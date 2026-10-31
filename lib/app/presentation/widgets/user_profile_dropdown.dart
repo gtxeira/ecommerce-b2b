@@ -1,13 +1,69 @@
+import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/main.dart';
-import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class UserProfileDropdown extends StatelessWidget {
+class UserProfileDropdown extends StatefulWidget {
   final Color? borderColor;
 
   const UserProfileDropdown({super.key, this.borderColor});
+
+  @override
+  State<UserProfileDropdown> createState() => _UserProfileDropdownState();
+}
+
+class _UserProfileDropdownState extends State<UserProfileDropdown> {
+  String? _companyName;
+  String? _positionTitle;
+  String? _loadedProfileKey;
+
+  /// Carrega a empresa uma única vez por sessão para exibir nome e cargo.
+  void _ensureCompanyData(UserSession session) {
+    final companyId = session.companyId;
+    if (companyId == null) return;
+
+    final profileKey = '${companyId.value}:${session.fullName}';
+    if (profileKey == _loadedProfileKey) return;
+    _loadedProfileKey = profileKey;
+    _companyName = null;
+    _positionTitle = null;
+    _loadCompanyData(companyId, session.fullName, profileKey);
+  }
+
+  Future<void> _loadCompanyData(
+    CompanyId companyId,
+    String fullName,
+    String profileKey,
+  ) async {
+    try {
+      final company = await getIt<CompanyRepository>().findById(companyId);
+      if (!mounted || profileKey != _loadedProfileKey) return;
+
+      String? position;
+      final normalizedName = fullName.trim().toLowerCase();
+      if (company != null && normalizedName.isNotEmpty) {
+        for (final buyer in company.authorizedBuyers) {
+          if (buyer.fullName.trim().toLowerCase() == normalizedName) {
+            if (buyer.positionTitle.trim().isNotEmpty) {
+              position = buyer.positionTitle;
+            }
+            break;
+          }
+        }
+      }
+
+      setState(() {
+        _companyName = company?.tradeName;
+        _positionTitle = position;
+      });
+    } catch (_) {
+      // Sem os dados da empresa, o menu mostra apenas nome e cargo.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,16 +73,16 @@ class UserProfileDropdown extends StatelessWidget {
 
     String userName = 'Visitante';
     String userRole = 'Convidado';
+    String? companyName;
 
     if (authState is AuthAuthenticated) {
-      userRole = authState.session.role.label;
-      userName = switch (authState.session.role) {
-        UserRole.buyer => 'Comprador',
-        UserRole.representative => 'Representante',
-        UserRole.finance => 'Gestor Financeiro',
-        UserRole.supervisor => 'Supervisor',
-        UserRole.admin => 'Administrador',
-      };
+      final session = authState.session;
+      _ensureCompanyData(session);
+      userName = session.fullName.isNotEmpty
+          ? session.fullName
+          : session.role.label;
+      userRole = _positionTitle ?? session.role.label;
+      companyName = _companyName;
     }
 
     return PopupMenuButton<void>(
@@ -40,7 +96,7 @@ class UserProfileDropdown extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: borderColor ?? colorScheme.outlineVariant,
+              color: widget.borderColor ?? colorScheme.outlineVariant,
               width: 1,
             ),
           ),
@@ -68,6 +124,16 @@ class UserProfileDropdown extends StatelessWidget {
                   color: colorScheme.onSurface,
                 ),
               ),
+              if (companyName != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  companyName,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
               Text(
                 userRole.toUpperCase(),
                 style: theme.textTheme.labelSmall?.copyWith(

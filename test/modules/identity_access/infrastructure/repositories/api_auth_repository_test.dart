@@ -52,6 +52,7 @@ void main() {
               'userId': 'rep-456',
               'role': 'Representative',
               'companyId': null,
+              'fullName': 'Representante Mock',
             },
           }),
         );
@@ -65,6 +66,7 @@ void main() {
       expect(session.userId.value, 'rep-456');
       expect(session.role, UserRole.representative);
       expect(session.companyId, isNull);
+      expect(session.fullName, 'Representante Mock');
       expect((await tokenStore.read())!.refreshToken, 'refresh');
     });
 
@@ -120,6 +122,7 @@ void main() {
             'userId': 'buyer-1',
             'role': 'Buyer',
             'companyId': 'c1',
+            'fullName': 'Carlos Comprador',
           }),
         );
       });
@@ -130,6 +133,7 @@ void main() {
       expect(session, isNotNull);
       expect(session!.role, UserRole.buyer);
       expect(session.companyId!.value, 'c1');
+      expect(session.fullName, 'Carlos Comprador');
     });
 
     test('should return null without persisted tokens', () async {

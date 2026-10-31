@@ -7,7 +7,15 @@ class UserSession {
   final UserRole role;
   final CompanyId? companyId; // Relevante apenas para UserRole.buyer
 
-  UserSession({required this.userId, required this.role, this.companyId}) {
+  /// Nome completo do usuário autenticado. Vazio em sessões antigas sem a claim.
+  final String fullName;
+
+  UserSession({
+    required this.userId,
+    required this.role,
+    this.companyId,
+    this.fullName = '',
+  }) {
     if (role == UserRole.buyer && companyId == null) {
       throw ArgumentError(
         'O ID da empresa é obrigatório para o perfil de comprador.',

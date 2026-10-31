@@ -120,6 +120,7 @@ class ApiAuthRepository implements AuthRepository {
       companyId: companyId == null || companyId.isEmpty
           ? null
           : CompanyId(companyId),
+      fullName: (map['fullName'] as String? ?? '').trim(),
     );
   }
 }

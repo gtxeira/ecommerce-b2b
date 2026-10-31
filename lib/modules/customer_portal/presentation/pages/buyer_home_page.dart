@@ -123,6 +123,9 @@ class BuyerHomePage extends StatelessWidget {
                       o.status == OrderStatus.pendingFinanceApproval,
                 )
                 .toList();
+            final displayName = session.fullName.isEmpty
+                ? session.role.label
+                : session.fullName;
 
             return Scaffold(
               backgroundColor: colorScheme.surface,
@@ -146,12 +149,13 @@ class BuyerHomePage extends StatelessWidget {
                           bottom: 16,
                         ),
                         title: Text(
-                          'Olá, ${session.userId.value.substring(0, 8)}',
+                          'Olá, $displayName',
                           style: theme.textTheme.headlineSmall?.copyWith(
                             color: colorScheme.onPrimary,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -0.5,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         background: Container(
                           decoration: BoxDecoration(
