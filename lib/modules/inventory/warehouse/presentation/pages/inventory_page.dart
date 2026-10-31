@@ -1,9 +1,9 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/repositories/inventory_repository.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/warehouse.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/repositories/inventory_repository.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/warehouse.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
 import 'package:flutter/material.dart';
 
 class InventoryPage extends StatefulWidget {

@@ -1,9 +1,9 @@
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/credit_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_pending_finance_reviews/get_pending_finance_reviews_use_case.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/api/finance_api.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -26,7 +26,9 @@ void main() {
         creditStatus: CreditStatus.pending,
         items: [],
       );
-      when(() => financeApi.getPendingReviews()).thenAnswer((_) async => [pending]);
+      when(
+        () => financeApi.getPendingReviews(),
+      ).thenAnswer((_) async => [pending]);
 
       final result = await useCase.execute();
 

@@ -1,7 +1,7 @@
 import 'package:ecommerce_b2b/modules/customer_portal/boleto/application/download_boleto/download_boleto_use_case.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/boleto/domain/repositories/boleto_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/boleto/domain/value_objects/boleto_copy.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/boleto/model/repositories/boleto_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/boleto/model/value_objects/boleto_copy.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class MockBoletoRepository implements BoletoRepository {

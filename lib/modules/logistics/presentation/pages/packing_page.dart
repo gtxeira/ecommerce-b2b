@@ -1,15 +1,15 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/repositories/sales_order_repository.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/repositories/inventory_repository.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/warehouse.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/repositories/inventory_repository.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/warehouse.dart';
 import 'package:ecommerce_b2b/modules/logistics/application/procces_order/process_order_shipment_use_case.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/warehouse_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/logistics/value_objects/tracking_code.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/warehouse_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/logistics/value_objects/tracking_code.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 

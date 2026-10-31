@@ -1,9 +1,9 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/shipment.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/shipment.dart';
 import 'package:ecommerce_b2b/modules/logistics/shipment/infrastructure/repositories/api_shipment_repository.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/warehouse_id.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/warehouse_id.dart';
 
 class FulfillmentState {
   final bool hasPicking;

@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/infrastructure/repositories/api_user_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 

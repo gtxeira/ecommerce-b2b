@@ -1,4 +1,4 @@
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class CatalogState extends Equatable {

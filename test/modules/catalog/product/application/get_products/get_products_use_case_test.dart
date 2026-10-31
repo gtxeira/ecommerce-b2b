@@ -1,8 +1,8 @@
 import 'package:ecommerce_b2b/modules/catalog/product/application/get_products/get_products_use_case.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -34,8 +34,9 @@ void main() {
         createProduct('1', 'Notebook', 'SKU-001'),
         createProduct('2', 'Monitor', 'SKU-002'),
       ];
-      when(() => productRepository.getAll(query: null))
-          .thenAnswer((_) async => products);
+      when(
+        () => productRepository.getAll(query: null),
+      ).thenAnswer((_) async => products);
 
       final result = await useCase.execute();
 
@@ -46,8 +47,9 @@ void main() {
 
     test('should delegate the query to the repository', () async {
       final products = [createProduct('1', 'Notebook', 'SKU-001')];
-      when(() => productRepository.getAll(query: 'Note'))
-          .thenAnswer((_) async => products);
+      when(
+        () => productRepository.getAll(query: 'Note'),
+      ).thenAnswer((_) async => products);
 
       final result = await useCase.execute(query: 'Note');
 

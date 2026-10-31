@@ -1,8 +1,8 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/repositories/company_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_account.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_account.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/user_management_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

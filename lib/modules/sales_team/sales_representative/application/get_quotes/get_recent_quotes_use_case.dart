@@ -1,9 +1,9 @@
 import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/quote.dart';
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/repositories/quote_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/repositories/quote_repository.dart';
 import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/representative_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
 import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 /// Orçamentos recentes do representante. A API valida a hierarquia.

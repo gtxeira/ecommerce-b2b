@@ -2,11 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/enums/rma_status.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/return_request.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/enums/rma_status.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/return_request.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/infrastructure/repositories/api_return_request_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/rma_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/rma_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../support/fake_http_adapter.dart';

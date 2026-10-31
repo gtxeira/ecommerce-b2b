@@ -1,14 +1,14 @@
 import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/application/get_return_requests/get_return_requests_use_case.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/enums/rma_status.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/repositories/return_request_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/return_request.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/rma_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/user_id.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/enums/rma_status.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/repositories/return_request_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/return_request.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/rma_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/user_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 

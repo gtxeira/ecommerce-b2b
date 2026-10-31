@@ -1,6 +1,6 @@
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/user_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_account.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/repositories/user_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_account.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -11,11 +11,7 @@ class UserManagementCubit extends Cubit<UserManagementState> {
 
   UserManagementCubit(this._repository) : super(UserManagementInitial());
 
-  Future<void> load({
-    UserRole? role,
-    bool? active,
-    String? search,
-  }) async {
+  Future<void> load({UserRole? role, bool? active, String? search}) async {
     emit(UserManagementLoading());
     try {
       final users = await _repository.findAll(
@@ -23,7 +19,14 @@ class UserManagementCubit extends Cubit<UserManagementState> {
         active: active,
         search: search,
       );
-      emit(UserManagementLoaded(users: users, role: role, active: active, search: search));
+      emit(
+        UserManagementLoaded(
+          users: users,
+          role: role,
+          active: active,
+          search: search,
+        ),
+      );
     } catch (error) {
       emit(UserManagementFailure(error.toString()));
     }
@@ -95,6 +98,13 @@ class UserManagementCubit extends Cubit<UserManagementState> {
       active: active,
       search: search,
     );
-    emit(UserManagementLoaded(users: users, role: role, active: active, search: search));
+    emit(
+      UserManagementLoaded(
+        users: users,
+        role: role,
+        active: active,
+        search: search,
+      ),
+    );
   }
 }

@@ -1,4 +1,4 @@
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:flutter/material.dart';
 
 enum AppPage {

@@ -5,19 +5,19 @@ import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
 
 // Repositórios (interfaces)
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/repositories/price_table_repository.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/repositories/company_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/boleto/domain/repositories/boleto_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/repositories/return_request_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/auth_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/user_repository.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/repositories/inventory_repository.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/repositories/shipment_repository.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/repositories/tracking_repository.dart';
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/repositories/quote_repository.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/repositories/sales_order_repository.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/repositories/sales_representative_repository.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/price_table_repository.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/boleto/model/repositories/boleto_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/repositories/return_request_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/repositories/auth_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/repositories/user_repository.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/repositories/inventory_repository.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/repositories/shipment_repository.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/repositories/tracking_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/repositories/quote_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/repositories/sales_representative_repository.dart';
 
 // Implementações HTTP
 import 'package:ecommerce_b2b/modules/catalog/price_table/infrastructure/repositories/api_price_table_repository.dart';

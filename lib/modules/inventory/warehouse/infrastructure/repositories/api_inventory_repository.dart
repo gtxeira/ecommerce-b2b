@@ -1,11 +1,11 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/repositories/inventory_repository.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/stock_item.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/warehouse.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/warehouse_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/quantity.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/repositories/inventory_repository.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/stock_item.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/warehouse.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/warehouse_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
 
 class ApiInventoryRepository implements InventoryRepository {
   final ApiClient _api;

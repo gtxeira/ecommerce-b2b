@@ -1,17 +1,17 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/commission.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/customer_assignment.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/enums/commission_status.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/repositories/sales_representative_repository.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/sales_representative.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/sales_hierarchy_link.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/representative_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/percentage.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/customer_assignment.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/enums/commission_status.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/repositories/sales_representative_repository.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_representative.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_hierarchy_link.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/email_address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/percentage.dart';
 
 class ApiSalesRepresentativeRepository
     implements SalesRepresentativeRepository {

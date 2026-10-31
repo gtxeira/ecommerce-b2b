@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
 import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 class GetProductsUseCase {

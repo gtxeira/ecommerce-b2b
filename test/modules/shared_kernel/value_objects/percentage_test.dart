@@ -1,5 +1,5 @@
 import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/percentage.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/percentage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

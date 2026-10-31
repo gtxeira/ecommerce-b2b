@@ -1,17 +1,17 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/cnpj.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/inscricao_estadual.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/cnpj.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/inscricao_estadual.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/presentation/cubit/company_management_cubit.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart'
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart'
     as address_state;
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/email_input.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/money_input.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/not_empty_input.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/phone_input.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/zip_code_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/email_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/money_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/not_empty_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/phone_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/zip_code_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -70,9 +70,10 @@ class CompanyListPage extends StatelessWidget {
                 final targetRepId = state is CompanyManagementLoaded
                     ? state.selectedRepresentativeId
                     : null;
-                return context
-                    .read<CompanyManagementCubit>()
-                    .loadCompanies(session, targetRepresentativeId: targetRepId);
+                return context.read<CompanyManagementCubit>().loadCompanies(
+                  session,
+                  targetRepresentativeId: targetRepId,
+                );
               },
               child: state is CompanyManagementLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -198,11 +199,17 @@ class CompanyListPage extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildSectionTitle(theme, 'Compradores Autorizados'),
+                            _buildSectionTitle(
+                              theme,
+                              'Compradores Autorizados',
+                            ),
                             if (!session.isBuyer)
                               TextButton.icon(
-                                onPressed: () =>
-                                    _showAddBuyerDialog(context, company, session),
+                                onPressed: () => _showAddBuyerDialog(
+                                  context,
+                                  company,
+                                  session,
+                                ),
                                 icon: const Icon(
                                   Icons.person_add_rounded,
                                   size: 18,
@@ -214,7 +221,9 @@ class CompanyListPage extends StatelessWidget {
                         if (company.authorizedBuyers.isEmpty)
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Nenhum comprador autorizado cadastrado.'),
+                            child: Text(
+                              'Nenhum comprador autorizado cadastrado.',
+                            ),
                           )
                         else
                           ...company.authorizedBuyers.map(
@@ -223,7 +232,9 @@ class CompanyListPage extends StatelessWidget {
                               margin: const EdgeInsets.only(top: 8.0),
                               child: ListTile(
                                 dense: true,
-                                leading: const Icon(Icons.person_outline_rounded),
+                                leading: const Icon(
+                                  Icons.person_outline_rounded,
+                                ),
                                 title: Text(
                                   buyer.fullName,
                                   style: const TextStyle(
@@ -265,12 +276,20 @@ class CompanyListPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: Row(
                   children: [
-                    Icon(Icons.supervised_user_circle_rounded, color: colorScheme.primary),
+                    Icon(
+                      Icons.supervised_user_circle_rounded,
+                      color: colorScheme.primary,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -278,7 +297,11 @@ class CompanyListPage extends StatelessWidget {
                         children: [
                           const Text(
                             'Filtrar Carteira por Representante',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           DropdownButtonHideUnderline(
@@ -288,19 +311,28 @@ class CompanyListPage extends StatelessWidget {
                               items: [
                                 DropdownMenuItem(
                                   value: session.userId.value,
-                                  child: const Text('Minha Carteira (Pessoal)', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  child: const Text(
+                                    'Minha Carteira (Pessoal)',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
-                                ...subordinates.map((sub) => DropdownMenuItem(
-                                  value: sub.id.value,
-                                  child: Text(sub.fullName),
-                                )),
+                                ...subordinates.map(
+                                  (sub) => DropdownMenuItem(
+                                    value: sub.id.value,
+                                    child: Text(sub.fullName),
+                                  ),
+                                ),
                               ],
                               onChanged: (newRepId) {
                                 if (newRepId != null) {
-                                  context.read<CompanyManagementCubit>().loadCompanies(
-                                    session,
-                                    targetRepresentativeId: newRepId,
-                                  );
+                                  context
+                                      .read<CompanyManagementCubit>()
+                                      .loadCompanies(
+                                        session,
+                                        targetRepresentativeId: newRepId,
+                                      );
                                 }
                               },
                             ),

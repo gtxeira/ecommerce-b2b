@@ -1,5 +1,5 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_cubit.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_state.dart';
 import 'package:flutter/material.dart';
@@ -78,7 +78,9 @@ class _BuyerCatalogViewState extends State<_BuyerCatalogView> {
               ],
               onChanged: (query) {
                 setState(() {}); // Atualiza botão X
-                context.read<CatalogCubit>().loadProducts(query: query.isEmpty ? null : query);
+                context.read<CatalogCubit>().loadProducts(
+                  query: query.isEmpty ? null : query,
+                );
               },
               elevation: const WidgetStatePropertyAll(0),
             ),
@@ -96,17 +98,24 @@ class _BuyerCatalogViewState extends State<_BuyerCatalogView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline_rounded, size: 64, color: colorScheme.error),
+                  Icon(
+                    Icons.error_outline_rounded,
+                    size: 64,
+                    color: colorScheme.error,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Erro ao carregar catálogo',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(state.message, textAlign: TextAlign.center),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
-                    onPressed: () => context.read<CatalogCubit>().loadProducts(),
+                    onPressed: () =>
+                        context.read<CatalogCubit>().loadProducts(),
                     icon: const Icon(Icons.refresh_rounded),
                     label: const Text('Tentar Novamente'),
                   ),
@@ -123,14 +132,22 @@ class _BuyerCatalogViewState extends State<_BuyerCatalogView> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.inventory_2_outlined, size: 80, color: colorScheme.primary.withValues(alpha: 0.4)),
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      size: 80,
+                      color: colorScheme.primary.withValues(alpha: 0.4),
+                    ),
                     const SizedBox(height: 20),
                     Text(
                       'Nenhum produto encontrado',
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    const Text('Tente ajustar a busca ou contate seu representante.'),
+                    const Text(
+                      'Tente ajustar a busca ou contate seu representante.',
+                    ),
                   ],
                 ),
               );
@@ -138,8 +155,10 @@ class _BuyerCatalogViewState extends State<_BuyerCatalogView> {
 
             return RefreshIndicator(
               onRefresh: () => context.read<CatalogCubit>().loadProducts(
-                    query: _searchController.text.isEmpty ? null : _searchController.text,
-                  ),
+                query: _searchController.text.isEmpty
+                    ? null
+                    : _searchController.text,
+              ),
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: products.length,
@@ -188,13 +207,17 @@ class _ProductCard extends StatelessWidget {
         ),
         title: Text(
           product.name,
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(
             'SKU: ${product.sku}',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         trailing: Column(
@@ -211,7 +234,9 @@ class _ProductCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               '${product.variants.length} variações',
-              style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -222,7 +247,9 @@ class _ProductCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 product.description,
-                style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -236,7 +263,9 @@ class _ProductCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 'Variações disponíveis',
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -245,7 +274,9 @@ class _ProductCard extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -257,7 +288,10 @@ class _ProductCard extends StatelessWidget {
                         children: [
                           Text(
                             'SKU: ${v.variantSku}',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
                           Text(
                             [
@@ -265,13 +299,17 @@ class _ProductCard extends StatelessWidget {
                               if (v.size.isNotEmpty) v.size,
                               if (v.voltage.isNotEmpty) v.voltage,
                             ].join(' · '),
-                            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     Text(
-                      v.sameAsParent ? product.basePrice.formatted : (v.price?.formatted ?? '—'),
+                      v.sameAsParent
+                          ? product.basePrice.formatted
+                          : (v.price?.formatted ?? '—'),
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
                         color: colorScheme.primary,
@@ -292,7 +330,9 @@ class _ProductCard extends StatelessWidget {
             label: const Text('SOLICITAR ORÇAMENTO'),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(44),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
           ),
         ],

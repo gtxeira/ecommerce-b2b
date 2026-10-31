@@ -3,7 +3,7 @@ import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
 import 'package:ecommerce_b2b/app/presentation/layouts/main_layout.dart';
 import 'package:ecommerce_b2b/app/presentation/pages/home_page.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/pages/login_page.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/pages/users_page.dart';

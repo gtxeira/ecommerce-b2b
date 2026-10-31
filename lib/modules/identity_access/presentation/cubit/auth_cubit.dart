@@ -3,8 +3,8 @@ import 'dart:async';
 
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/modules/identity_access/application/login/login_use_case.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/auth_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/repositories/auth_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 

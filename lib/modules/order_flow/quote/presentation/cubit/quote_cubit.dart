@@ -1,6 +1,6 @@
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/quote.dart';
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/repositories/quote_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/repositories/quote_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

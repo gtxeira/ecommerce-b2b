@@ -1,13 +1,13 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/enums/rma_status.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/repositories/return_request_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/return_request.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/return_request_item.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/rma_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/quantity.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/enums/rma_status.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/repositories/return_request_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/return_request.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/return_request_item.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/rma_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
 
 class ApiReturnRequestRepository implements ReturnRequestRepository {
   final ApiClient _api;

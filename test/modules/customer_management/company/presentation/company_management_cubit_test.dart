@@ -4,10 +4,10 @@ import 'package:ecommerce_b2b/modules/customer_management/company/application/re
 import '../fakes/fake_company_repository.dart';
 import '../fakes/fake_sales_representative_repository.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/presentation/cubit/company_management_cubit.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/user_id.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/user_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -106,31 +106,34 @@ void main() {
       expect(loadedState.companies.length, 3);
     });
 
-    test('addAuthorizedBuyer should emit Loading, Success, and Loaded', () async {
-      final session = UserSession(
-        userId: const UserId('rep-456'),
-        role: UserRole.representative,
-      );
+    test(
+      'addAuthorizedBuyer should emit Loading, Success, and Loaded',
+      () async {
+        final session = UserSession(
+          userId: const UserId('rep-456'),
+          role: UserRole.representative,
+        );
 
-      final states = <CompanyManagementState>[];
-      cubit.stream.listen(states.add);
+        final states = <CompanyManagementState>[];
+        cubit.stream.listen(states.add);
 
-      await cubit.addAuthorizedBuyer(
-        currentSession: session,
-        companyId: const CompanyId('c1'),
-        fullName: 'New Buyer',
-        email: 'buyer@acme.com',
-        phone: '11988888888',
-        positionTitle: 'Buyer manager',
-      );
-      await Future.delayed(Duration.zero);
+        await cubit.addAuthorizedBuyer(
+          currentSession: session,
+          companyId: const CompanyId('c1'),
+          fullName: 'New Buyer',
+          email: 'buyer@acme.com',
+          phone: '11988888888',
+          positionTitle: 'Buyer manager',
+        );
+        await Future.delayed(Duration.zero);
 
-      expect(states, [
-        isA<CompanyManagementLoading>(),
-        isA<CompanyManagementSuccess>(),
-        isA<CompanyManagementLoading>(),
-        isA<CompanyManagementLoaded>(),
-      ]);
-    });
+        expect(states, [
+          isA<CompanyManagementLoading>(),
+          isA<CompanyManagementSuccess>(),
+          isA<CompanyManagementLoading>(),
+          isA<CompanyManagementLoaded>(),
+        ]);
+      },
+    );
   });
 }

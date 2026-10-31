@@ -1,5 +1,5 @@
 import 'package:ecommerce_b2b/main.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,10 +14,10 @@ class UserProfileDropdown extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthCubit>().state;
-    
+
     String userName = 'Visitante';
     String userRole = 'Convidado';
-    
+
     if (authState is AuthAuthenticated) {
       userRole = authState.session.role.name;
       userName = switch (authState.session.role) {
@@ -88,7 +88,8 @@ class UserProfileDropdown extends StatelessWidget {
             // evitando glitch visual em alguns dispositivos.
             Future.delayed(Duration.zero, () {
               final currentMode = themeNotifier.value;
-              final isDark = currentMode == ThemeMode.dark ||
+              final isDark =
+                  currentMode == ThemeMode.dark ||
                   (currentMode == ThemeMode.system &&
                       brightness == Brightness.dark);
               themeNotifier.value = isDark ? ThemeMode.light : ThemeMode.dark;
@@ -96,7 +97,10 @@ class UserProfileDropdown extends StatelessWidget {
           },
           child: const ListTile(
             leading: Icon(Icons.brightness_6_outlined),
-            title: Text('Mudar Tema', style: TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(
+              'Mudar Tema',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             contentPadding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
           ),

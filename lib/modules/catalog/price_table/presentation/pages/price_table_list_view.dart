@@ -1,18 +1,19 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/price_table.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/price_rule.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/enums/price_scope_type.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/price_table.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/price_rule.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/enums/price_scope_type.dart';
 import 'package:ecommerce_b2b/modules/catalog/price_table/presentation/cubit/price_table_cubit.dart';
 import 'package:ecommerce_b2b/modules/catalog/price_table/presentation/cubit/price_table_state.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_cubit.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart' as address_state;
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/price_table_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/quantity.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/money_input.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/not_empty_input.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart'
+    as address_state;
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/price_table_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/money_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/not_empty_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,7 +36,12 @@ class PriceTableListView extends StatelessWidget {
           }
 
           if (state is PriceTableError) {
-            return Center(child: Text(state.message, style: TextStyle(color: colorScheme.error)));
+            return Center(
+              child: Text(
+                state.message,
+                style: TextStyle(color: colorScheme.error),
+              ),
+            );
           }
 
           if (state is PriceTableLoaded) {
@@ -47,7 +53,9 @@ class PriceTableListView extends StatelessWidget {
                 label: const Text('Nova Tabela'),
               ),
               body: tables.isEmpty
-                  ? const Center(child: Text('Nenhuma tabela de preços cadastrada.'))
+                  ? const Center(
+                      child: Text('Nenhuma tabela de preços cadastrada.'),
+                    )
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: tables.length,
@@ -55,10 +63,19 @@ class PriceTableListView extends StatelessWidget {
                         final table = tables[index];
                         return Card(
                           margin: const EdgeInsets.only(bottom: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: ExpansionTile(
-                            title: Text(table.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text('Escopo: ${table.scopeType.name.toUpperCase()}'),
+                            title: Text(
+                              table.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Escopo: ${table.scopeType.name.toUpperCase()}',
+                            ),
                             children: [
                               Padding(
                                 padding: const EdgeInsets.all(16),
@@ -66,40 +83,64 @@ class PriceTableListView extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('Regras de Preços (${table.rules.length})', 
-                                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                                        Text(
+                                          'Regras de Preços (${table.rules.length})',
+                                          style: theme.textTheme.titleSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
                                         TextButton.icon(
-                                          onPressed: () => _showAddRuleDialog(context, table),
-                                          icon: const Icon(Icons.add_circle_outline),
+                                          onPressed: () => _showAddRuleDialog(
+                                            context,
+                                            table,
+                                          ),
+                                          icon: const Icon(
+                                            Icons.add_circle_outline,
+                                          ),
                                           label: const Text('Adicionar Regra'),
                                         ),
                                       ],
                                     ),
                                     if (table.rules.isEmpty)
                                       const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                                        child: Text('Nenhuma regra definida nesta tabela.'),
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 8.0,
+                                        ),
+                                        child: Text(
+                                          'Nenhuma regra definida nesta tabela.',
+                                        ),
                                       )
                                     else
-                                      ...table.rules.map((rule) => Card(
-                                        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                                        elevation: 0,
-                                        margin: const EdgeInsets.only(top: 8),
-                                        child: ListTile(
-                                          dense: true,
-                                          title: Text('Produto ID: ${rule.productId.value}'),
-                                          subtitle: Text(
-                                            'Qtd: ${rule.minQuantity.value} - ${rule.maxQuantity.value} | '
-                                            'Estado: ${rule.state?.code ?? "NACIONAL"}'
-                                          ),
-                                          trailing: Text(
-                                            rule.unitPrice.formatted,
-                                            style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.primary),
+                                      ...table.rules.map(
+                                        (rule) => Card(
+                                          color: colorScheme
+                                              .surfaceContainerHighest
+                                              .withValues(alpha: 0.3),
+                                          elevation: 0,
+                                          margin: const EdgeInsets.only(top: 8),
+                                          child: ListTile(
+                                            dense: true,
+                                            title: Text(
+                                              'Produto ID: ${rule.productId.value}',
+                                            ),
+                                            subtitle: Text(
+                                              'Qtd: ${rule.minQuantity.value} - ${rule.maxQuantity.value} | '
+                                              'Estado: ${rule.state?.code ?? "NACIONAL"}',
+                                            ),
+                                            trailing: Text(
+                                              rule.unitPrice.formatted,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: colorScheme.primary,
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                      )),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -132,27 +173,43 @@ class PriceTableListView extends StatelessWidget {
               title: const Text('Nova Tabela de Preços'),
               content: Form(
                 key: formKey,
-                autovalidateMode: hasSubmitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                autovalidateMode: hasSubmitted
+                    ? AutovalidateMode.onUserInteraction
+                    : AutovalidateMode.disabled,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextFormField(
                       controller: nameCtrl,
-                      decoration: const InputDecoration(labelText: 'Nome da Tabela *'),
-                      validator: (v) => NotEmptyInput.dirty(v ?? '').isValid ? null : 'Obrigatório',
+                      decoration: const InputDecoration(
+                        labelText: 'Nome da Tabela *',
+                      ),
+                      validator: (v) => NotEmptyInput.dirty(v ?? '').isValid
+                          ? null
+                          : 'Obrigatório',
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<PriceScopeType>(
                       initialValue: scope,
                       decoration: const InputDecoration(labelText: 'Escopo'),
-                      items: PriceScopeType.values.map((e) => DropdownMenuItem(value: e, child: Text(e.name.toUpperCase()))).toList(),
+                      items: PriceScopeType.values
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e,
+                              child: Text(e.name.toUpperCase()),
+                            ),
+                          )
+                          .toList(),
                       onChanged: (v) => setState(() => scope = v!),
                     ),
                   ],
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(diagCtx), child: const Text('Cancelar')),
+                TextButton(
+                  onPressed: () => Navigator.pop(diagCtx),
+                  child: const Text('Cancelar'),
+                ),
                 ElevatedButton(
                   onPressed: () {
                     setState(() => hasSubmitted = true);
@@ -190,7 +247,9 @@ class PriceTableListView extends StatelessWidget {
       builder: (diagCtx) => MultiBlocProvider(
         providers: [
           BlocProvider.value(value: context.read<PriceTableCubit>()),
-          BlocProvider(create: (context) => getIt<CatalogCubit>()..loadProducts()),
+          BlocProvider(
+            create: (context) => getIt<CatalogCubit>()..loadProducts(),
+          ),
         ],
         child: StatefulBuilder(
           builder: (context, setState) {
@@ -201,7 +260,9 @@ class PriceTableListView extends StatelessWidget {
                 child: SingleChildScrollView(
                   child: Form(
                     key: formKey,
-                    autovalidateMode: hasSubmitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                    autovalidateMode: hasSubmitted
+                        ? AutovalidateMode.onUserInteraction
+                        : AutovalidateMode.disabled,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -209,10 +270,21 @@ class PriceTableListView extends StatelessWidget {
                           builder: (context, state) {
                             if (state is CatalogLoaded) {
                               return DropdownButtonFormField<ProductId>(
-                                decoration: const InputDecoration(labelText: 'Produto *'),
-                                items: state.products.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
-                                onChanged: (v) => setState(() => selectedProduct = v),
-                                validator: (v) => v == null ? 'Obrigatório' : null,
+                                decoration: const InputDecoration(
+                                  labelText: 'Produto *',
+                                ),
+                                items: state.products
+                                    .map(
+                                      (p) => DropdownMenuItem(
+                                        value: p.id,
+                                        child: Text(p.name),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (v) =>
+                                    setState(() => selectedProduct = v),
+                                validator: (v) =>
+                                    v == null ? 'Obrigatório' : null,
                               );
                             }
                             return const CircularProgressIndicator();
@@ -225,7 +297,9 @@ class PriceTableListView extends StatelessWidget {
                               child: TextFormField(
                                 controller: minQtyCtrl,
                                 keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(labelText: 'Qtd Mínima'),
+                                decoration: const InputDecoration(
+                                  labelText: 'Qtd Mínima',
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -233,27 +307,50 @@ class PriceTableListView extends StatelessWidget {
                               child: TextFormField(
                                 controller: maxQtyCtrl,
                                 keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(labelText: 'Qtd Máxima'),
+                                decoration: const InputDecoration(
+                                  labelText: 'Qtd Máxima',
+                                ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<address_state.State?>(
-                          decoration: const InputDecoration(labelText: 'Estado (Opcional)'),
+                          decoration: const InputDecoration(
+                            labelText: 'Estado (Opcional)',
+                          ),
                           items: [
-                            const DropdownMenuItem(value: null, child: Text('NACIONAL')),
-                            ...address_state.State.values.map((e) => DropdownMenuItem(value: e, child: Text(e.code))),
+                            const DropdownMenuItem(
+                              value: null,
+                              child: Text('NACIONAL'),
+                            ),
+                            ...address_state.State.values.map(
+                              (e) => DropdownMenuItem(
+                                value: e,
+                                child: Text(e.code),
+                              ),
+                            ),
                           ],
                           onChanged: (v) => setState(() => selectedState = v),
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: priceCtrl,
-                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: const InputDecoration(labelText: 'Preço Unitário *', prefixIcon: Icon(Icons.attach_money)),
-                          validator: (v) => MoneyInput.dirty(v ?? '').isValid ? null : 'Preço inválido',
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d*'),
+                            ),
+                          ],
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Preço Unitário *',
+                            prefixIcon: Icon(Icons.attach_money),
+                          ),
+                          validator: (v) => MoneyInput.dirty(v ?? '').isValid
+                              ? null
+                              : 'Preço inválido',
                         ),
                       ],
                     ),
@@ -261,26 +358,35 @@ class PriceTableListView extends StatelessWidget {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(diagCtx), child: const Text('Cancelar')),
+                TextButton(
+                  onPressed: () => Navigator.pop(diagCtx),
+                  child: const Text('Cancelar'),
+                ),
                 ElevatedButton(
                   onPressed: () {
                     setState(() => hasSubmitted = true);
                     if (formKey.currentState?.validate() ?? false) {
                       final rule = PriceRule(
                         productId: selectedProduct!,
-                        minQuantity: Quantity.create(int.parse(minQtyCtrl.text)).getOrThrow(),
-                        maxQuantity: Quantity.create(int.parse(maxQtyCtrl.text)).getOrThrow(),
+                        minQuantity: Quantity.create(
+                          int.parse(minQtyCtrl.text),
+                        ).getOrThrow(),
+                        maxQuantity: Quantity.create(
+                          int.parse(maxQtyCtrl.text),
+                        ).getOrThrow(),
                         state: selectedState,
-                        unitPrice: Money.create(double.parse(priceCtrl.text)).getOrThrow(),
+                        unitPrice: Money.create(
+                          double.parse(priceCtrl.text),
+                        ).getOrThrow(),
                       );
-                      
+
                       final updatedTable = PriceTable(
                         id: table.id,
                         name: table.name,
                         scopeType: table.scopeType,
                         rules: [...table.rules, rule],
                       );
-                      
+
                       context.read<PriceTableCubit>().saveTable(updatedTable);
                       Navigator.pop(diagCtx);
                     }

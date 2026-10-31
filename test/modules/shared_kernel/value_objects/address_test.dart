@@ -1,6 +1,6 @@
 import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/value_objects/address.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

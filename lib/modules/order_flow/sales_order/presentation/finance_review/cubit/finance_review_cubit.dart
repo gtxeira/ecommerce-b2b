@@ -1,9 +1,9 @@
 // ignore_for_file: prefer_initializing_formals
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_pending_finance_reviews/get_pending_finance_reviews_use_case.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/process_finance_review/process_finance_review_use_case.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/enums/finance_decision.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/finance_review.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/enums/finance_decision.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/finance_review.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 

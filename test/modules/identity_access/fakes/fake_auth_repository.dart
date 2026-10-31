@@ -1,10 +1,10 @@
 import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/auth_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/user_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/repositories/auth_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/user_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/email_address.dart';
 import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 class FakeAuthRepository implements AuthRepository {

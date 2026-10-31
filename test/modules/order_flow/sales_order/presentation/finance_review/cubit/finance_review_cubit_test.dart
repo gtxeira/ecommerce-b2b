@@ -1,11 +1,11 @@
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/credit_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_pending_finance_reviews/get_pending_finance_reviews_use_case.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/process_finance_review/process_finance_review_use_case.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/finance_review.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/finance_review.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -74,38 +74,49 @@ void main() {
       await cubit.loadPendingOrders();
       await Future<void>.delayed(Duration.zero);
 
-      expect(states, [isA<FinanceReviewLoading>(), isA<FinanceReviewFailure>()]);
+      expect(states, [
+        isA<FinanceReviewLoading>(),
+        isA<FinanceReviewFailure>(),
+      ]);
     });
 
     test('approveOrder should send the review and reload the queue', () async {
-      when(() => processReview.execute(
-            order: any(named: 'order'),
-            review: any(named: 'review'),
-          )).thenAnswer((_) async => order);
+      when(
+        () => processReview.execute(
+          order: any(named: 'order'),
+          review: any(named: 'review'),
+        ),
+      ).thenAnswer((_) async => order);
       when(() => getPendingReviews.execute()).thenAnswer((_) async => []);
 
       await cubit.approveOrder(order, 'Limite ok');
 
-      verify(() => processReview.execute(
-            order: order,
-            review: any(named: 'review'),
-          )).called(1);
+      verify(
+        () => processReview.execute(
+          order: order,
+          review: any(named: 'review'),
+        ),
+      ).called(1);
       verify(() => getPendingReviews.execute()).called(1);
     });
 
     test('rejectOrder should send the review and reload the queue', () async {
-      when(() => processReview.execute(
-            order: any(named: 'order'),
-            review: any(named: 'review'),
-          )).thenAnswer((_) async => order);
+      when(
+        () => processReview.execute(
+          order: any(named: 'order'),
+          review: any(named: 'review'),
+        ),
+      ).thenAnswer((_) async => order);
       when(() => getPendingReviews.execute()).thenAnswer((_) async => []);
 
       await cubit.rejectOrder(order, 'Crédito insuficiente');
 
-      verify(() => processReview.execute(
-            order: order,
-            review: any(named: 'review'),
-          )).called(1);
+      verify(
+        () => processReview.execute(
+          order: order,
+          review: any(named: 'review'),
+        ),
+      ).called(1);
     });
 
     test('invoiceOrder should call the API and reload', () async {

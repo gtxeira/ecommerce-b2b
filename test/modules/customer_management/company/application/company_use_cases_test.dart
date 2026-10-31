@@ -2,11 +2,11 @@ import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/application/add_authorized_buyer/add_authorized_buyer_use_case.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/application/get_companies/get_companies_use_case.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/application/register_company/register_company_use_case.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/user_id.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/user_id.dart';
 import 'package:ecommerce_b2b/app/core/result/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 

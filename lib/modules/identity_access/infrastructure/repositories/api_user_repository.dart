@@ -1,8 +1,8 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/user_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_account.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/repositories/user_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_account.dart';
 
 class ApiUserRepository implements UserRepository {
   final ApiClient _api;

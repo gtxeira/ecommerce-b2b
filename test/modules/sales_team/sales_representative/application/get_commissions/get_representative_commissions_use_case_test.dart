@@ -1,14 +1,14 @@
 import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_commissions/get_representative_commissions_use_case.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/commission.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/enums/commission_status.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/repositories/sales_representative_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/representative_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/percentage.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/enums/commission_status.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/repositories/sales_representative_repository.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/percentage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 

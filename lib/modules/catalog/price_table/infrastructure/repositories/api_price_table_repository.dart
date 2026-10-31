@@ -1,15 +1,15 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/enums/price_scope_type.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/price_rule.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/price_table.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/repositories/price_table_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/price_table_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_variant_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/quantity.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/enums/price_scope_type.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/price_rule.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/price_table.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/price_table_repository.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/price_table_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_variant_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
 
 class ApiPriceTableRepository implements PriceTableRepository {
   final ApiClient _api;

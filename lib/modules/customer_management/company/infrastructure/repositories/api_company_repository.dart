@@ -1,18 +1,18 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/authorized_buyer.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/customer_credit_account.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/repositories/company_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/cnpj.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/inscricao_estadual.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/buyer_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/phone_number.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/authorized_buyer.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/customer_credit_account.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/cnpj.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/inscricao_estadual.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/value_objects/address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/buyer_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/email_address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/phone_number.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
 
 class ApiCompanyRepository implements CompanyRepository {
   final ApiClient _api;

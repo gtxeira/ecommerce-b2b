@@ -2,12 +2,12 @@ import 'package:ecommerce_b2b/modules/catalog/product/application/delete_product
 import 'package:ecommerce_b2b/modules/catalog/product/application/delete_product_variant/delete_product_variant_use_case.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/application/get_products/get_products_use_case.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/application/save_product/save_product_use_case.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_state.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/repositories/inventory_repository.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/stock_item.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_variant_id.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/repositories/inventory_repository.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/stock_item.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_variant_id.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CatalogCubit extends Cubit<CatalogState> {

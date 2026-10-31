@@ -3,7 +3,7 @@ import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/infrastructure/repositories/api_company_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../support/fake_http_adapter.dart';

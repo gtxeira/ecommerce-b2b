@@ -1,17 +1,17 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/credit_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/enums/finance_decision.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/finance_review.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/order_item.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/repositories/sales_order_repository.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/quantity.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/enums/finance_decision.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/finance_review.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/order_item.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
 
 class ApiSalesOrderRepository implements SalesOrderRepository {
   final ApiClient _api;

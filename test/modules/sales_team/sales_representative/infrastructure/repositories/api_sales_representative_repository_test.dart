@@ -2,9 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/enums/commission_status.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/enums/commission_status.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/infrastructure/repositories/api_sales_representative_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/representative_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../support/fake_http_adapter.dart';

@@ -2,11 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/credit_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/enums/finance_decision.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/enums/finance_decision.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/api/finance_api.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../support/fake_http_adapter.dart';

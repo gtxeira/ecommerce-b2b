@@ -3,9 +3,9 @@ import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/infrastructure/repositories/api_auth_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/email_address.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../support/fake_http_adapter.dart';

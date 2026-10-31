@@ -1,12 +1,12 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product_variant.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_variant_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/logistics/value_objects/weight.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product_variant.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_variant_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/logistics/value_objects/weight.dart';
 
 class ApiProductRepository implements ProductRepository {
   final ApiClient _api;
@@ -17,7 +17,9 @@ class ApiProductRepository implements ProductRepository {
   Future<List<Product>> getAll({String? query}) async {
     final data = await _api.get(
       '/api/products',
-      query: query == null || query.trim().isEmpty ? null : {'query': query.trim()},
+      query: query == null || query.trim().isEmpty
+          ? null
+          : {'query': query.trim()},
     );
     if (data is! List) return const [];
     return data

@@ -1,12 +1,13 @@
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/commission.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/customer_assignment.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/repositories/sales_representative_repository.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/sales_representative.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/representative_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/percentage.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/customer_assignment.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/repositories/sales_representative_repository.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_representative.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/email_address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/percentage.dart';
 
-class FakeSalesRepresentativeRepository implements SalesRepresentativeRepository {
+class FakeSalesRepresentativeRepository
+    implements SalesRepresentativeRepository {
   final List<SalesRepresentative> _reps = [];
 
   FakeSalesRepresentativeRepository() {
@@ -56,15 +57,21 @@ class FakeSalesRepresentativeRepository implements SalesRepresentativeRepository
   @override
   Future<List<Commission>> getCommissions({String? representativeId}) async {
     return _reps
-        .where((r) => representativeId == null || r.id.value == representativeId)
+        .where(
+          (r) => representativeId == null || r.id.value == representativeId,
+        )
         .expand((r) => r.commissions)
         .toList();
   }
 
   @override
-  Future<List<CustomerAssignment>> getPortfolio({String? representativeId}) async {
+  Future<List<CustomerAssignment>> getPortfolio({
+    String? representativeId,
+  }) async {
     return _reps
-        .where((r) => representativeId == null || r.id.value == representativeId)
+        .where(
+          (r) => representativeId == null || r.id.value == representativeId,
+        )
         .expand((r) => r.assignments)
         .toList();
   }
