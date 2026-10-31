@@ -22,5 +22,17 @@ enum OrderStatus {
   rma,
 
   /// Pedido faturado (a comissão do representante nasce aqui).
-  invoiced,
+  invoiced;
+
+  /// Nome de exibição em português.
+  String get label => switch (this) {
+    OrderStatus.pendingFinanceApproval => 'Aguardando Aprovação Financeira',
+    OrderStatus.blockedByFinance => 'Bloqueado pelo Financeiro',
+    OrderStatus.pickingPacking => 'Em Separação e Embalagem',
+    OrderStatus.inTransit => 'Em Transporte',
+    OrderStatus.delivered => 'Entregue',
+    OrderStatus.cancelled => 'Cancelado',
+    OrderStatus.rma => 'Devolução / RMA',
+    OrderStatus.invoiced => 'Faturado',
+  };
 }

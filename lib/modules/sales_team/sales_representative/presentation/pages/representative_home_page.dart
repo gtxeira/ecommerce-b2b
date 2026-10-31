@@ -273,7 +273,7 @@ class RepresentativeHomePage extends StatelessWidget {
                                   'Orçamento #${quote.id.value.substring(0, 8)}',
                                 ),
                                 subtitle: Text(
-                                  'Total: ${quote.total.formatted} - ${quote.status.name}',
+                                  'Total: ${quote.total.formatted} - ${quote.status.label}',
                                 ),
                                 trailing: const Icon(
                                   Icons.chevron_right_rounded,

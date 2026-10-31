@@ -5,7 +5,6 @@ import 'package:ecommerce_b2b/modules/customer_portal/presentation/cubit/custome
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/enums/rma_status.dart';
 import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
-import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
@@ -341,9 +340,7 @@ class BuyerHomePage extends StatelessWidget {
                               );
                             }
                             final order = orders[index];
-                            final orderStatusLabel = _getOrderStatusLabel(
-                              order.status,
-                            );
+                            final orderStatusLabel = order.status.label;
                             final orderStatusColor = _getOrderStatusColor(
                               order.status,
                               colorScheme,
@@ -431,7 +428,7 @@ class BuyerHomePage extends StatelessWidget {
                             );
                           }
                           final rma = rmas[index];
-                          final rmaStatusLabel = _getRmaStatusLabel(rma.status);
+                          final rmaStatusLabel = rma.status.label;
                           final rmaStatusColor = _getRmaStatusColor(
                             rma.status,
                             colorScheme,
@@ -999,11 +996,11 @@ class BuyerHomePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Status: ${_getOrderStatusLabel(order.status)}',
+                'Status: ${order.status.label}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                'Limite Financeiro: ${_getCreditStatusLabel(order.creditStatus)}',
+                'Limite Financeiro: ${order.creditStatus.label}',
               ),
               const Divider(height: 24),
               const Text(
@@ -1106,7 +1103,7 @@ class BuyerHomePage extends StatelessWidget {
                 itemCount: orders.length,
                 itemBuilder: (listContext, index) {
                   final order = orders[index];
-                  final orderStatusLabel = _getOrderStatusLabel(order.status);
+                  final orderStatusLabel = order.status.label;
                   final orderStatusColor = _getOrderStatusColor(
                     order.status,
                     colorScheme,
@@ -1154,27 +1151,6 @@ class BuyerHomePage extends StatelessWidget {
 
   // --- Conversores de Status e Helpers ---
 
-  String _getOrderStatusLabel(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pendingFinanceApproval:
-        return 'Pendente Aprovação';
-      case OrderStatus.blockedByFinance:
-        return 'Bloqueado pelo Financeiro';
-      case OrderStatus.pickingPacking:
-        return 'Picking & Packing';
-      case OrderStatus.inTransit:
-        return 'Em Transporte';
-      case OrderStatus.delivered:
-        return 'Entregue';
-      case OrderStatus.invoiced:
-        return 'Faturado';
-      case OrderStatus.rma:
-        return 'Devolução / RMA';
-      case OrderStatus.cancelled:
-        return 'Cancelado';
-    }
-  }
-
   Color _getOrderStatusColor(OrderStatus status, ColorScheme colorScheme) {
     switch (status) {
       case OrderStatus.pendingFinanceApproval:
@@ -1214,36 +1190,6 @@ class BuyerHomePage extends StatelessWidget {
         return Icons.assignment_return_outlined;
       case OrderStatus.cancelled:
         return Icons.cancel_outlined;
-    }
-  }
-
-  String _getCreditStatusLabel(CreditStatus status) {
-    switch (status) {
-      case CreditStatus.approved:
-        return 'Aprovado';
-      case CreditStatus.blocked:
-        return 'Bloqueado';
-      case CreditStatus.pending:
-        return 'Pendente';
-      default:
-        return 'Desconhecido';
-    }
-  }
-
-  String _getRmaStatusLabel(RmaStatus status) {
-    switch (status) {
-      case RmaStatus.pending:
-        return 'Solicitado';
-      case RmaStatus.authorized:
-        return 'Autorizado';
-      case RmaStatus.received:
-        return 'Recebido';
-      case RmaStatus.inspected:
-        return 'Em Inspeção';
-      case RmaStatus.completed:
-        return 'Concluído';
-      case RmaStatus.rejected:
-        return 'Rejeitado';
     }
   }
 

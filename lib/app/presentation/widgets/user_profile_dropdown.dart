@@ -19,7 +19,7 @@ class UserProfileDropdown extends StatelessWidget {
     String userRole = 'Convidado';
 
     if (authState is AuthAuthenticated) {
-      userRole = authState.session.role.name;
+      userRole = authState.session.role.label;
       userName = switch (authState.session.role) {
         UserRole.buyer => 'Comprador',
         UserRole.representative => 'Representante',

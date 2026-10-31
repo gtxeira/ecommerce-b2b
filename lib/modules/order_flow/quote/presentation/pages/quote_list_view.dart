@@ -78,7 +78,7 @@ class _QuoteListViewState extends State<QuoteListView> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      'Status: ${quote.status.name} • Itens: ${quote.items.length}',
+                      'Status: ${quote.status.label} • Itens: ${quote.items.length}',
                     ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () {

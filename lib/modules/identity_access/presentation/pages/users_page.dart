@@ -28,12 +28,38 @@ class _UsersView extends StatefulWidget {
 
 class _UsersViewState extends State<_UsersView> {
   final _searchController = TextEditingController();
+  final Map<String, String> _companyNames = {};
   UserRole? _roleFilter;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCompanyNames();
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Carrega o nome fantasia das empresas para não exibir o id na listagem.
+  Future<void> _loadCompanyNames() async {
+    try {
+      final companies = await getIt<CompanyRepository>().findAll();
+      if (!mounted) return;
+      setState(() {
+        _companyNames
+          ..clear()
+          ..addEntries(
+            companies.map(
+              (company) => MapEntry(company.id.value, company.tradeName),
+            ),
+          );
+      });
+    } catch (_) {
+      // Mantém o fallback para o id caso não seja possível carregar as empresas.
+    }
   }
 
   void _reload() {
@@ -83,7 +109,7 @@ class _UsersViewState extends State<_UsersView> {
                     ...UserRole.values.map(
                       (role) => DropdownMenuItem(
                         value: role,
-                        child: Text(role.apiName),
+                        child: Text(role.label),
                       ),
                     ),
                   ],
@@ -134,6 +160,9 @@ class _UsersViewState extends State<_UsersView> {
                     itemCount: users.length,
                     itemBuilder: (context, index) {
                       final user = users[index];
+                      final companyName = user.companyId == null
+                          ? null
+                          : _companyNames[user.companyId!] ?? user.companyId;
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
@@ -146,8 +175,8 @@ class _UsersViewState extends State<_UsersView> {
                           ),
                           title: Text(user.fullName),
                           subtitle: Text(
-                            '${user.email} • ${user.role.apiName}'
-                            '${user.companyId == null ? '' : ' • ${user.companyId}'}',
+                            '${user.email} • ${user.role.label}'
+                            '${companyName == null ? '' : ' • $companyName'}',
                           ),
                           trailing: PopupMenuButton<String>(
                             onSelected: (action) {
@@ -233,7 +262,7 @@ class _UsersViewState extends State<_UsersView> {
                       .map(
                         (item) => DropdownMenuItem(
                           value: item,
-                          child: Text(item.apiName),
+                          child: Text(item.label),
                         ),
                       )
                       .toList(),

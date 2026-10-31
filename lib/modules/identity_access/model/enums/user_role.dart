@@ -24,6 +24,15 @@ enum UserRole {
     return null;
   }
 
+  /// Nome de exibição em português (menos técnico para a interface).
+  String get label => switch (this) {
+    UserRole.buyer => 'Comprador',
+    UserRole.representative => 'Representante',
+    UserRole.finance => 'Financeiro',
+    UserRole.supervisor => 'Supervisor',
+    UserRole.admin => 'Administrador',
+  };
+
   /// Nome esperado pela API.
   String get apiName => switch (this) {
     UserRole.buyer => 'Buyer',

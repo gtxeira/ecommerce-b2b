@@ -74,7 +74,7 @@ class PriceTableListView extends StatelessWidget {
                               ),
                             ),
                             subtitle: Text(
-                              'Escopo: ${table.scopeType.name.toUpperCase()}',
+                              'Escopo: ${table.scopeType.label}',
                             ),
                             children: [
                               Padding(
@@ -196,7 +196,7 @@ class PriceTableListView extends StatelessWidget {
                           .map(
                             (e) => DropdownMenuItem(
                               value: e,
-                              child: Text(e.name.toUpperCase()),
+                              child: Text(e.label),
                             ),
                           )
                           .toList(),

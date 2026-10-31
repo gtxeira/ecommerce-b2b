@@ -13,5 +13,14 @@ enum QuoteStatus {
   convertedToOrder,
 
   /// Orçamento cancelado.
-  cancelled,
+  cancelled;
+
+  /// Nome de exibição em português.
+  String get label => switch (this) {
+    QuoteStatus.draft => 'Rascunho',
+    QuoteStatus.sent => 'Enviado',
+    QuoteStatus.expired => 'Expirado',
+    QuoteStatus.convertedToOrder => 'Convertido em Pedido',
+    QuoteStatus.cancelled => 'Cancelado',
+  };
 }
