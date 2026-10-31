@@ -1,10 +1,9 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/quantity.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
-class ReturnRequestItem extends ValueObject {
+class ReturnRequestItem {
   final ProductId productId;
   final Quantity quantity;
   final String problemDescription;

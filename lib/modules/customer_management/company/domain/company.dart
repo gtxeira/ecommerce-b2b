@@ -1,7 +1,7 @@
 // ignore_for_file: prefer_initializing_formals
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/cnpj.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/inscricao_estadual.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_aggregate_root.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/base/base_entity.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address.dart';
@@ -12,7 +12,7 @@ import 'package:ecommerce_b2b/modules/customer_management/company/domain/authori
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/customer_credit_account.dart';
 
 /// Raiz do Agregado que representa uma Empresa (Cliente B2B).
-class Company extends AggregateRoot<CompanyId> {
+class Company extends Entity<CompanyId> {
   /// Razão Social.
   final String legalName;
   /// Nome Fantasia.

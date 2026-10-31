@@ -1,4 +1,4 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_aggregate_root.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/base/base_entity.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
 import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
@@ -9,7 +9,7 @@ import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/finance_revi
 // ignore_for_file: prefer_initializing_formals
 
 /// Raiz do Agregado que representa um Pedido de Venda.
-class SalesOrder extends AggregateRoot<OrderId> {
+class SalesOrder extends Entity<OrderId> {
   final String? companyId;
   OrderStatus _status;
   CreditStatus _creditStatus;

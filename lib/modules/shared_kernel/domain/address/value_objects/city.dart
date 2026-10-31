@@ -1,11 +1,10 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/city_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
 import 'package:flutter/foundation.dart';
 
 /// Objeto de Valor que representa uma cidade válida.
 @immutable
-class City extends ValueObject {
+class City {
   final String value;
 
   const City._(this.value);

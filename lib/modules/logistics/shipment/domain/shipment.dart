@@ -1,4 +1,4 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_aggregate_root.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/base/base_entity.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/shipment_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/logistics/value_objects/tracking_code.dart';
 import 'package:ecommerce_b2b/modules/logistics/shipment/domain/enums/shipment_status.dart';
@@ -6,7 +6,7 @@ import 'package:ecommerce_b2b/modules/logistics/shipment/domain/shipping_label.d
 import 'package:ecommerce_b2b/modules/logistics/shipment/domain/tracking_event.dart';
 
 /// Raiz do Agregado que representa uma Remessa/Envio.
-class Shipment extends AggregateRoot<ShipmentId> {
+class Shipment extends Entity<ShipmentId> {
   final String orderId;
   /// Código de rastreamento da transportadora.
   final TrackingCode trackingCode;

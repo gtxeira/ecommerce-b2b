@@ -1,9 +1,8 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/logistics/shipment/domain/enums/tracking_status.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
-class TrackingEvent extends ValueObject {
+class TrackingEvent {
   final TrackingStatus status;
   final DateTime occurredAt;
   final String? location;

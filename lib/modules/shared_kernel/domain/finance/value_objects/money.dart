@@ -1,4 +1,3 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/enums/currency.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/errors/money_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
@@ -9,7 +8,7 @@ import 'package:flutter/foundation.dart';
 /// Objeto de Valor que representa quantias monetárias.
 /// Utiliza inteiros (centavos) internamente para evitar erros de precisão decimal.
 @immutable
-class Money extends ValueObject {
+class Money {
   /// Valor total em centavos.
   final int amountInCents;
   /// Código da moeda (ex: BRL, USD).

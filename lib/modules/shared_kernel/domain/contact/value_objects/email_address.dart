@@ -1,11 +1,10 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/errors/email_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
 import 'package:flutter/foundation.dart';
 
 /// Objeto de Valor que representa um endereço de e-mail válido.
 @immutable
-class EmailAddress extends ValueObject {
+class EmailAddress {
   final String value;
 
   const EmailAddress._(this.value);

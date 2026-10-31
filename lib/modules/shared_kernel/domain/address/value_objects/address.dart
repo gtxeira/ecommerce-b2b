@@ -1,5 +1,4 @@
 import 'package:ecommerce_b2b/modules/shared_kernel/base/base_domain_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address_complement.dart';
@@ -12,7 +11,7 @@ import 'package:flutter/foundation.dart';
 
 /// Objeto de Valor que representa um endereço válido.
 @immutable
-class Address extends ValueObject {
+class Address {
   final Street street;
   final AddressNumber number;
   final AddressComplement? complement;

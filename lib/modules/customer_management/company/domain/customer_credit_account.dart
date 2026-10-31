@@ -1,8 +1,7 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
 
 /// Objeto de Valor que representa a conta de crédito de um cliente.
-class CustomerCreditAccount extends ValueObject {
+class CustomerCreditAccount {
   /// Limite total pré-aprovado.
   final Money preApprovedLimit;
   /// Saldo devedor atual (faturas já emitidas e não pagas).

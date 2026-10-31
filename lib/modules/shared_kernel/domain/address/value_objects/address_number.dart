@@ -1,10 +1,9 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/address_number_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
-class AddressNumber extends ValueObject {
+class AddressNumber {
   final String value;
 
   const AddressNumber._(this.value);

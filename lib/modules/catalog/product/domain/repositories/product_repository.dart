@@ -1,12 +1,10 @@
 import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_repository.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_variant_id.dart';
 
 /// Contrato do repositório de produtos.
-abstract class ProductRepository implements BaseRepository<Product> {
+abstract class ProductRepository {
   /// Salva um produto.
-  @override
   Future<void> save(Product product);
 
   /// Exclui um produto.

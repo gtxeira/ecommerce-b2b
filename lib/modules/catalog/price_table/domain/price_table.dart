@@ -1,9 +1,9 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_aggregate_root.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/base/base_entity.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/price_table_id.dart';
 import 'package:ecommerce_b2b/modules/catalog/price_table/domain/enums/price_scope_type.dart';
 import 'package:ecommerce_b2b/modules/catalog/price_table/domain/price_rule.dart';
 
-class PriceTable extends AggregateRoot<PriceTableId> {
+class PriceTable extends Entity<PriceTableId> {
   final String name;
   final PriceScopeType scopeType;
   final List<PriceRule> _rules;

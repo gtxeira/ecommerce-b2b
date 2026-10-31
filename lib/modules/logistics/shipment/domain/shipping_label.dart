@@ -1,8 +1,7 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
-class ShippingLabel extends ValueObject {
+class ShippingLabel {
   final String labelNumber;
 
   const ShippingLabel(this.labelNumber);

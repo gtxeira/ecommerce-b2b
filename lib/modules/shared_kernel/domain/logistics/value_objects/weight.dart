@@ -1,10 +1,9 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/logistics/errors/weight_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
-class Weight extends ValueObject {
+class Weight {
   final double value;
 
   const Weight._(this.value);

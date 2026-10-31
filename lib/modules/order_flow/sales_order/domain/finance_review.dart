@@ -1,9 +1,8 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/enums/finance_decision.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
-class FinanceReview extends ValueObject {
+class FinanceReview {
   final FinanceDecision decision;
   final String reviewerId;
   final DateTime reviewedAt;

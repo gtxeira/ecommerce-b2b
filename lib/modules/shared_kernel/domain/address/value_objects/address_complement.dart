@@ -1,10 +1,9 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/address_complement_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
-class AddressComplement extends ValueObject {
+class AddressComplement {
   final String value;
 
   const AddressComplement._(this.value);

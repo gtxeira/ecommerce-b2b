@@ -1,11 +1,11 @@
 // ignore_for_file: prefer_initializing_formals
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_aggregate_root.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/base/base_entity.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/quote_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/domain/enums/quote_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/domain/quote_item.dart';
 
-class Quote extends AggregateRoot<QuoteId> {
+class Quote extends Entity<QuoteId> {
   final String? companyId;
   final String? representativeId;
   QuoteStatus _status;

@@ -1,4 +1,3 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/errors/phone_number_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
 import 'package:flutter/foundation.dart';
@@ -7,7 +6,7 @@ import 'package:flutter/foundation.dart';
 /// O formato E.164 garante que o número inclua o código do país, DDD e número, 
 /// começando com o caractere '+' seguido apenas por dígitos (máximo 15 dígitos).
 @immutable
-class PhoneNumber extends ValueObject {
+class PhoneNumber {
   /// O número de telefone no formato E.164 (ex: +5511999998888).
   final String value;
 

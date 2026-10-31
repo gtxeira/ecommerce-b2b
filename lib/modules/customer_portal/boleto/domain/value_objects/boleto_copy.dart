@@ -1,8 +1,7 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_value_object.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
-class BoletoCopy extends ValueObject {
+class BoletoCopy {
   final String barcode;
   final String url;
 

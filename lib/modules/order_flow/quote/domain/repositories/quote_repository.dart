@@ -1,9 +1,7 @@
 import 'package:ecommerce_b2b/modules/order_flow/quote/domain/quote.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_repository.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/quote_id.dart';
 
-abstract class QuoteRepository implements BaseRepository<Quote> {
-  @override
+abstract class QuoteRepository {
   Future<void> save(Quote quote);
 
   Future<Quote?> getById(QuoteId id);
