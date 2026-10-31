@@ -6,6 +6,12 @@ abstract class AppTheme {
   // Cor base do aplicativo (Pastel blue)
   static const Color _seedColor = Color(0xFF8AB4F8);
 
+  /// Largura padrão dos modais (cards flutuantes).
+  ///
+  /// 500 é a largura do conteúdo do modal "Adicionar Comprador" da tela de
+  /// empresas, mais 48 de padding horizontal padrão do AlertDialog.
+  static const double _dialogWidth = 548;
+
   /// Definição do Light Theme
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(
@@ -28,6 +34,12 @@ abstract class AppTheme {
         color: colorScheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         margin: const EdgeInsets.all(8),
+      ),
+      dialogTheme: const DialogThemeData(
+        constraints: BoxConstraints(
+          minWidth: _dialogWidth,
+          maxWidth: _dialogWidth,
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -88,6 +100,12 @@ abstract class AppTheme {
         color: colorScheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         margin: const EdgeInsets.all(8),
+      ),
+      dialogTheme: const DialogThemeData(
+        constraints: BoxConstraints(
+          minWidth: _dialogWidth,
+          maxWidth: _dialogWidth,
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

@@ -394,7 +394,7 @@ class ProductListView extends StatelessWidget {
             return AlertDialog(
               title: const Text('Cadastrar Novo Produto'),
               content: SizedBox(
-                width: 600,
+                width: 500,
                 child: SingleChildScrollView(
                   child: Form(
                     key: formKey,

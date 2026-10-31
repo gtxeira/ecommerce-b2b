@@ -325,7 +325,7 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
             return AlertDialog(
               title: const Text('Adicionar Item'),
               content: SizedBox(
-                width: 900,
+                width: 500,
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

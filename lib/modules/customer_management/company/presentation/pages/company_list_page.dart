@@ -428,7 +428,7 @@ class CompanyListPage extends StatelessWidget {
             return AlertDialog(
               title: const Text('Cadastrar Nova Empresa'),
               content: SizedBox(
-                width: 900,
+                width: 500,
                 child: SingleChildScrollView(
                   child: Form(
                     key: formKey,
