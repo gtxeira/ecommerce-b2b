@@ -6,6 +6,7 @@ import 'package:ecommerce_b2b/modules/inventory/warehouse/model/stock_item.dart'
 class Warehouse extends Entity<WarehouseId> {
   /// Código identificador interno do armazém.
   final String code;
+
   /// Nome do armazém.
   final String name;
   final List<StockItem> _stockItems;
@@ -16,8 +17,8 @@ class Warehouse extends Entity<WarehouseId> {
     required this.code,
     required this.name,
     List<StockItem>? stockItems,
-  })  : _stockItems = stockItems ?? [],
-        super(id);
+  }) : _stockItems = stockItems ?? [],
+       super(id);
 
   /// Lista de itens em estoque neste armazém.
   List<StockItem> get stockItems => List.unmodifiable(_stockItems);

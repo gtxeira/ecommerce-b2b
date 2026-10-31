@@ -5,10 +5,7 @@ class BoletoCopy {
   final String barcode;
   final String url;
 
-  const BoletoCopy({
-    required this.barcode,
-    required this.url,
-  });
+  const BoletoCopy({required this.barcode, required this.url});
 
   @override
   bool operator ==(Object other) =>

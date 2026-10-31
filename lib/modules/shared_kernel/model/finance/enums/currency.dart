@@ -5,8 +5,10 @@ enum Currency {
 
   /// Código da moeda (ex: BRL, USD).
   final String code;
+
   /// Símbolo da moeda (ex: R$, $).
   final String symbol;
+
   /// País da moeda (ex: Brasil, Estados Unidos).
   final String country;
 

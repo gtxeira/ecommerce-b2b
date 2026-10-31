@@ -24,5 +24,6 @@ class ReturnRequestItem {
           problemDescription == other.problemDescription;
 
   @override
-  int get hashCode => productId.hashCode ^ quantity.hashCode ^ problemDescription.hashCode;
+  int get hashCode =>
+      productId.hashCode ^ quantity.hashCode ^ problemDescription.hashCode;
 }

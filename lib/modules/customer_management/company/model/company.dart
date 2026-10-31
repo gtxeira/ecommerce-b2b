@@ -15,27 +15,37 @@ import 'package:ecommerce_b2b/modules/customer_management/company/model/customer
 class Company extends Entity<CompanyId> {
   /// Razão Social.
   final String legalName;
+
   /// Nome Fantasia.
   final String tradeName;
+
   /// CNPJ da empresa.
   final Cnpj cnpj;
+
   /// Inscrição Estadual.
   final InscricaoEstadual inscricaoEstadual;
+
   /// E-mail principal de contato.
   final EmailAddress email;
+
   /// Telefone principal de contato.
   final PhoneNumber phone;
+
   /// Endereço de faturamento.
   final Address billingAddress;
+
   /// Endereço de entrega.
   final Address shippingAddress;
+
   /// Código do Estado (UF).
   final State state;
+
   /// Limite de crédito total concedido.
   final Money creditLimit;
+
   /// ID do representante comercial responsável (opcional).
   final String? representativeId;
-  
+
   final List<AuthorizedBuyer> _authorizedBuyers;
   CustomerCreditAccount _creditAccount;
 
@@ -60,8 +70,9 @@ class Company extends Entity<CompanyId> {
        super(id);
 
   /// Lista de compradores autorizados para esta empresa.
-  List<AuthorizedBuyer> get authorizedBuyers => List.unmodifiable(_authorizedBuyers);
-  
+  List<AuthorizedBuyer> get authorizedBuyers =>
+      List.unmodifiable(_authorizedBuyers);
+
   /// Conta de crédito associada à empresa.
   CustomerCreditAccount get creditAccount => _creditAccount;
 

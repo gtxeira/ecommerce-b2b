@@ -6,7 +6,9 @@ sealed class Result<S, F> {
   S getOrThrow() {
     return switch (this) {
       Success(value: var v) => v,
-      Failure(error: var e) => throw Exception('Called getOrThrow on Failure: $e'),
+      Failure(error: var e) => throw Exception(
+        'Called getOrThrow on Failure: $e',
+      ),
     };
   }
 
@@ -19,7 +21,9 @@ sealed class Result<S, F> {
 
   F getFailureOrThrow() {
     return switch (this) {
-      Success(value: var v) => throw Exception('Called getFailureOrThrow on Success: $v'),
+      Success(value: var v) => throw Exception(
+        'Called getFailureOrThrow on Success: $v',
+      ),
       Failure(error: var e) => e,
     };
   }

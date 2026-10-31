@@ -12,7 +12,7 @@ void main() {
       const id = ShipmentId('s1');
       final trackingCode = TrackingCode.create('ABC123XYZ').getOrThrow();
       final label = ShippingLabel('LABEL123');
-      
+
       final shipment = Shipment(
         id: id,
         orderId: 'order-1',

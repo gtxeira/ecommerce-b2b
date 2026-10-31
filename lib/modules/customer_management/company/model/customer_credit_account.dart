@@ -4,8 +4,10 @@ import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/
 class CustomerCreditAccount {
   /// Limite total pré-aprovado.
   final Money preApprovedLimit;
+
   /// Saldo devedor atual (faturas já emitidas e não pagas).
   final Money openBalance;
+
   /// Valor total de pedidos em processamento (faturamento pendente).
   final Money pendingOrdersBalance;
 

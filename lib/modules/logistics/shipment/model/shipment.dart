@@ -8,9 +8,11 @@ import 'package:ecommerce_b2b/modules/logistics/shipment/model/tracking_event.da
 /// Raiz do Agregado que representa uma Remessa/Envio.
 class Shipment extends Entity<ShipmentId> {
   final String orderId;
+
   /// Código de rastreamento da transportadora.
   final TrackingCode trackingCode;
   ShipmentStatus _status;
+
   /// Etiqueta de envio associada.
   final ShippingLabel shippingLabel;
   final List<TrackingEvent> _trackingEvents;
@@ -23,12 +25,12 @@ class Shipment extends Entity<ShipmentId> {
     required this._status,
     required this.shippingLabel,
     List<TrackingEvent>? trackingEvents,
-  })  : _trackingEvents = trackingEvents ?? [],
-        super(id);
+  }) : _trackingEvents = trackingEvents ?? [],
+       super(id);
 
   /// Status atual do envio.
   ShipmentStatus get status => _status;
-  
+
   /// Histórico de eventos de rastreamento.
   List<TrackingEvent> get trackingEvents => List.unmodifiable(_trackingEvents);
 

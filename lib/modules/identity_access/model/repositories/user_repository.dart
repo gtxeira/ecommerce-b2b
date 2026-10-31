@@ -26,8 +26,5 @@ abstract class UserRepository {
     required bool active,
   });
 
-  Future<void> resetPassword({
-    required String id,
-    required String newPassword,
-  });
+  Future<void> resetPassword({required String id, required String newPassword});
 }

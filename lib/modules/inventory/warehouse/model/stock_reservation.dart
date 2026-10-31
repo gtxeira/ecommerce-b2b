@@ -7,10 +7,7 @@ class StockReservation {
   final OrderId orderId;
   final Quantity quantity;
 
-  const StockReservation({
-    required this.orderId,
-    required this.quantity,
-  });
+  const StockReservation({required this.orderId, required this.quantity});
 
   @override
   bool operator ==(Object other) =>

@@ -8,12 +8,16 @@ import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/
 class Product extends Entity<ProductId> {
   /// Unidade de Manutenção de Estoque (SKU) principal.
   final String sku;
+
   /// Nome do produto.
   final String name;
+
   /// Descrição detalhada do produto.
   final String description;
+
   /// Preço base do produto.
   final Money basePrice;
+
   /// Indica se o produto está ativo para venda.
   final bool active;
   final List<ProductVariant> _variants;
@@ -27,8 +31,8 @@ class Product extends Entity<ProductId> {
     required this.basePrice,
     required this.active,
     List<ProductVariant>? variants,
-  })  : _variants = variants ?? [],
-        super(id);
+  }) : _variants = variants ?? [],
+       super(id);
 
   /// Lista de variantes (cores, tamanhos, voltagens) deste produto.
   List<ProductVariant> get variants => List.unmodifiable(_variants);

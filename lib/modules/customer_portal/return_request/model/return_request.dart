@@ -15,8 +15,8 @@ class ReturnRequest extends Entity<RmaId> {
     required this._status,
     required this.reason,
     List<ReturnRequestItem>? items,
-  })  : _items = items ?? [],
-        super(id);
+  }) : _items = items ?? [],
+       super(id);
 
   RmaStatus get status => _status;
   List<ReturnRequestItem> get items => List.unmodifiable(_items);

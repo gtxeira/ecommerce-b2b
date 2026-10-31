@@ -7,18 +7,17 @@ class UserSession {
   final UserRole role;
   final CompanyId? companyId; // Relevante apenas para UserRole.buyer
 
-  UserSession({
-    required this.userId,
-    required this.role,
-    this.companyId,
-  }) {
+  UserSession({required this.userId, required this.role, this.companyId}) {
     if (role == UserRole.buyer && companyId == null) {
-      throw ArgumentError('O ID da empresa é obrigatório para o perfil de comprador.');
+      throw ArgumentError(
+        'O ID da empresa é obrigatório para o perfil de comprador.',
+      );
     }
   }
 
   bool get isBuyer => role == UserRole.buyer;
-  bool get isRepresentative => role == UserRole.representative || role == UserRole.supervisor;
+  bool get isRepresentative =>
+      role == UserRole.representative || role == UserRole.supervisor;
   bool get isFinance => role == UserRole.finance;
   bool get isSupervisor => role == UserRole.supervisor;
 }

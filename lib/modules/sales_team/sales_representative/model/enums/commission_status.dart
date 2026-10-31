@@ -1,6 +1,1 @@
-enum CommissionStatus {
-  pending,
-  approved,
-  paid,
-  cancelled;
-}
+enum CommissionStatus { pending, approved, paid, cancelled }

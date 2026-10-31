@@ -25,10 +25,10 @@ class SalesRepresentative extends Entity<RepresentativeId> {
     List<Commission>? commissions,
     this._supervisorLink,
     List<SalesHierarchyLink>? subordinateLinks,
-  })  : _assignments = assignments ?? [],
-        _commissions = commissions ?? [],
-        _subordinateLinks = subordinateLinks ?? [],
-        super(id);
+  }) : _assignments = assignments ?? [],
+       _commissions = commissions ?? [],
+       _subordinateLinks = subordinateLinks ?? [],
+       super(id);
 
   List<CustomerAssignment> get assignments => List.unmodifiable(_assignments);
   List<Commission> get commissions => List.unmodifiable(_commissions);
@@ -54,9 +54,8 @@ class SalesRepresentative extends Entity<RepresentativeId> {
   }
 
   void addSubordinate(RepresentativeId subordinateId) {
-    _subordinateLinks.add(SalesHierarchyLink(
-      supervisorId: id,
-      subordinateId: subordinateId,
-    ));
+    _subordinateLinks.add(
+      SalesHierarchyLink(supervisorId: id, subordinateId: subordinateId),
+    );
   }
 }

@@ -12,10 +12,10 @@ class StockItem {
     required this.productId,
     required this._physicalQuantity,
     List<StockReservation>? reservations,
-  })  : _reservations = reservations ?? [];
+  }) : _reservations = reservations ?? [];
 
   Quantity get physicalQuantity => _physicalQuantity;
-  
+
   Quantity get reservedQuantity {
     int total = 0;
     for (var res in _reservations) {

@@ -8,7 +8,7 @@ abstract class SalesOrderRepository {
   Future<SalesOrder?> getById(OrderId id);
 
   Future<List<SalesOrder>> getAll();
-  
+
   Future<List<SalesOrder>> findByCompanyId(CompanyId companyId);
 
   Future<List<SalesOrder>> findByStatus(String status);

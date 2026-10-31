@@ -9,6 +9,7 @@ class Commission {
   final Percentage rate;
   final Money amount;
   final CommissionStatus status;
+
   /// Pedido que originou a comissão (nulo nas comissões históricas do seed).
   final String? orderId;
 

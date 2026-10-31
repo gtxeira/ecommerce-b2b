@@ -2,12 +2,16 @@
 enum UserRole {
   /// Comprador
   buyer,
+
   /// Representante
   representative,
+
   /// Financeiro
   finance,
+
   /// Supervisor
   supervisor,
+
   /// Administrador
   admin;
 
@@ -22,10 +26,10 @@ enum UserRole {
 
   /// Nome esperado pela API.
   String get apiName => switch (this) {
-        UserRole.buyer => 'Buyer',
-        UserRole.representative => 'Representative',
-        UserRole.finance => 'Finance',
-        UserRole.supervisor => 'Supervisor',
-        UserRole.admin => 'Admin',
-      };
+    UserRole.buyer => 'Buyer',
+    UserRole.representative => 'Representative',
+    UserRole.finance => 'Finance',
+    UserRole.supervisor => 'Supervisor',
+    UserRole.admin => 'Admin',
+  };
 }

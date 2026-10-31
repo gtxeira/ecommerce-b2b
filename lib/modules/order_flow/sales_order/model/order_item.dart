@@ -15,7 +15,10 @@ class OrderItem {
     required this.unitPriceSnapshot,
   });
 
-  Money get subtotal => Money.create(unitPriceSnapshot.amount * quantity.value, currency: unitPriceSnapshot.currency).getOrThrow();
+  Money get subtotal => Money.create(
+    unitPriceSnapshot.amount * quantity.value,
+    currency: unitPriceSnapshot.currency,
+  ).getOrThrow();
 
   @override
   bool operator ==(Object other) =>
@@ -27,5 +30,6 @@ class OrderItem {
           unitPriceSnapshot == other.unitPriceSnapshot;
 
   @override
-  int get hashCode => productId.hashCode ^ quantity.hashCode ^ unitPriceSnapshot.hashCode;
+  int get hashCode =>
+      productId.hashCode ^ quantity.hashCode ^ unitPriceSnapshot.hashCode;
 }

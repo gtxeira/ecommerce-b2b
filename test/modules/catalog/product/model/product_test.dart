@@ -42,11 +42,18 @@ void main() {
         active: true,
       );
 
-      expect(() => product.variants.add(ProductVariant(
-        id: const ProductVariantId('v1'),
-        variantSku: 'V1',
-        color: '', size: '', voltage: '',
-      )), throwsUnsupportedError);
+      expect(
+        () => product.variants.add(
+          ProductVariant(
+            id: const ProductVariantId('v1'),
+            variantSku: 'V1',
+            color: '',
+            size: '',
+            voltage: '',
+          ),
+        ),
+        throwsUnsupportedError,
+      );
     });
 
     test('should remove variant by ID correctly', () {
@@ -61,12 +68,16 @@ void main() {
           ProductVariant(
             id: const ProductVariantId('v1'),
             variantSku: 'SKU-001-RED',
-            color: 'Red', size: 'G', voltage: 'N/A',
+            color: 'Red',
+            size: 'G',
+            voltage: 'N/A',
           ),
           ProductVariant(
             id: const ProductVariantId('v2'),
             variantSku: 'SKU-001-BLUE',
-            color: 'Blue', size: 'M', voltage: 'N/A',
+            color: 'Blue',
+            size: 'M',
+            voltage: 'N/A',
           ),
         ],
       );
@@ -88,7 +99,9 @@ void main() {
         active: true,
       );
 
-      final removed = product.removeVariant(const ProductVariantId('non-existent'));
+      final removed = product.removeVariant(
+        const ProductVariantId('non-existent'),
+      );
 
       expect(removed, isFalse);
       expect(product.variants, isEmpty);

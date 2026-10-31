@@ -19,25 +19,29 @@ void main() {
     });
 
     // Deve lançar erro ao criar sessão de comprador sem o companyId
-    test('should throw error when creating buyer session without companyId', () {
-      expect(
-        () => UserSession(
-          userId: const UserId('user-1'),
-          role: UserRole.buyer,
-        ),
-        throwsArgumentError,
-      );
-    });
+    test(
+      'should throw error when creating buyer session without companyId',
+      () {
+        expect(
+          () =>
+              UserSession(userId: const UserId('user-1'), role: UserRole.buyer),
+          throwsArgumentError,
+        );
+      },
+    );
 
     // Deve criar uma sessão válida para o representante sem o ID da empresa
-    test('should create valid session for representative without companyId', () {
-      final session = UserSession(
-        userId: const UserId('user-1'),
-        role: UserRole.representative,
-      );
+    test(
+      'should create valid session for representative without companyId',
+      () {
+        final session = UserSession(
+          userId: const UserId('user-1'),
+          role: UserRole.representative,
+        );
 
-      expect(session.isRepresentative, isTrue);
-      expect(session.companyId, isNull);
-    });
+        expect(session.isRepresentative, isTrue);
+        expect(session.companyId, isNull);
+      },
+    );
   });
 }

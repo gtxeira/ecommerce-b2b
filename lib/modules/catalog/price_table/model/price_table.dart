@@ -13,8 +13,8 @@ class PriceTable extends Entity<PriceTableId> {
     required this.name,
     required this.scopeType,
     List<PriceRule>? rules,
-  })  : _rules = rules ?? [],
-        super(id);
+  }) : _rules = rules ?? [],
+       super(id);
 
   List<PriceRule> get rules => List.unmodifiable(_rules);
 
