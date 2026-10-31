@@ -137,6 +137,7 @@ class CompanyManagementCubit extends Cubit<CompanyManagementState> {
     required String email,
     required String phone,
     required String positionTitle,
+    required String password,
   }) async {
     final originalState = state;
     emit(CompanyManagementLoading());
@@ -148,6 +149,7 @@ class CompanyManagementCubit extends Cubit<CompanyManagementState> {
       email: email,
       phone: phone,
       positionTitle: positionTitle,
+      password: password,
     );
 
     result.fold(

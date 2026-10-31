@@ -64,22 +64,17 @@ class Company {
     +Money creditLimit
 }
 
-class AuthorizedBuyer {
-    +BuyerId id
-    +String fullName
-    +EmailAddress email
-    +PhoneNumber phone
-    +String positionTitle
-    +Boolean active
-}
-
 class CustomerCreditAccount {
     +Money preApprovedLimit
     +Money openBalance
     +Money availableLimit()
 }
 
-Company "1" *-- "*" AuthorizedBuyer
+note right of Company
+  Compradores autorizados são usuários
+  (IdentityAccess) com role Buyer e companyId.
+end note
+
 Company "1" *-- "1" CustomerCreditAccount
 
 @enduml
@@ -312,7 +307,6 @@ Eu definiria os Aggregates assim:
 
 ```text
 Company
-├── AuthorizedBuyer
 └── CustomerCreditAccount
 
 SalesRepresentative

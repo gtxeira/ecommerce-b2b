@@ -6,6 +6,8 @@ class UserAccount {
   final String email;
   final UserRole role;
   final String? companyId;
+  final String? phone;
+  final String? positionTitle;
   final bool active;
 
   const UserAccount({
@@ -14,6 +16,8 @@ class UserAccount {
     required this.email,
     required this.role,
     required this.companyId,
+    this.phone,
+    this.positionTitle,
     required this.active,
   });
 }

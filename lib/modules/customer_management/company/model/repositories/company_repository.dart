@@ -11,12 +11,14 @@ abstract class CompanyRepository {
   Future<List<Company>> findByRepresentativeId(String representativeId);
 
   /// Adiciona um comprador autorizado à empresa (POST /api/companies/{id}/buyers)
-  /// e devolve a representação criada pela API.
+  /// e devolve a representação criada pela API. O comprador também é um usuário
+  /// com login (papel Buyer), por isso a senha inicial é obrigatória.
   Future<AuthorizedBuyer> addAuthorizedBuyer({
     required CompanyId companyId,
     required String fullName,
     required String email,
     required String phone,
     required String positionTitle,
+    required String password,
   });
 }

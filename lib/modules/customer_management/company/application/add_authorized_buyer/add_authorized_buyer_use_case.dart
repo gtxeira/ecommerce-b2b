@@ -20,6 +20,7 @@ class AddAuthorizedBuyerUseCase {
     required String email,
     required String phone,
     required String positionTitle,
+    required String password,
   }) async {
     final company = await _companyRepository.findById(companyId);
     if (company == null) {
@@ -45,6 +46,7 @@ class AddAuthorizedBuyerUseCase {
         email: emailResult.getOrThrow().value,
         phone: phoneResult.getOrThrow().value,
         positionTitle: positionTitle,
+        password: password,
       );
 
       company.addAuthorizedBuyer(buyer);

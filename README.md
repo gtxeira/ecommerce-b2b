@@ -66,6 +66,7 @@ flutter run --dart-define=API_BASE_URL=http://192.168.0.10:5143
 | E-mail              | Perfil (Role)                            |
 |---------------------|------------------------------------------|
 | buyer@test.com      | Buyer (Comprador)                        |
+| pepper@stark.com    | Buyer (Comprador)                        |
 | rep@test.com        | Representative (Representante Comercial) |
 | supervisor@test.com | Supervisor                               |
 | finance@test.com    | Finance (Financeiro)                     |

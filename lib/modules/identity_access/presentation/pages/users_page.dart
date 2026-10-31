@@ -218,8 +218,11 @@ class _UsersViewState extends State<_UsersView> {
     final fullNameCtrl = TextEditingController(text: user?.fullName ?? '');
     final emailCtrl = TextEditingController(text: user?.email ?? '');
     final passwordCtrl = TextEditingController();
-    var role = user?.role ?? UserRole.buyer;
+    var role = user?.role ?? UserRole.representative;
     var active = user?.active ?? true;
+    final roleOptions = UserRole.values.where(
+      (item) => item != UserRole.buyer || user?.role == UserRole.buyer,
+    );
     String? companyId =
         user?.companyId ??
         (companies.isNotEmpty ? companies.first.id.value : null);
@@ -258,7 +261,7 @@ class _UsersViewState extends State<_UsersView> {
                 DropdownButtonFormField<UserRole>(
                   initialValue: role,
                   decoration: const InputDecoration(labelText: 'Papel'),
-                  items: UserRole.values
+                  items: roleOptions
                       .map(
                         (item) => DropdownMenuItem(
                           value: item,
@@ -274,6 +277,15 @@ class _UsersViewState extends State<_UsersView> {
                     });
                   },
                 ),
+                if (user == null && role != UserRole.buyer)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Compradores são cadastrados na tela de Empresas, '
+                      'junto com o acesso ao portal.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
                 if (role == UserRole.buyer) ...[
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(

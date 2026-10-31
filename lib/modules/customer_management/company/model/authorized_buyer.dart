@@ -6,7 +6,7 @@ import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/
 class AuthorizedBuyer extends Entity<BuyerId> {
   final String fullName;
   final EmailAddress email;
-  final PhoneNumber phone;
+  final PhoneNumber? phone;
   final String positionTitle;
   final bool active;
 

@@ -123,6 +123,7 @@ void main() {
             'role': 'Buyer',
             'companyId': 'c1',
             'fullName': 'Carlos Comprador',
+            'positionTitle': 'Diretor de Compras',
           }),
         );
       });
@@ -134,6 +135,7 @@ void main() {
       expect(session!.role, UserRole.buyer);
       expect(session.companyId!.value, 'c1');
       expect(session.fullName, 'Carlos Comprador');
+      expect(session.positionTitle, 'Diretor de Compras');
     });
 
     test('should return null without persisted tokens', () async {

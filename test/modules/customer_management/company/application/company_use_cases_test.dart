@@ -98,6 +98,7 @@ void main() {
         email: 'buyer@acme.com',
         phone: '11988888888',
         positionTitle: 'Buyer Manager',
+        password: 'senha1234',
       );
 
       expect(result.isSuccess, isTrue);

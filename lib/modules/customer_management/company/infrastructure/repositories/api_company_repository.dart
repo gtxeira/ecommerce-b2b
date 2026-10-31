@@ -55,6 +55,7 @@ class ApiCompanyRepository implements CompanyRepository {
     required String email,
     required String phone,
     required String positionTitle,
+    required String password,
   }) async {
     final data = await _api.post(
       '/api/companies/${companyId.value}/buyers',
@@ -63,6 +64,7 @@ class ApiCompanyRepository implements CompanyRepository {
         'email': email,
         'phone': phone,
         'positionTitle': positionTitle,
+        'password': password,
       },
     );
     if (data is! Map) {
@@ -159,12 +161,17 @@ class ApiCompanyRepository implements CompanyRepository {
     zipCode: readString(json, 'zipCode'),
   ).getOrThrow();
 
-  AuthorizedBuyer _buyerFromJson(Map<String, dynamic> json) => AuthorizedBuyer(
-    id: BuyerId(readString(json, 'id')),
-    fullName: readString(json, 'fullName'),
-    email: EmailAddress.create(readString(json, 'email')).getOrThrow(),
-    phone: PhoneNumber.create(readString(json, 'phone')).getOrThrow(),
-    positionTitle: readString(json, 'positionTitle'),
-    active: readBool(json, 'active', true),
-  );
+  AuthorizedBuyer _buyerFromJson(Map<String, dynamic> json) {
+    final phone = readNullableString(json, 'phone');
+    return AuthorizedBuyer(
+      id: BuyerId(readString(json, 'id')),
+      fullName: readString(json, 'fullName'),
+      email: EmailAddress.create(readString(json, 'email')).getOrThrow(),
+      phone: phone == null || phone.isEmpty
+          ? null
+          : PhoneNumber.create(phone).getOrThrow(),
+      positionTitle: readString(json, 'positionTitle'),
+      active: readBool(json, 'active', true),
+    );
+  }
 }

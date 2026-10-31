@@ -18,48 +18,23 @@ class UserProfileDropdown extends StatefulWidget {
 
 class _UserProfileDropdownState extends State<UserProfileDropdown> {
   String? _companyName;
-  String? _positionTitle;
-  String? _loadedProfileKey;
+  String? _loadedCompanyId;
 
-  /// Carrega a empresa uma única vez por sessão para exibir nome e cargo.
+  /// Carrega a empresa uma única vez por sessão para exibir o nome fantasia.
   void _ensureCompanyData(UserSession session) {
     final companyId = session.companyId;
     if (companyId == null) return;
-
-    final profileKey = '${companyId.value}:${session.fullName}';
-    if (profileKey == _loadedProfileKey) return;
-    _loadedProfileKey = profileKey;
+    if (companyId.value == _loadedCompanyId) return;
+    _loadedCompanyId = companyId.value;
     _companyName = null;
-    _positionTitle = null;
-    _loadCompanyData(companyId, session.fullName, profileKey);
+    _loadCompanyData(companyId);
   }
 
-  Future<void> _loadCompanyData(
-    CompanyId companyId,
-    String fullName,
-    String profileKey,
-  ) async {
+  Future<void> _loadCompanyData(CompanyId companyId) async {
     try {
       final company = await getIt<CompanyRepository>().findById(companyId);
-      if (!mounted || profileKey != _loadedProfileKey) return;
-
-      String? position;
-      final normalizedName = fullName.trim().toLowerCase();
-      if (company != null && normalizedName.isNotEmpty) {
-        for (final buyer in company.authorizedBuyers) {
-          if (buyer.fullName.trim().toLowerCase() == normalizedName) {
-            if (buyer.positionTitle.trim().isNotEmpty) {
-              position = buyer.positionTitle;
-            }
-            break;
-          }
-        }
-      }
-
-      setState(() {
-        _companyName = company?.tradeName;
-        _positionTitle = position;
-      });
+      if (!mounted || companyId.value != _loadedCompanyId) return;
+      setState(() => _companyName = company?.tradeName);
     } catch (_) {
       // Sem os dados da empresa, o menu mostra apenas nome e cargo.
     }
@@ -81,8 +56,10 @@ class _UserProfileDropdownState extends State<UserProfileDropdown> {
       userName = session.fullName.isNotEmpty
           ? session.fullName
           : session.role.label;
-      userRole = _positionTitle ?? session.role.label;
-      companyName = _companyName;
+      userRole = session.isBuyer && session.positionTitle?.isNotEmpty == true
+          ? session.positionTitle!
+          : session.role.label;
+      companyName = session.companyId == null ? null : _companyName;
     }
 
     return PopupMenuButton<void>(

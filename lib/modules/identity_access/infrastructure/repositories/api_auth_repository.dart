@@ -121,6 +121,7 @@ class ApiAuthRepository implements AuthRepository {
           ? null
           : CompanyId(companyId),
       fullName: (map['fullName'] as String? ?? '').trim(),
+      positionTitle: (map['positionTitle'] as String?)?.trim(),
     );
   }
 }

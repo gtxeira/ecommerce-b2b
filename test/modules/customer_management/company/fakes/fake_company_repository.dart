@@ -151,6 +151,7 @@ class FakeCompanyRepository implements CompanyRepository {
     required String email,
     required String phone,
     required String positionTitle,
+    required String password,
   }) async {
     return AuthorizedBuyer(
       id: BuyerId('buyer-${DateTime.now().microsecondsSinceEpoch}'),

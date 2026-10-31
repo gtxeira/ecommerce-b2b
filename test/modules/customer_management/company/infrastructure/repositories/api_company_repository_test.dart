@@ -125,9 +125,11 @@ void main() {
         email: 'joao@abc.com.br',
         phone: '11977777777',
         positionTitle: 'Analista',
+        password: 'senha1234',
       );
 
       expect(body!['fullName'], 'João');
+      expect(body!['password'], 'senha1234');
       expect(buyer.id.value, 'b2');
       expect(buyer.email.value, 'joao@abc.com.br');
     });

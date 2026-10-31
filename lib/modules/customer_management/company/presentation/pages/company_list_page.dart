@@ -203,7 +203,7 @@ class CompanyListPage extends StatelessWidget {
                               theme,
                               'Compradores Autorizados',
                             ),
-                            if (!session.isBuyer)
+                            if (session.isAdmin)
                               TextButton.icon(
                                 onPressed: () => _showAddBuyerDialog(
                                   context,
@@ -242,7 +242,13 @@ class CompanyListPage extends StatelessWidget {
                                   ),
                                 ),
                                 subtitle: Text(
-                                  '${buyer.positionTitle} • ${buyer.email.value} • ${buyer.phone.value}',
+                                  [
+                                    if (buyer.positionTitle.trim().isNotEmpty)
+                                      buyer.positionTitle,
+                                    buyer.email.value,
+                                    if (buyer.phone != null)
+                                      buyer.phone!.formatted,
+                                  ].join(' • '),
                                 ),
                                 trailing: buyer.active
                                     ? Icon(
@@ -711,6 +717,7 @@ class CompanyListPage extends StatelessWidget {
     final emailCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
     final positionCtrl = TextEditingController();
+    final passwordCtrl = TextEditingController();
 
     final phoneFormatter = MaskTextInputFormatter(
       mask: '(##) #####-####',
@@ -729,65 +736,97 @@ class CompanyListPage extends StatelessWidget {
               title: Text('Adicionar Comprador - ${company.tradeName}'),
               content: SizedBox(
                 width: 500, // Aumenta a largura do modal
-                child: Form(
-                  key: formKey,
-                  autovalidateMode: hasSubmitted
-                      ? AutovalidateMode.onUserInteraction
-                      : AutovalidateMode.disabled,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: fullNameCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Nome Completo *',
-                          prefixIcon: Icon(Icons.person_rounded),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    autovalidateMode: hasSubmitted
+                        ? AutovalidateMode.onUserInteraction
+                        : AutovalidateMode.disabled,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextFormField(
+                          controller: fullNameCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Nome Completo *',
+                            prefixIcon: Icon(Icons.person_rounded),
+                          ),
+                          validator: (v) {
+                            final input = NotEmptyInput.dirty(v ?? '');
+                            return input.isValid ? null : 'Campo obrigatório';
+                          },
                         ),
-                        validator: (v) {
-                          final input = NotEmptyInput.dirty(v ?? '');
-                          return input.isValid ? null : 'Campo obrigatório';
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: emailCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'E-mail *',
-                          prefixIcon: Icon(Icons.email_rounded),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: emailCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'E-mail *',
+                            prefixIcon: Icon(Icons.email_rounded),
+                          ),
+                          validator: (v) {
+                            final input = EmailInput.dirty(v ?? '');
+                            return input.isValid ? null : 'E-mail inválido';
+                          },
                         ),
-                        validator: (v) {
-                          final input = EmailInput.dirty(v ?? '');
-                          return input.isValid ? null : 'E-mail inválido';
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: phoneCtrl,
-                        inputFormatters: [phoneFormatter],
-                        decoration: const InputDecoration(
-                          labelText: 'Telefone *',
-                          hintText: '(00) 00000-0000',
-                          prefixIcon: Icon(Icons.phone_rounded),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: phoneCtrl,
+                          inputFormatters: [phoneFormatter],
+                          decoration: const InputDecoration(
+                            labelText: 'Telefone *',
+                            hintText: '(00) 00000-0000',
+                            prefixIcon: Icon(Icons.phone_rounded),
+                          ),
+                          validator: (v) {
+                            final input = PhoneInput.dirty(v ?? '');
+                            return input.isValid ? null : 'Telefone inválido';
+                          },
                         ),
-                        validator: (v) {
-                          final input = PhoneInput.dirty(v ?? '');
-                          return input.isValid ? null : 'Telefone inválido';
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: positionCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Cargo *',
-                          hintText: 'Ex: Gerente de Compras',
-                          prefixIcon: Icon(Icons.badge_rounded),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: positionCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Cargo *',
+                            hintText: 'Ex: Gerente de Compras',
+                            prefixIcon: Icon(Icons.badge_rounded),
+                          ),
+                          validator: (v) {
+                            final input = NotEmptyInput.dirty(v ?? '');
+                            return input.isValid ? null : 'Campo obrigatório';
+                          },
                         ),
-                        validator: (v) {
-                          final input = NotEmptyInput.dirty(v ?? '');
-                          return input.isValid ? null : 'Campo obrigatório';
-                        },
-                      ),
-                    ],
+                        const Divider(height: 32),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Acesso ao portal',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: passwordCtrl,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Senha inicial *',
+                            helperText:
+                                'Mínimo 8 caracteres, com pelo menos uma letra e um número',
+                            prefixIcon: Icon(Icons.lock_rounded),
+                          ),
+                          validator: (v) {
+                            final value = v ?? '';
+                            if (value.length < 8) {
+                              return 'A senha deve ter ao menos 8 caracteres';
+                            }
+                            if (!RegExp(r'[A-Za-z]').hasMatch(value) ||
+                                !RegExp(r'\d').hasMatch(value)) {
+                              return 'A senha deve conter letra e número';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -809,6 +848,7 @@ class CompanyListPage extends StatelessWidget {
                         email: emailCtrl.text,
                         phone: phoneCtrl.text,
                         positionTitle: positionCtrl.text,
+                        password: passwordCtrl.text,
                       );
                       Navigator.pop(diagCtx);
                     }

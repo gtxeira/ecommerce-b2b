@@ -10,11 +10,15 @@ class UserSession {
   /// Nome completo do usuário autenticado. Vazio em sessões antigas sem a claim.
   final String fullName;
 
+  /// Cargo do comprador na empresa. Nulo para os demais papéis.
+  final String? positionTitle;
+
   UserSession({
     required this.userId,
     required this.role,
     this.companyId,
     this.fullName = '',
+    this.positionTitle,
   }) {
     if (role == UserRole.buyer && companyId == null) {
       throw ArgumentError(
@@ -28,4 +32,5 @@ class UserSession {
       role == UserRole.representative || role == UserRole.supervisor;
   bool get isFinance => role == UserRole.finance;
   bool get isSupervisor => role == UserRole.supervisor;
+  bool get isAdmin => role == UserRole.admin;
 }

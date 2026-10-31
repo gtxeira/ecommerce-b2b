@@ -124,6 +124,7 @@ void main() {
           email: 'buyer@acme.com',
           phone: '11988888888',
           positionTitle: 'Buyer manager',
+          password: 'senha1234',
         );
         await Future.delayed(Duration.zero);
 
