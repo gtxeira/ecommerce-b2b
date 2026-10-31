@@ -4,11 +4,11 @@ import 'package:ecommerce_b2b/app/core/network/token_store.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/auth_repository.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/auth/errors/auth_errors.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/user_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 /// Autenticação JWT contra a API.
 ///
@@ -21,7 +21,7 @@ class ApiAuthRepository implements AuthRepository {
   ApiAuthRepository(this._api, this._tokenStore);
 
   @override
-  Future<Result<UserSession, AuthError>> login(
+  Future<Result<UserSession, AppError>> login(
     EmailAddress email,
     String password,
   ) async {
@@ -30,26 +30,48 @@ class ApiAuthRepository implements AuthRepository {
         '/api/auth/login',
         data: {'email': email.value, 'password': password},
       );
-      if (data is! Map) return Failure(InvalidCredentialsError());
+      if (data is! Map) {
+        return Failure(
+          const AppError(
+            AppErrorCodes.invalidCredentials,
+            'E-mail ou senha inválidos.',
+          ),
+        );
+      }
 
       final map = Map<String, dynamic>.from(data);
       final tokens = AuthTokens.fromJson(map);
       if (tokens.accessToken.isEmpty || tokens.refreshToken.isEmpty) {
-        return Failure(InvalidCredentialsError());
+        return Failure(
+          const AppError(
+            AppErrorCodes.invalidCredentials,
+            'E-mail ou senha inválidos.',
+          ),
+        );
       }
 
       final session = _sessionFrom(map['session']);
       if (session == null) {
-        return Failure(InvalidCredentialsError());
+        return Failure(
+          const AppError(
+            AppErrorCodes.invalidCredentials,
+            'E-mail ou senha inválidos.',
+          ),
+        );
       }
 
       await _tokenStore.save(tokens);
       return Success(session);
     } on ApiException catch (error) {
       if (error.statusCode == 401) {
-        return Failure(InvalidCredentialsError());
+        return Failure(
+          const AppError(
+            AppErrorCodes.invalidCredentials,
+            'E-mail ou senha inválidos.',
+          ),
+        );
       }
-      return Failure(UnauthorizedError(error.message));
+      return Failure(error.toAppError());
     }
   }
 

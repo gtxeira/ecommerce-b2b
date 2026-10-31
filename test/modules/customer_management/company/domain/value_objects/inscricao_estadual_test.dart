@@ -1,4 +1,4 @@
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/errors/inscricao_estadual_errors.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/inscricao_estadual.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,21 +15,33 @@ void main() {
     test('should return InscricaoEstadualEmptyError for empty input', () {
       final result = InscricaoEstadual.create('');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<InscricaoEstadualEmptyError>());
+      expect(
+        result.getFailureOrThrow().code,
+        AppErrorCodes.inscricaoEstadualEmpty,
+      );
     });
 
     /// deve retornar InscricaoEstadualEmptyError para entrada apenas com espaços em branco
-    test('should return InscricaoEstadualEmptyError for whitespace-only input', () {
-      final result = InscricaoEstadual.create('  ');
-      expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<InscricaoEstadualEmptyError>());
-    });
+    test(
+      'should return InscricaoEstadualEmptyError for whitespace-only input',
+      () {
+        final result = InscricaoEstadual.create('  ');
+        expect(result.isFailure, isTrue);
+        expect(
+          result.getFailureOrThrow().code,
+          AppErrorCodes.inscricaoEstadualEmpty,
+        );
+      },
+    );
 
     /// deve retornar InscricaoEstadualInvalidError para entrada muito curta
     test('should return InscricaoEstadualInvalidError for too short input', () {
       final result = InscricaoEstadual.create('123');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<InscricaoEstadualInvalidError>());
+      expect(
+        result.getFailureOrThrow().code,
+        AppErrorCodes.inscricaoEstadualInvalid,
+      );
     });
 
     /// deve ser igual a outro objeto com o mesmo valor

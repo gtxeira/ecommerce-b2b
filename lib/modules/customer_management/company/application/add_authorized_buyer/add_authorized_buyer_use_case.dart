@@ -1,24 +1,19 @@
-import 'package:ecommerce_b2b/app/core/network/api_domain_error.dart';
 import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/repositories/company_repository.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_domain_errors.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/phone_number.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
-
-class CompanyNotFoundError extends DomainError {
-  CompanyNotFoundError() : super('Empresa não encontrada.');
-}
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 class AddAuthorizedBuyerUseCase {
   final CompanyRepository _companyRepository;
 
   AddAuthorizedBuyerUseCase(this._companyRepository);
 
-  Future<Result<Company, DomainError>> execute({
+  Future<Result<Company, AppError>> execute({
     required UserSession currentSession,
     required CompanyId companyId,
     required String fullName,
@@ -28,7 +23,12 @@ class AddAuthorizedBuyerUseCase {
   }) async {
     final company = await _companyRepository.findById(companyId);
     if (company == null) {
-      return Failure(CompanyNotFoundError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.companyNotFound,
+          'Empresa não encontrada.',
+        ),
+      );
     }
 
     final emailResult = EmailAddress.create(email);
@@ -50,9 +50,9 @@ class AddAuthorizedBuyerUseCase {
       company.addAuthorizedBuyer(buyer);
       return Success(company);
     } on ApiException catch (error) {
-      return Failure(ApiDomainError.fromException(error));
+      return Failure(error.toAppError());
     } catch (error) {
-      return Failure(ApiDomainError(error.toString()));
+      return Failure(AppError(AppErrorCodes.networkError, error.toString()));
     }
   }
 }

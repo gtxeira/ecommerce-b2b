@@ -1,6 +1,6 @@
 import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 class SaveProductUseCase {
   final ProductRepository _productRepository;

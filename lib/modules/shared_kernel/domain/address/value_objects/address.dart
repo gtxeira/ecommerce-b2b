@@ -1,6 +1,6 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_domain_errors.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address_complement.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address_number.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/city.dart';
@@ -30,7 +30,7 @@ class Address {
     required this.zipCode,
   });
 
-  static Result<Address, DomainError> create({
+  static Result<Address, AppError> create({
     required String street,
     required String number,
     String? complement,
@@ -70,9 +70,9 @@ class Address {
       return Failure(neighborhoodResult.getFailureOrThrow());
     }
 
-    final Result<AddressComplement?, DomainError> complementResult =
+    final Result<AddressComplement?, AppError> complementResult =
         complement == null || complement.trim().isEmpty
-        ? Success<AddressComplement?, DomainError>(null)
+        ? Success<AddressComplement?, AppError>(null)
         : AddressComplement.create(complement);
 
     if (complementResult.isFailure) {

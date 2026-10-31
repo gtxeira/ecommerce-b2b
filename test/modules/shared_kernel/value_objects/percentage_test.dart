@@ -1,4 +1,4 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/errors/percentage_errors.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/percentage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,14 +16,20 @@ void main() {
     test('should return PercentageOutOfRangeError for values < 0', () {
       final result = Percentage.create(-1.0);
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<PercentageOutOfRangeError>());
+      expect(
+        result.getFailureOrThrow().code,
+        AppErrorCodes.percentageOutOfRange,
+      );
     });
 
     /// deve retornar erro de porcentagem fora do intervalo para valores maiores que cem
     test('should return PercentageOutOfRangeError for values > 100', () {
       final result = Percentage.create(100.1);
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<PercentageOutOfRangeError>());
+      expect(
+        result.getFailureOrThrow().code,
+        AppErrorCodes.percentageOutOfRange,
+      );
     });
 
     /// toString deve formatar corretamente

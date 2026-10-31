@@ -1,6 +1,6 @@
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/enums/currency.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/errors/money_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 import 'package:flutter/foundation.dart';
 
 // TODO: Migrar para utilizar os pacotes decimal/decimal.dart ou money2/money2:
@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 class Money {
   /// Valor total em centavos.
   final int amountInCents;
+
   /// Código da moeda (ex: BRL, USD).
   final Currency currency;
 
@@ -18,9 +19,17 @@ class Money {
 
   /// Cria uma instância de [Money] a partir de um valor decimal.
   /// Retorna [Failure] se o valor for negativo.
-  static Result<Money, MoneyError> create(double amount, {Currency currency = Currency.brazil}) {
+  static Result<Money, AppError> create(
+    double amount, {
+    Currency currency = Currency.brazil,
+  }) {
     if (amount < 0) {
-      return Failure(MoneyNegativeError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.moneyNegative,
+          'O valor monetário não pode ser negativo.',
+        ),
+      );
     }
 
     final cents = (amount * 100).round();
@@ -34,7 +43,9 @@ class Money {
   /// Lança [ArgumentError] se as moedas forem diferentes.
   Money operator +(Money other) {
     if (currency != other.currency) {
-      throw ArgumentError('Money currency mismatch: $currency vs ${other.currency}');
+      throw ArgumentError(
+        'Money currency mismatch: $currency vs ${other.currency}',
+      );
     }
 
     return Money._(amountInCents + other.amountInCents, currency: currency);
@@ -45,12 +56,16 @@ class Money {
   /// Lança [StateError] se o resultado for negativo.
   Money operator -(Money other) {
     if (currency != other.currency) {
-      throw ArgumentError('Money currency mismatch: $currency vs ${other.currency}');
+      throw ArgumentError(
+        'Money currency mismatch: $currency vs ${other.currency}',
+      );
     }
 
     final result = amountInCents - other.amountInCents;
     if (result < 0) {
-      throw StateError('O valor monetário não pode ser negativo após a subtração');
+      throw StateError(
+        'O valor monetário não pode ser negativo após a subtração',
+      );
     }
 
     return Money._(result, currency: currency);

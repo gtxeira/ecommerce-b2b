@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
@@ -88,7 +89,7 @@ void main() {
       expect(result.getOrThrow().role, UserRole.admin);
     });
 
-    test('should return InvalidCredentialsError on 401', () async {
+    test('should return INVALID_CREDENTIALS on 401', () async {
       final adapter = FakeHttpAdapter(
         (options) async => jsonResponse(
           errorEnvelope(
@@ -103,6 +104,7 @@ void main() {
       final result = await repository.login(email, 'errada');
 
       expect(result.isFailure, isTrue);
+      expect(result.getFailureOrThrow().code, AppErrorCodes.invalidCredentials);
       expect(result.getFailureOrThrow().message, 'E-mail ou senha inválidos.');
       expect(await tokenStore.read(), isNull);
     });

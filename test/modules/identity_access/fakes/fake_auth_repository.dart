@@ -1,11 +1,11 @@
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/auth_repository.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/auth/errors/auth_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/user_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 class FakeAuthRepository implements AuthRepository {
   UserSession? _currentSession;
@@ -39,13 +39,18 @@ class FakeAuthRepository implements AuthRepository {
   };
 
   @override
-  Future<Result<UserSession, AuthError>> login(
+  Future<Result<UserSession, AppError>> login(
     EmailAddress email,
     String password,
   ) async {
     final user = _users[email.value];
     if (user == null || user.password != password) {
-      return Failure(InvalidCredentialsError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.invalidCredentials,
+          'E-mail ou senha inválidos.',
+        ),
+      );
     }
 
     _currentSession = UserSession(

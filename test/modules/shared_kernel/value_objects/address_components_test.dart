@@ -1,9 +1,4 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/address_complement_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/address_number_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/city_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/neighborhood_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/street_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/zip_code_errors.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address_complement.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address_number.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/city.dart';
@@ -25,14 +20,14 @@ void main() {
     test('should return error for empty street', () {
       final result = Street.create('  ');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<StreetEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.streetEmpty);
     });
 
     /// deve retornar erro para rua muito longa
     test('should return error for too long street', () {
       final result = Street.create('a' * 101);
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<StreetTooLongError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.streetTooLong);
     });
   });
 
@@ -48,14 +43,17 @@ void main() {
     test('should return error for empty number', () {
       final result = AddressNumber.create('');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<AddressNumberEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.addressNumberEmpty);
     });
 
     /// deve retornar erro para número muito longo
     test('should return error for too long number', () {
       final result = AddressNumber.create('a' * 11);
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<AddressNumberTooLongError>());
+      expect(
+        result.getFailureOrThrow().code,
+        AppErrorCodes.addressNumberTooLong,
+      );
     });
   });
 
@@ -71,14 +69,20 @@ void main() {
     test('should return error for empty complement', () {
       final result = AddressComplement.create('');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<AddressComplementEmptyError>());
+      expect(
+        result.getFailureOrThrow().code,
+        AppErrorCodes.addressComplementEmpty,
+      );
     });
 
     /// deve retornar erro para complemento muito longo
     test('should return error for too long complement', () {
       final result = AddressComplement.create('a' * 61);
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<AddressComplementTooLongError>());
+      expect(
+        result.getFailureOrThrow().code,
+        AppErrorCodes.addressComplementTooLong,
+      );
     });
   });
 
@@ -94,14 +98,14 @@ void main() {
     test('should return error for empty city', () {
       final result = City.create('');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<CityEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.cityEmpty);
     });
 
     /// deve retornar erro para cidade muito longa
     test('should return error for too long city', () {
       final result = City.create('a' * 101);
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<CityTooLongError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.cityTooLong);
     });
   });
 
@@ -117,14 +121,17 @@ void main() {
     test('should return error for empty neighborhood', () {
       final result = Neighborhood.create('');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<NeighborhoodEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.neighborhoodEmpty);
     });
 
     /// deve retornar erro para bairro muito longo
     test('should return error for too long neighborhood', () {
       final result = Neighborhood.create('a' * 71);
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<NeighborhoodTooLongError>());
+      expect(
+        result.getFailureOrThrow().code,
+        AppErrorCodes.neighborhoodTooLong,
+      );
     });
   });
 
@@ -141,14 +148,14 @@ void main() {
     test('should return error for invalid zip code length', () {
       final result = ZipCode.create('12345');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<ZipCodeLengthError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.zipCodeLength);
     });
 
     /// deve retornar erro para CEP vazio
     test('should return error for empty zip code', () {
       final result = ZipCode.create('');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<ZipCodeEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.zipCodeEmpty);
     });
   });
 }

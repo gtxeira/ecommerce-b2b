@@ -1,5 +1,5 @@
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/state_errors.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -29,14 +29,14 @@ void main() {
     test('should return Failure for invalid state', () {
       final result = State.fromString('XX');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<StateInvalidError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.stateInvalid);
     });
 
     /// deve retornar Failure para entrada vazia
     test('should return Failure for empty input', () {
       final result = State.fromString('');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<StateInvalidError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.stateInvalid);
     });
   });
 }

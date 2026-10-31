@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/logistics/errors/weight_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
@@ -8,9 +8,14 @@ class Weight {
 
   const Weight._(this.value);
 
-  static Result<Weight, WeightError> create(double value) {
+  static Result<Weight, AppError> create(double value) {
     if (value < 0) {
-      return Failure(WeightNegativeError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.weightNegative,
+          'O peso não pode ser negativo.',
+        ),
+      );
     }
     return Success(Weight._(value));
   }

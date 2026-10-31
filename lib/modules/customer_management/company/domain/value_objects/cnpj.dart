@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/errors/cnpj_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 import 'package:flutter/foundation.dart';
 
 /// Value Object para CNPJ (Cadastro Nacional da Pessoa Jurídica)
@@ -9,25 +9,49 @@ class Cnpj {
 
   const Cnpj._(this.value);
 
-  /// Creates a valid [Cnpj] instance or returns a [CnpjError].
-  static Result<Cnpj, CnpjError> create(String input) {
+  /// Creates a valid [Cnpj] instance or returns an [AppError].
+  static Result<Cnpj, AppError> create(String input) {
     if (input.trim().isEmpty) {
-      return Failure(CnpjEmptyError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.cnpjEmpty,
+          'O CNPJ não pode ser vazio.',
+          field: 'cnpj',
+        ),
+      );
     }
 
     final digits = _onlyDigits(input);
 
     if (digits.length != 14) {
-      return Failure(CnpjInvalidLengthError(digits.length));
+      return Failure(
+        AppError(
+          AppErrorCodes.cnpjInvalidLength,
+          'O CNPJ deve conter exatamente 14 dígitos (encontrados ${digits.length}).',
+          field: 'cnpj',
+        ),
+      );
     }
 
     // Reject sequences (ex: 00000000000000, 11111111111111)
     if (RegExp(r'^(\d)\1*$').hasMatch(digits)) {
-      return Failure(CnpjInvalidError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.cnpjInvalid,
+          'O número do CNPJ é inválido.',
+          field: 'cnpj',
+        ),
+      );
     }
 
     if (!_validateCheckDigits(digits)) {
-      return Failure(CnpjInvalidVerificationDigitsError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.cnpjInvalidVerificationDigits,
+          'O número do CNPJ é inválido (dígitos verificadores não coincidem).',
+          field: 'cnpj',
+        ),
+      );
     }
 
     return Success(Cnpj._(digits));

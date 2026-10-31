@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/state_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 /// Enum que representa as Unidades Federativas (UF) do Brasil.
 enum State {
@@ -40,11 +40,17 @@ enum State {
   const State({required this.name, required this.code});
 
   /// Função utilitária (Factory) para criar o Enum a partir de uma String não tratada
-  static Result<State, StateError> fromString(String input) {
+  static Result<State, AppError> fromString(String input) {
     final cleanInput = input.trim().toLowerCase();
 
     if (cleanInput.isEmpty) {
-      return Failure(StateInvalidError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.stateInvalid,
+          'O estado é inválido.',
+          field: 'state',
+        ),
+      );
     }
 
     for (final state in State.values) {
@@ -54,17 +60,29 @@ enum State {
       }
     }
 
-    return Failure(StateInvalidError());
+    return Failure(
+      const AppError(
+        AppErrorCodes.stateInvalid,
+        'O estado é inválido.',
+        field: 'state',
+      ),
+    );
   }
 
   /// Converte o nome do enum devolvido pela API C# (ex.: `SaoPaulo`).
   ///
   /// O nome de exibição deste enum é acentuado ("São Paulo"), então não serve
   /// para o contrato HTTP; o identificador do enum é a ponte.
-  static Result<State, StateError> fromApiName(String input) {
+  static Result<State, AppError> fromApiName(String input) {
     final cleanInput = input.trim().toLowerCase();
     if (cleanInput.isEmpty) {
-      return Failure(StateInvalidError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.stateInvalid,
+          'O estado é inválido.',
+          field: 'state',
+        ),
+      );
     }
 
     for (final state in State.values) {
@@ -74,7 +92,13 @@ enum State {
       }
     }
 
-    return Failure(StateInvalidError());
+    return Failure(
+      const AppError(
+        AppErrorCodes.stateInvalid,
+        'O estado é inválido.',
+        field: 'state',
+      ),
+    );
   }
 
   /// Nome esperado pela API (identificador do enum em C#).

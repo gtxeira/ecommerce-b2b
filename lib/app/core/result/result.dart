@@ -1,5 +1,3 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/failures/validation_failure.dart';
-
 /// Result/Either Pattern
 sealed class Result<S, F> {
   bool get isSuccess => this is Success<S, F>;
@@ -51,29 +49,4 @@ class Success<S, F> extends Result<S, F> {
 class Failure<S, F> extends Result<S, F> {
   final F error;
   Failure(this.error);
-}
-
-typedef ValidationResult<S, F> = Result<S, List<F>>;
-
-/// Extensão para combinar resultados de validação, que é uma lista de resultados
-extension ResultCombine<S> on Result<S, ValidationFailure> {
-  /// Combina este resultado com outro. Se ambos tiverem erros, junta as listas.
-  static Result<List<dynamic>, ValidationFailure> combine(List<Result<dynamic, ValidationFailure>> results) {
-    final List<Object> accumulatedErrors = [];
-    final List<dynamic> successes = [];
-
-    for (final result in results) {
-      if (result is Failure<dynamic, ValidationFailure>) {
-        accumulatedErrors.addAll(result.error.errors);
-      } else if (result is Success<dynamic, ValidationFailure>) {
-        successes.add(result.value);
-      }
-    }
-
-    if (accumulatedErrors.isNotEmpty) {
-      return Failure(ValidationFailure(accumulatedErrors));
-    }
-
-    return Success(successes);
-  }
 }

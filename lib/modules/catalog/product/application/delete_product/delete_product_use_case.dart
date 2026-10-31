@@ -1,6 +1,6 @@
 import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 /// Exclusão de produto. A API decide se há vínculos ativos e devolve o erro.
 class DeleteProductUseCase {

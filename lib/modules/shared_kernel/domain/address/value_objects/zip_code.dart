@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/zip_code_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 import 'package:flutter/foundation.dart';
 
 // TODO Tornar o ZIP Code compatível com todos os códigos postais do mundo, para endereços internacionais.
@@ -10,15 +10,27 @@ class ZipCode {
 
   const ZipCode._(this.value);
 
-  static Result<ZipCode, ZipCodeError> create(String input) {
+  static Result<ZipCode, AppError> create(String input) {
     final digits = input.replaceAll(RegExp(r'\D'), '');
 
     if (digits.isEmpty) {
-      return Failure(ZipCodeEmptyError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.zipCodeEmpty,
+          'O CEP não pode ser vazio',
+          field: 'zipCode',
+        ),
+      );
     }
 
     if (digits.length != 8) {
-      return Failure(ZipCodeLengthError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.zipCodeLength,
+          'O CEP deve ter 8 dígitos.',
+          field: 'zipCode',
+        ),
+      );
     }
 
     return Success(ZipCode._(digits));

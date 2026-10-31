@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/errors/percentage_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 import 'package:flutter/foundation.dart';
 
 /// Objeto de Valor que representa uma porcentagem válida.
@@ -11,9 +11,14 @@ class Percentage {
 
   /// Cria uma instância de [Percentage] a partir de um valor decimal.
   /// Retorna [Failure] se o valor estiver fora do intervalo [0, 100].
-  static Result<Percentage, PercentageError> create(double value) {
+  static Result<Percentage, AppError> create(double value) {
     if (value < 0 || value > 100) {
-      return Failure(PercentageOutOfRangeError());
+      return Failure(
+        const AppError(
+          AppErrorCodes.percentageOutOfRange,
+          'A porcentagem deve estar entre 0 e 100.',
+        ),
+      );
     }
     return Success(Percentage._(value));
   }

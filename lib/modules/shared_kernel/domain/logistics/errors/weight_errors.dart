@@ -1,9 +1,0 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_domain_errors.dart';
-
-sealed class WeightError extends DomainError {
-  WeightError(super.message);
-}
-
-class WeightNegativeError extends WeightError {
-  WeightNegativeError() : super('O peso não pode ser negativo.');
-}
