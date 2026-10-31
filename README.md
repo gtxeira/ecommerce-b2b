@@ -75,37 +75,53 @@ flutter run --dart-define=API_BASE_URL=http://192.168.0.10:5143
 
 ---
 
-## Arquitetura Modelo:
+## Arquitetura do cliente
+
+O app é um **cliente fino**: não tem banco local nem regra de negócio própria. A API C# é a
+autoridade sobre validação, autorização, crédito, estoque e transições de estado; o Flutter
+mantém apenas um **modelo de leitura** e a apresentação.
 
 ```Plaintext
 lib/
 │
-├── app/                             # Configurações globais do app
-│   ├── config/                      # Rotas, temas, cores, injeção de dependência global
-│   └── core/                        # Componentes compartilhados por todo o sistema
-│       ├── errors/                  # Falhas e exceções (Failure, Exception)
-│       ├── usecases/                # Classe base abstrata para UseCases
-│       └── utils/                   # Extensões, formatadores, constantes
+├── app/                             # Infraestrutura transversal do app
+│   ├── core/
+│   │   ├── errors/                  # AppError + AppErrorCodes (mesmo vocabulário da API)
+│   │   ├── network/                 # ApiClient, JWT/refresh, envelope { data, meta }
+│   │   ├── result/                  # Result/Success/Failure
+│   │   ├── routes/                  # go_router
+│   │   └── di/                      # get_it
+│   └── presentation/                # Layout, tema, widgets globais e inputs formz
 │
-└── modules/                         # O coração do DDD orientado a Features (Módulos)
-    └── auth/                        # Exemplo de Feature: Autenticação
+└── modules/                         # Um diretório por contexto de negócio
+    └── catalog/                     # Exemplo: Produtos e Tabelas de Preço
+        ├── model/                   # Modelo de leitura do cliente
+        │   ├── product.dart         # Entidades e VOs (Money, Quantity, ...)
+        │   ├── enums/               # Enums do contrato (status, UF, papel)
+        │   ├── repositories/        # Contratos que a infraestrutura implementa
+        │   └── ...                  # IDs tipados e objetos comuns
         │
-        ├── domain/                  # CAMADA DE DOMÍNIO (Regras de Negócio Puras)
-        │   ├── entities/            # Entidades de Negócio (ex: User)
-        │   ├── value_objects/       # Objetos de Valor (ex: Email, Password com validações)
-        │   ├── repositories/        # Interfaces/Contratos dos Repositórios
-        │   └── usecases/            # Casos de Uso (ex: LoginWithEmail, Logout)
+        ├── application/             # Use cases: orquestram repositórios
         │
-        ├── data/                    # CAMADA DE DADOS (Infraestrutura)
-        │   ├── datasources/         # Fontes de dados (AuthRemoteDataSource, AuthLocalDataSource)
-        │   ├── models/              # Modelos de dados (ex: UserModel que herda de User + toJson/fromJson)
-        │   └── repositories/        # Implementações dos repositórios do domínio
+        ├── infrastructure/          # Implementações HTTP
+        │   └── repositories/        # api_*: traduzem JSON da API -> model
         │
-        └── presentation/            # CAMADA DE APRESENTAÇÃO (Interface e Estado)
-            ├── controllers/         # Gerenciamento de estado (Bloc, Cubit, Controller, Notifier)
-            ├── pages/               # Telas completas (LoginPage, RegisterPage)
-            └── widgets/             # Componentes visuais exclusivos dessa feature
+        └── presentation/            # Cubits, páginas e widgets do contexto
 ```
+
+### Quem é dono de cada regra
+
+| Responsabilidade | Onde mora |
+|---|---|
+| CNPJ, crédito, hierarquia comercial, preço, transição de pedido, estoque | **API C#** |
+| Busca e filtros de listagem (`?query`, recortes por papel) | **API C#** |
+| Validação de formulário, máscara e formatação para o usuário | Cliente (espelho de UX) |
+| Tradução dos enums PascalCase da API (`Representative`, `SaoPaulo`, ...) | `infrastructure/repositories/api_*` |
+| Envelope `{ data, meta }` / `{ errors, meta }` e refresh de token | `app/core/network` |
+
+Os VOs do cliente (`Cnpj`, `EmailAddress`, `Money`, ...) continuam validando para dar feedback
+imediato no formulário, mas **não são a fonte da verdade**: os códigos de erro são os mesmos da
+API e qualquer regra que divirja é considerada bug do cliente.
 
 ---
 
@@ -121,7 +137,7 @@ lib/modules/
 ├── logistics/                # Fluxo de Expedição (Picking, Packing), Etiquetas, Rastreamento e Frete
 ├── customer_portal/          # Portal do Cliente, Histórico de Compras, Download de Boletos e Devoluções (RMA)
 ├── identity_access/          # Controle de Autenticação, Login, Gerenciamento de Sessão e Perfis de Acesso (Roles)
-└── shared_kernel/            # Núcleo Compartilhado: Classes base de DDD (Entity, ValueObject) e Objetos comuns (Cnpj, Money, Address)
+└── shared_kernel/            # Modelo comum: Entity, EntityId, IDs tipados (Cnpj, Money, Address, ...)
 ```
 
 ---
@@ -133,5 +149,5 @@ lib/modules/
   `shared_preferences` no Web). O `ApiClient` renova o access token uma vez em caso de 401 e, se o
   refresh falhar, derruba a sessão para o login.
 - **Enums da API:** a camada `infrastructure/repositories/api_*` traduz os nomes PascalCase da API
-  (`Representative`, `Invoicing`, `Converted`, `SaoPaulo`, etc.) para os enums do domínio Flutter.
+  (`Representative`, `Invoicing`, `Converted`, `SaoPaulo`, etc.) para os enums do modelo Flutter.
 

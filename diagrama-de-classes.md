@@ -2,6 +2,11 @@
 
 # Visão Geral dos Contextos
 
+> **Documento histórico.** Este diagrama descreve o modelo original do app Flutter, antes da
+> migração para a API C#. A referência atual do domínio é
+> [`../EcommerceB2b/docs/diagrama-de-classes.md`](../EcommerceB2b/docs/diagrama-de-classes.md);
+> no cliente, o código correspondente vive em `lib/modules/*/model/`.
+
 ```text
 ┌──────────────────────┐
 │ Customer Management  │
