@@ -92,6 +92,34 @@ void main() {
       expect(stock.single.physicalQuantity.value, 150);
     });
 
+    test('should POST a new warehouse and map the response', () async {
+      RequestOptions? captured;
+      final adapter = FakeHttpAdapter((options) async {
+        captured = options;
+        return jsonResponse(
+          successEnvelope({
+            'id': 'wh-new',
+            'code': 'SUL',
+            'name': 'Depósito Sul',
+          }),
+          statusCode: 201,
+        );
+      });
+      final repository = buildRepository(adapter);
+
+      final warehouse = await repository.createWarehouse(
+        code: 'sul',
+        name: 'Depósito Sul',
+      );
+
+      expect(captured!.method, 'POST');
+      expect(captured!.path, '/api/inventory/warehouses');
+      expect((captured!.data as Map)['code'], 'sul');
+      expect((captured!.data as Map)['name'], 'Depósito Sul');
+      expect(warehouse.id.value, 'wh-new');
+      expect(warehouse.code, 'SUL');
+    });
+
     test('should PATCH the physical quantity', () async {
       RequestOptions? captured;
       final adapter = FakeHttpAdapter((options) async {

@@ -55,6 +55,85 @@ class _InventoryPageState extends State<InventoryPage> {
     }
   }
 
+  Future<void> _showAddWarehouseDialog() async {
+    final formKey = GlobalKey<FormState>();
+    final codeCtrl = TextEditingController();
+    final nameCtrl = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Novo Depósito'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Nome do Depósito *',
+                  prefixIcon: Icon(Icons.warehouse_outlined),
+                ),
+                validator: (value) =>
+                    (value ?? '').trim().isEmpty ? 'Informe o nome' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: codeCtrl,
+                textCapitalization: TextCapitalization.characters,
+                decoration: const InputDecoration(
+                  labelText: 'Código Identificador *',
+                  prefixIcon: Icon(Icons.qr_code_rounded),
+                  helperText: 'Até 20 caracteres, único',
+                ),
+                validator: (value) {
+                  final code = (value ?? '').trim();
+                  if (code.isEmpty) return 'Informe o código';
+                  if (code.length > 20) return 'Máximo de 20 caracteres';
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.pop(dialogContext, true);
+              }
+            },
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await getIt<InventoryRepository>().createWarehouse(
+        code: codeCtrl.text.trim(),
+        name: nameCtrl.text.trim(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Depósito cadastrado com sucesso!')),
+      );
+      await _loadData();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao cadastrar depósito: $error')),
+      );
+    }
+  }
+
   Future<void> _adjustStock(
     Product product, [
     Warehouse? targetWarehouse,
@@ -163,6 +242,11 @@ class _InventoryPageState extends State<InventoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const B2BAppBar(title: 'Gestão de Estoque'),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showAddWarehouseDialog,
+        icon: const Icon(Icons.add_business_rounded),
+        label: const Text('Novo Depósito'),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

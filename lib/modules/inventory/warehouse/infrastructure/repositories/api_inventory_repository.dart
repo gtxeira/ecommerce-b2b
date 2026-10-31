@@ -109,6 +109,26 @@ class ApiInventoryRepository implements InventoryRepository {
   }
 
   @override
+  Future<Warehouse> createWarehouse({
+    required String code,
+    required String name,
+  }) async {
+    final data = await _api.post(
+      '/api/inventory/warehouses',
+      data: {'code': code, 'name': name},
+    );
+    if (data is! Map) {
+      throw StateError('Resposta inesperada ao cadastrar depósito.');
+    }
+    final json = Map<String, dynamic>.from(data);
+    return Warehouse(
+      id: WarehouseId(readString(json, 'id')),
+      code: readString(json, 'code'),
+      name: readString(json, 'name'),
+    );
+  }
+
+  @override
   Future<void> adjustStock({
     required WarehouseId warehouseId,
     required ProductId productId,
