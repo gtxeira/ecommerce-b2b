@@ -143,4 +143,22 @@ class FakeCompanyRepository implements CompanyRepository {
     }
     return [];
   }
+
+  @override
+  Future<AuthorizedBuyer> addAuthorizedBuyer({
+    required CompanyId companyId,
+    required String fullName,
+    required String email,
+    required String phone,
+    required String positionTitle,
+  }) async {
+    return AuthorizedBuyer(
+      id: BuyerId('buyer-${DateTime.now().microsecondsSinceEpoch}'),
+      fullName: fullName,
+      email: EmailAddress.create(email).getOrThrow(),
+      phone: PhoneNumber.create(phone).getOrThrow(),
+      positionTitle: positionTitle,
+      active: true,
+    );
+  }
 }

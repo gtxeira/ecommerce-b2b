@@ -612,7 +612,9 @@ class BuyerHomePage extends StatelessWidget {
         ),
       ),
     ).then((_) {
-      context.read<CustomerPortalCubit>().clearActiveBoleto();
+      if (context.mounted) {
+        context.read<CustomerPortalCubit>().clearActiveBoleto();
+      }
     });
   }
 
@@ -723,8 +725,11 @@ class BuyerHomePage extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Filtra pedidos que foram entregues
-    final deliveredOrders = orders.where((o) => o.status == OrderStatus.delivered).toList();
+    // A API aceita RMA para pedidos entregues ou faturados.
+    final deliveredOrders = orders
+        .where((o) =>
+            o.status == OrderStatus.delivered || o.status == OrderStatus.invoiced)
+        .toList();
 
     if (deliveredOrders.isEmpty) {
       showDialog(
@@ -992,6 +997,8 @@ class BuyerHomePage extends StatelessWidget {
         return 'Em Transporte';
       case OrderStatus.delivered:
         return 'Entregue';
+      case OrderStatus.invoiced:
+        return 'Faturado';
       case OrderStatus.rma:
         return 'Devolução / RMA';
       case OrderStatus.cancelled:
@@ -1011,6 +1018,8 @@ class BuyerHomePage extends StatelessWidget {
         return Colors.orange;
       case OrderStatus.delivered:
         return Colors.green;
+      case OrderStatus.invoiced:
+        return Colors.teal;
       case OrderStatus.rma:
         return colorScheme.secondary;
       case OrderStatus.cancelled:
@@ -1030,6 +1039,8 @@ class BuyerHomePage extends StatelessWidget {
         return Icons.local_shipping_outlined;
       case OrderStatus.delivered:
         return Icons.check_circle_outline_rounded;
+      case OrderStatus.invoiced:
+        return Icons.receipt_long_outlined;
       case OrderStatus.rma:
         return Icons.assignment_return_outlined;
       case OrderStatus.cancelled:

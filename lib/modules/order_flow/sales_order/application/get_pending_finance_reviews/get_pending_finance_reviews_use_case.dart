@@ -1,17 +1,10 @@
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/repositories/sales_order_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/api/finance_api.dart';
 
 class GetPendingFinanceReviewsUseCase {
-  final SalesOrderRepository _orderRepository;
+  final FinanceApi _financeApi;
 
-  GetPendingFinanceReviewsUseCase(this._orderRepository);
+  GetPendingFinanceReviewsUseCase(this._financeApi);
 
-  Future<List<SalesOrder>> execute() async {
-    // Busca tanto pedidos pendentes de aprovação quanto bloqueados que requerem ação manual (RF12).
-    final pending = await _orderRepository.findByStatus(OrderStatus.pendingFinanceApproval.name);
-    final blocked = await _orderRepository.findByStatus(OrderStatus.blockedByFinance.name);
-    
-    return [...pending, ...blocked];
-  }
+  Future<List<SalesOrder>> execute() => _financeApi.getPendingReviews();
 }

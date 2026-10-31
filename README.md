@@ -13,51 +13,51 @@ Overleaf: [Documentação Trabalho Final - Overleaf](https://www.overleaf.com/pr
 
 ## Como Executar o Projeto
 
-Este projeto utiliza o **Drift** com SQLite para persistência local e necessita de geração de código
-para funcionar corretamente. Siga as instruções abaixo para configurar e rodar o projeto:
+O app é um **cliente fino da API C#** (`../EcommerceB2b`). Toda a regra de negócio, persistência e
+autorização ficam na API; o Flutter apenas apresenta dados e valida formulários.
 
 ### Pré-requisitos
 
-Certifique-se de ter o Flutter instalado em sua máquina (compatível com Dart `^3.12.2` / Flutter
-`^3.22.0` ou superior).
+- Flutter compatível com Dart `^3.12.2`.
+- API rodando (por padrão em `http://localhost:5143`).
 
-### 1. Obter dependências do Flutter
+### 1. Subir a API
 
-No diretório raiz do projeto, execute:
+```bash
+cd ../EcommerceB2b
+dotnet run --project src/EcommerceB2b.Api --launch-profile http
+```
+
+A API cria o SQLite e roda o seed demo no startup.
+
+### 2. Obter dependências do Flutter
 
 ```bash
 flutter pub get
 ```
 
-### 2. Gerar o banco de dados (Drift / Build Runner)
-
-Como o arquivo gerado do banco de dados `app_database.g.dart` está listado no `.gitignore`, você
-precisa gerar as classes do Drift localmente antes de executar ou testar o projeto:
-
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
-
-> **Dica**: Durante o desenvolvimento, você pode usar
-`dart run build_runner watch --delete-conflicting-outputs` para regenerar os arquivos
-> automaticamente sempre que fizer alterações nas tabelas.
-
 ### 3. Executar os testes
 
-Para rodar a suíte completa de testes unitários e de integração (incluindo testes específicos com
-SQLite em memória para os repositórios do Drift):
-
 ```bash
+flutter analyze
 flutter test
 ```
 
 ### 4. Executar o aplicativo
 
-Para rodar o aplicativo em um emulador ou dispositivo conectado:
-
 ```bash
+# Web/desktop (API local)
 flutter run
+
+# Emulador Android (a URL padrão já é 10.0.2.2)
+flutter run
+
+# Dispositivo físico ou API remota
+flutter run --dart-define=API_BASE_URL=http://192.168.0.10:5143
 ```
+
+> O app não abre mais um banco local. Sem a API no ar ele mostra a tela de login e as chamadas
+> falham com a mensagem de conectividade.
 
 ---
 
@@ -69,6 +69,7 @@ flutter run
 | rep@test.com        | Representative (Representante Comercial) |
 | supervisor@test.com | Supervisor                               |
 | finance@test.com    | Finance (Financeiro)                     |
+| admin@test.com      | Admin (gestão de usuários)               |
 
 > A senha para todos é: `password123`.
 
@@ -125,15 +126,12 @@ lib/modules/
 
 ---
 
-## Persistência de Dados (SQLite & Drift)
+## Persistência e sessão
 
-O aplicativo utiliza o **SQLite** como banco de dados embarcado local, gerenciado de forma reativa
-pelo ORM **Drift**.
+- **Dados de negócio:** vivem exclusivamente na API C# (EF Core + SQLite/PostgreSQL).
+- **Sessão:** access/refresh tokens são persistidos com `flutter_secure_storage` (fallback
+  `shared_preferences` no Web). O `ApiClient` renova o access token uma vez em caso de 401 e, se o
+  refresh falhar, derruba a sessão para o login.
+- **Enums da API:** a camada `infrastructure/repositories/api_*` traduz os nomes PascalCase da API
+  (`Representative`, `Invoicing`, `Converted`, `SaoPaulo`, etc.) para os enums do domínio Flutter.
 
-* **Funcionamento:** Toda a persistência de dados ocorre diretamente no dispositivo do usuário de
-  maneira embarcada. Não é necessário baixar ou instalar nenhum servidor de banco de dados externo.
-* **Armazenamento:** O arquivo físico do banco de dados (`db.sqlite`) reside em uma pasta de sistema
-  privada e segura atribuída ao aplicativo pelo sistema operacional (via `path_provider`).
-* **Ambiente de Testes:** Durante a execução de testes automatizados (`flutter test`), o SQLite roda
-  **100% em memória RAM** (`NativeDatabase.memory()`). Isso garante que os testes sejam rápidos,
-  isolados e que o banco seja descartado imediatamente após a conclusão dos testes.

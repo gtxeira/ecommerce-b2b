@@ -1,3 +1,4 @@
+// ignore_for_file: prefer_initializing_formals
 import 'package:ecommerce_b2b/modules/shared_kernel/base/base_aggregate_root.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/quote_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
@@ -9,6 +10,7 @@ class Quote extends AggregateRoot<QuoteId> {
   final String? representativeId;
   QuoteStatus _status;
   final List<QuoteItem> _items;
+  final Money _shippingCost;
 
   Quote({
     required QuoteId id,
@@ -16,21 +18,29 @@ class Quote extends AggregateRoot<QuoteId> {
     this.representativeId,
     required QuoteStatus status,
     List<QuoteItem>? items,
-  })  : _status = status,
-        _items = items ?? [],
-        super(id);
+    Money? shippingCost,
+  }) : _status = status,
+       _items = items ?? [],
+       _shippingCost = shippingCost ?? Money.create(0).getOrThrow(),
+       super(id);
 
   QuoteStatus get status => _status;
   List<QuoteItem> get items => List.unmodifiable(_items);
+  Money get shippingCost => _shippingCost;
 
   Money get total {
-    if (_items.isEmpty) return Money.create(0).getOrThrow();
-    
-    Money sum = Money.create(0, currency: _items.first.unitPrice.currency).getOrThrow();
+    if (_items.isEmpty) {
+      return _shippingCost;
+    }
+
+    Money sum = Money.create(
+      0,
+      currency: _items.first.unitPrice.currency,
+    ).getOrThrow();
     for (var item in _items) {
       sum = sum + item.subtotal;
     }
-    return sum;
+    return sum + _shippingCost;
   }
 
   void addItem(QuoteItem item) {

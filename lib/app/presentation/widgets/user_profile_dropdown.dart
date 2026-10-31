@@ -25,6 +25,7 @@ class UserProfileDropdown extends StatelessWidget {
         UserRole.representative => 'Representante',
         UserRole.finance => 'Gestor Financeiro',
         UserRole.supervisor => 'Supervisor',
+        UserRole.admin => 'Administrador',
       };
     }
 

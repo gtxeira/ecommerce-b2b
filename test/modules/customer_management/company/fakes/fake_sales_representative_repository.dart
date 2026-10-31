@@ -1,3 +1,5 @@
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/commission.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/customer_assignment.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/repositories/sales_representative_repository.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/sales_representative.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/representative_id.dart';
@@ -49,5 +51,21 @@ class FakeSalesRepresentativeRepository implements SalesRepresentativeRepository
   /// Helper to add custom reps for specific test scenarios.
   void addRep(SalesRepresentative rep) {
     _reps.add(rep);
+  }
+
+  @override
+  Future<List<Commission>> getCommissions({String? representativeId}) async {
+    return _reps
+        .where((r) => representativeId == null || r.id.value == representativeId)
+        .expand((r) => r.commissions)
+        .toList();
+  }
+
+  @override
+  Future<List<CustomerAssignment>> getPortfolio({String? representativeId}) async {
+    return _reps
+        .where((r) => representativeId == null || r.id.value == representativeId)
+        .expand((r) => r.assignments)
+        .toList();
   }
 }

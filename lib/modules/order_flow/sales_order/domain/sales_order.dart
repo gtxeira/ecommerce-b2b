@@ -15,6 +15,7 @@ class SalesOrder extends AggregateRoot<OrderId> {
   CreditStatus _creditStatus;
   final List<OrderItem> _items;
   FinanceReview? _financeReview;
+  final Money _shippingCost;
 
   /// Construtor do Pedido de Venda.
   SalesOrder({
@@ -24,33 +25,41 @@ class SalesOrder extends AggregateRoot<OrderId> {
     required CreditStatus creditStatus,
     required List<OrderItem> items,
     FinanceReview? financeReview,
-  })  : _status = status,
-        _creditStatus = creditStatus,
-        _items = items,
-        _financeReview = financeReview,
-        super(id);
+    Money? shippingCost,
+  }) : _status = status,
+       _creditStatus = creditStatus,
+       _items = items,
+       _financeReview = financeReview,
+       _shippingCost = shippingCost ?? Money.create(0).getOrThrow(),
+       super(id);
 
   /// Status atual do pedido (ex: pendente aprovação, em trânsito).
   OrderStatus get status => _status;
-  
+
   /// Status de crédito do pedido.
   CreditStatus get creditStatus => _creditStatus;
-  
+
   /// Itens que compõem o pedido.
   List<OrderItem> get items => List.unmodifiable(_items);
-  
+
   /// Revisão financeira associada ao pedido, se houver.
   FinanceReview? get financeReview => _financeReview;
 
-  /// Calcula o valor total do pedido somando os subtotais de cada item.
+  /// Frete herdado do orçamento, em reais.
+  Money get shippingCost => _shippingCost;
+
+  /// Calcula o valor total do pedido somando os subtotais de cada item e o frete.
   Money get total {
-    if (_items.isEmpty) return Money.create(0).getOrThrow();
-    
-    Money sum = Money.create(0, currency: _items.first.unitPriceSnapshot.currency).getOrThrow();
+    if (_items.isEmpty) return _shippingCost;
+
+    Money sum = Money.create(
+      0,
+      currency: _items.first.unitPriceSnapshot.currency,
+    ).getOrThrow();
     for (var item in _items) {
       sum = sum + item.subtotal;
     }
-    return sum;
+    return sum + _shippingCost;
   }
 
   /// Atualiza o status do pedido.

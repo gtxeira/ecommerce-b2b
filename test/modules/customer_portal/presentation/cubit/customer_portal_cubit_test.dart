@@ -9,9 +9,6 @@ import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/retu
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/enums/rma_status.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/shipment.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/repositories/shipment_repository.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/repositories/tracking_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/domain/enums/credit_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
@@ -27,21 +24,16 @@ class MockGetPurchaseHistoryUseCase extends Mock implements GetPurchaseHistoryUs
 class MockGetReturnRequestsUseCase extends Mock implements GetReturnRequestsUseCase {}
 class MockDownloadBoletoUseCase extends Mock implements DownloadBoletoUseCase {}
 class MockOpenReturnRequestUseCase extends Mock implements OpenReturnRequestUseCase {}
-class MockShipmentRepository extends Mock implements ShipmentRepository {}
-class MockTrackingRepository extends Mock implements TrackingRepository {}
-class MockShipment extends Mock implements Shipment {}
 
 class SalesOrderFake extends Fake implements SalesOrder {}
 class RmaIdFake extends Fake implements RmaId {}
 class ReturnRequestItemFake extends Fake implements ReturnRequestItem {}
-class ShipmentFake extends Fake implements Shipment {}
 
 void main() {
   setUpAll(() {
     registerFallbackValue(SalesOrderFake());
     registerFallbackValue(RmaIdFake());
     registerFallbackValue(ReturnRequestItemFake());
-    registerFallbackValue(ShipmentFake());
   });
 
   group('CustomerPortalCubit', () {
@@ -49,8 +41,6 @@ void main() {
     late MockGetReturnRequestsUseCase getReturnRequests;
     late MockDownloadBoletoUseCase downloadBoleto;
     late MockOpenReturnRequestUseCase openReturnRequest;
-    late MockShipmentRepository shipmentRepository;
-    late MockTrackingRepository trackingRepository;
     late CustomerPortalCubit cubit;
 
     final companyId = const CompanyId('c1');
@@ -65,16 +55,12 @@ void main() {
       getReturnRequests = MockGetReturnRequestsUseCase();
       downloadBoleto = MockDownloadBoletoUseCase();
       openReturnRequest = MockOpenReturnRequestUseCase();
-      shipmentRepository = MockShipmentRepository();
-      trackingRepository = MockTrackingRepository();
 
       cubit = CustomerPortalCubit(
         getPurchaseHistoryUseCase: getPurchaseHistory,
         getReturnRequestsUseCase: getReturnRequests,
         downloadBoletoUseCase: downloadBoleto,
         openReturnRequestUseCase: openReturnRequest,
-        shipmentRepository: shipmentRepository,
-        trackingRepository: trackingRepository,
       );
     });
 
@@ -119,31 +105,6 @@ void main() {
       final loaded = states[1] as CustomerPortalLoaded;
       expect(loaded.orders, [order]);
       expect(loaded.returnRequests, [rma]);
-    });
-
-    test('loadPortalData should sync tracking for in-transit orders', () async {
-      final order = SalesOrder(
-        id: const OrderId('o-transit'),
-        companyId: 'c1',
-        status: OrderStatus.inTransit,
-        creditStatus: CreditStatus.approved,
-        items: [],
-      );
-
-      final shipment = MockShipment();
-
-      when(() => getPurchaseHistory.execute(companyId, session)).thenAnswer((_) async => Success([order]));
-      when(() => getReturnRequests.execute(companyId, session)).thenAnswer((_) async => Success([]));
-      when(() => shipmentRepository.getByOrderId('o-transit')).thenAnswer((_) async => shipment);
-      when(() => trackingRepository.syncTracking(any())).thenAnswer((_) async => {});
-      when(() => shipmentRepository.save(any())).thenAnswer((_) async => {});
-
-      await cubit.loadPortalData(companyId: companyId, session: session);
-      await Future.delayed(Duration.zero);
-
-      verify(() => shipmentRepository.getByOrderId('o-transit')).called(1);
-      verify(() => trackingRepository.syncTracking(shipment)).called(1);
-      verify(() => shipmentRepository.save(shipment)).called(1);
     });
 
     test('downloadBoleto should get boleto copy and update state', () async {

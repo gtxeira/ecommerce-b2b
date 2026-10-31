@@ -30,17 +30,25 @@ class FinanceReviewPage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline_rounded, size: 64, color: colorScheme.error),
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 64,
+                      color: colorScheme.error,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Erro ao carregar análises',
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(state.message),
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: () => context.read<FinanceReviewCubit>().loadPendingOrders(),
+                      onPressed: () => context
+                          .read<FinanceReviewCubit>()
+                          .loadPendingOrders(),
                       child: const Text('Recarregar'),
                     ),
                   ],
@@ -54,7 +62,11 @@ class FinanceReviewPage extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.gpp_good_rounded, size: 80, color: colorScheme.primary.withValues(alpha: 0.5)),
+                      Icon(
+                        Icons.gpp_good_rounded,
+                        size: 80,
+                        color: colorScheme.primary.withValues(alpha: 0.5),
+                      ),
                       const SizedBox(height: 20),
                       Text(
                         'Fila de Análise Limpa!',
@@ -66,7 +78,9 @@ class FinanceReviewPage extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         'Todos os pedidos bloqueados ou pendentes já foram revisados.',
-                        style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -79,8 +93,11 @@ class FinanceReviewPage extends StatelessWidget {
                 itemCount: state.pendingOrders.length,
                 itemBuilder: (context, index) {
                   final order = state.pendingOrders[index];
-                  final isBlocked = order.status == OrderStatus.blockedByFinance;
-                  final statusColor = isBlocked ? colorScheme.error : colorScheme.tertiary;
+                  final isBlocked =
+                      order.status == OrderStatus.blockedByFinance;
+                  final statusColor = isBlocked
+                      ? colorScheme.error
+                      : colorScheme.tertiary;
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: 20),
@@ -88,7 +105,11 @@ class FinanceReviewPage extends StatelessWidget {
                     color: colorScheme.surfaceContainerLow,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
-                      side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                      side: BorderSide(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.3,
+                        ),
+                      ),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(24),
@@ -111,12 +132,17 @@ class FinanceReviewPage extends StatelessWidget {
                                   const SizedBox(height: 4),
                                   Text(
                                     'Empresa ID: ${order.companyId}',
-                                    style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ],
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
                                   color: statusColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(12),
@@ -133,11 +159,13 @@ class FinanceReviewPage extends StatelessWidget {
                             ],
                           ),
                           const Divider(height: 32),
-                          
+
                           // Detalhes dos Itens do Pedido
                           Text(
                             'Itens do Pedido',
-                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           ListView.builder(
@@ -147,9 +175,12 @@ class FinanceReviewPage extends StatelessWidget {
                             itemBuilder: (itemCtx, itemIdx) {
                               final item = order.items[itemIdx];
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Text(
@@ -159,7 +190,10 @@ class FinanceReviewPage extends StatelessWidget {
                                     ),
                                     Text(
                                       item.unitPriceSnapshot.toString(),
-                                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -174,7 +208,9 @@ class FinanceReviewPage extends StatelessWidget {
                             children: [
                               Text(
                                 'Valor Total a Faturar',
-                                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               Text(
                                 order.total.toString(),
@@ -186,34 +222,50 @@ class FinanceReviewPage extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Ações
                           Row(
                             children: [
                               Expanded(
                                 child: OutlinedButton.icon(
-                                  onPressed: () => _showReviewDialog(context, order, false),
+                                  onPressed: () =>
+                                      _showReviewDialog(context, order, false),
                                   icon: const Icon(Icons.cancel_outlined),
                                   label: const Text('REPROVAR CRÉDITO'),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: colorScheme.error,
-                                    side: BorderSide(color: colorScheme.error.withValues(alpha: 0.5)),
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    side: BorderSide(
+                                      color: colorScheme.error.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ElevatedButton.icon(
-                                  onPressed: () => _showReviewDialog(context, order, true),
-                                  icon: const Icon(Icons.check_circle_outline_rounded),
-                                  label: const Text('APROVAR E FATURAR'),
+                                  onPressed: () =>
+                                      _showReviewDialog(context, order, true),
+                                  icon: const Icon(
+                                    Icons.check_circle_outline_rounded,
+                                  ),
+                                  label: const Text('APROVAR'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: colorScheme.primary,
                                     foregroundColor: colorScheme.onPrimary,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -251,7 +303,7 @@ class FinanceReviewPage extends StatelessWidget {
           children: [
             Text(
               approve
-                  ? 'Você está prestes a aprovar e faturar o pedido #${order.id.value.substring(0, 8)}. O estoque será alocado e o fluxo de expedição iniciado.'
+                  ? 'Você está prestes a aprovar o pedido #${order.id.value.substring(0, 8)}. O estoque será alocado e o fluxo de expedição iniciado.'
                   : 'Você está prestes a reprovar o pedido #${order.id.value.substring(0, 8)}. O pedido será cancelado no sistema.',
               style: theme.textTheme.bodyMedium,
             ),
@@ -277,21 +329,35 @@ class FinanceReviewPage extends StatelessWidget {
             onPressed: () {
               if (controller.text.trim().isEmpty) {
                 ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  const SnackBar(content: Text('Por favor, preencha a justificativa.')),
+                  const SnackBar(
+                    content: Text('Por favor, preencha a justificativa.'),
+                  ),
                 );
                 return;
               }
               if (approve) {
-                parentContext.read<FinanceReviewCubit>().approveOrder(order, controller.text);
+                parentContext.read<FinanceReviewCubit>().approveOrder(
+                  order,
+                  controller.text,
+                );
               } else {
-                parentContext.read<FinanceReviewCubit>().rejectOrder(order, controller.text);
+                parentContext.read<FinanceReviewCubit>().rejectOrder(
+                  order,
+                  controller.text,
+                );
               }
               Navigator.pop(dialogContext);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: approve ? colorScheme.primary : colorScheme.error,
-              foregroundColor: approve ? colorScheme.onPrimary : colorScheme.onError,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              backgroundColor: approve
+                  ? colorScheme.primary
+                  : colorScheme.error,
+              foregroundColor: approve
+                  ? colorScheme.onPrimary
+                  : colorScheme.onError,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: const Text('CONFIRMAR'),
           ),

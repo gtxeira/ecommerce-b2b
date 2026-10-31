@@ -17,4 +17,11 @@ abstract class InventoryRepository implements BaseRepository<Warehouse> {
 
   /// Gets stock for a specific product in a warehouse.
   Future<StockItem?> getStock(WarehouseId warehouseId, ProductId productId);
+
+  /// Ajusta a quantidade física do produto no depósito (PATCH na API).
+  Future<void> adjustStock({
+    required WarehouseId warehouseId,
+    required ProductId productId,
+    required int physicalQuantity,
+  });
 }

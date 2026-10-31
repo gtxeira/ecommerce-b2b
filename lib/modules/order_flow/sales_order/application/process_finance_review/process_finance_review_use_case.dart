@@ -1,59 +1,27 @@
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/repositories/inventory_repository.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/warehouse.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/services/inventory_allocator_domain_service.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/finance_review.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/enums/finance_decision.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/services/order_state_machine_domain_service.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/repositories/sales_order_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/api/finance_api.dart';
 
-/// Caso de Uso responsável por processar a análise manual do departamento financeiro (RF12).
+/// A análise financeira é uma operação da API: ela decide a transição, aloca
+/// estoque e persiste. O cliente só envia a decisão.
 class ProcessFinanceReviewUseCase {
-  final OrderStateMachineDomainService _stateMachine;
-  final InventoryAllocatorDomainService _inventoryAllocator;
-  final SalesOrderRepository _orderRepository;
-  final InventoryRepository _inventoryRepository;
+  final FinanceApi _financeApi;
 
-  ProcessFinanceReviewUseCase(
-    this._stateMachine,
-    this._inventoryAllocator,
-    this._orderRepository,
-    this._inventoryRepository,
-  );
+  ProcessFinanceReviewUseCase(this._financeApi);
 
-  /// Aplica a decisão financeira ao pedido bloqueado e persiste no banco.
-  Future<void> execute({
+  Future<SalesOrder> execute({
     required SalesOrder order,
     required FinanceReview review,
-    required List<Warehouse> warehouses,
-  }) async {
-    if (order.status != OrderStatus.blockedByFinance &&
-        order.status != OrderStatus.pendingFinanceApproval) {
-      throw StateError(
-          'Apenas pedidos em análise ou bloqueados podem passar por análise financeira.');
-    }
+  }) {
+    return _financeApi.processReview(
+      orderId: order.id.value,
+      decision: review.decision,
+      justification: review.justification,
+    );
+  }
 
-    order.applyFinanceReview(review);
-
-    if (review.decision == FinanceDecision.approved) {
-      // Se aprovado manualmente, avança para Picking/Packing (RN11).
-      _stateMachine.transitionTo(order, OrderStatus.pickingPacking);
-      
-      // Tenta alocar estoque agora que foi aprovado.
-      for (final item in order.items) {
-        _inventoryAllocator.allocateStock(warehouses, order.id, item.productId, item.quantity);
-      }
-
-      // Salva os depósitos com as novas reservas.
-      for (final wh in warehouses) {
-        await _inventoryRepository.save(wh);
-      }
-    } else {
-      // Se reprovado, o pedido pode ser cancelado ou mantido como bloqueado (aqui vamos cancelar).
-      _stateMachine.transitionTo(order, OrderStatus.cancelled);
-    }
-
-    await _orderRepository.save(order);
+  Future<bool> invoice(SalesOrder order) async {
+    final result = await _financeApi.invoice(order.id.value);
+    return result.commissionGenerated;
   }
 }

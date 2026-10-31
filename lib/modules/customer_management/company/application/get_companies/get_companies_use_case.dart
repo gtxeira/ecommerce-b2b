@@ -1,70 +1,31 @@
+import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/repositories/company_repository.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/repositories/sales_representative_repository.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/services/sales_hierarchy_domain_service.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/representative_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/auth/errors/auth_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
 
+/// Empresas acessíveis à sessão. O recorte de papel/carteira é da API.
 class GetCompaniesUseCase {
   final CompanyRepository _companyRepository;
-  final SalesRepresentativeRepository _representativeRepository;
-  final SalesHierarchyDomainService _hierarchyService;
 
-  GetCompaniesUseCase(
-    this._companyRepository,
-    this._representativeRepository,
-    this._hierarchyService,
-  );
+  GetCompaniesUseCase(this._companyRepository);
 
   Future<Result<List<Company>, AuthError>> execute(
     UserSession currentSession, {
     String? targetRepresentativeId,
   }) async {
-    if (currentSession.isBuyer) {
-      if (currentSession.companyId == null) {
-        return Failure(UnauthorizedError('Sessão de comprador não possui empresa associada.'));
-      }
-      final company = await _companyRepository.findById(currentSession.companyId!);
-      if (company != null) {
-        return Success([company]);
-      }
-      return Success([]);
-    }
-
-    if (currentSession.isFinance) {
-      final companies = await _companyRepository.findAll();
+    try {
+      final companies = targetRepresentativeId != null
+          ? await _companyRepository.findByRepresentativeId(
+              targetRepresentativeId,
+            )
+          : await _companyRepository.findAll();
       return Success(companies);
+    } on ApiException catch (error) {
+      return Failure(UnauthorizedError(error.message));
+    } catch (error) {
+      return Failure(UnauthorizedError(error.toString()));
     }
-
-    if (currentSession.isRepresentative) {
-      final effectiveRepId = targetRepresentativeId ?? currentSession.userId.value;
-      
-      if (effectiveRepId != currentSession.userId.value) {
-        final supervisorId = RepresentativeId(currentSession.userId.value);
-        final supervisor = await _representativeRepository.findById(supervisorId);
-        
-        if (supervisor != null) {
-          final allReps = await _representativeRepository.findAll();
-          final hasAccess = _hierarchyService.canSupervisorAccessSubordinate(
-            supervisor: supervisor,
-            subordinateId: RepresentativeId(effectiveRepId),
-            allSubordinatesInContext: allReps,
-          );
-
-          if (!hasAccess) {
-            return Failure(UnauthorizedError('Você não tem permissão para visualizar este portfólio de clientes.'));
-          }
-        } else {
-          return Failure(UnauthorizedError('Supervisor não encontrado.'));
-        }
-      }
-
-      final companies = await _companyRepository.findByRepresentativeId(effectiveRepId);
-      return Success(companies);
-    }
-
-    return Failure(UnauthorizedError('Você não tem permissão para visualizar empresas.'));
   }
 }

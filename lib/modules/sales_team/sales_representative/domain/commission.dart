@@ -10,12 +10,15 @@ class Commission extends ValueObject {
   final Percentage rate;
   final Money amount;
   final CommissionStatus status;
+  /// Pedido que originou a comissão (nulo nas comissões históricas do seed).
+  final String? orderId;
 
   const Commission({
     required this.baseAmount,
     required this.rate,
     required this.amount,
     required this.status,
+    this.orderId,
   });
 
   @override
@@ -26,9 +29,14 @@ class Commission extends ValueObject {
           baseAmount == other.baseAmount &&
           rate == other.rate &&
           amount == other.amount &&
-          status == other.status;
+          status == other.status &&
+          orderId == other.orderId;
 
   @override
   int get hashCode =>
-      baseAmount.hashCode ^ rate.hashCode ^ amount.hashCode ^ status.hashCode;
+      baseAmount.hashCode ^
+      rate.hashCode ^
+      amount.hashCode ^
+      status.hashCode ^
+      orderId.hashCode;
 }

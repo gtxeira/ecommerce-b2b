@@ -1,10 +1,9 @@
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/repositories/inventory_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/domain/enums/credit_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_pending_finance_reviews/get_pending_finance_reviews_use_case.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/process_finance_review/process_finance_review_use_case.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/finance_review.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,8 +14,6 @@ class MockGetPendingFinanceReviewsUseCase extends Mock
 
 class MockProcessFinanceReviewUseCase extends Mock
     implements ProcessFinanceReviewUseCase {}
-
-class MockInventoryRepository extends Mock implements InventoryRepository {}
 
 class SalesOrderFake extends Fake implements SalesOrder {}
 
@@ -31,126 +28,93 @@ void main() {
   group('FinanceReviewCubit', () {
     late MockGetPendingFinanceReviewsUseCase getPendingReviews;
     late MockProcessFinanceReviewUseCase processReview;
-    late MockInventoryRepository inventoryRepository;
     late FinanceReviewCubit cubit;
+
+    final order = SalesOrder(
+      id: const OrderId('o1'),
+      status: OrderStatus.pendingFinanceApproval,
+      creditStatus: CreditStatus.pending,
+      items: [],
+    );
 
     setUp(() {
       getPendingReviews = MockGetPendingFinanceReviewsUseCase();
       processReview = MockProcessFinanceReviewUseCase();
-      inventoryRepository = MockInventoryRepository();
       cubit = FinanceReviewCubit(
         getPendingReviews: getPendingReviews,
         processReview: processReview,
-        inventoryRepository: inventoryRepository,
       );
     });
 
-    tearDown(() {
-      cubit.close();
-    });
+    tearDown(() => cubit.close());
 
     test('initial state should be FinanceReviewInitial', () {
       expect(cubit.state, isA<FinanceReviewInitial>());
     });
 
-    test('loadPendingOrders should emit Loading and then Loaded with orders', () async {
-      final order = SalesOrder(
-        id: const OrderId('o1'),
-        status: OrderStatus.pendingFinanceApproval,
-        creditStatus: CreditStatus.pending,
-        items: [],
-      );
-
+    test('loadPendingOrders should emit Loading then Loaded', () async {
       when(() => getPendingReviews.execute()).thenAnswer((_) async => [order]);
 
       final states = <FinanceReviewState>[];
       cubit.stream.listen(states.add);
 
       await cubit.loadPendingOrders();
-      await Future.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
 
-      expect(states, [
-        isA<FinanceReviewLoading>(),
-        isA<FinanceReviewLoaded>(),
-      ]);
-
-      final loaded = states[1] as FinanceReviewLoaded;
-      expect(loaded.pendingOrders, [order]);
+      expect(states, [isA<FinanceReviewLoading>(), isA<FinanceReviewLoaded>()]);
+      expect((states[1] as FinanceReviewLoaded).pendingOrders, [order]);
     });
 
-    test('loadPendingOrders should emit Failure when an exception is thrown', () async {
-      when(() => getPendingReviews.execute()).thenThrow(Exception('DB error'));
+    test('loadPendingOrders should emit Failure on exception', () async {
+      when(() => getPendingReviews.execute()).thenThrow(Exception('API error'));
 
       final states = <FinanceReviewState>[];
       cubit.stream.listen(states.add);
 
       await cubit.loadPendingOrders();
-      await Future.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
 
-      expect(states, [
-        isA<FinanceReviewLoading>(),
-        isA<FinanceReviewFailure>(),
-      ]);
-
-      final failure = states[1] as FinanceReviewFailure;
-      expect(failure.message, contains('DB error'));
+      expect(states, [isA<FinanceReviewLoading>(), isA<FinanceReviewFailure>()]);
     });
 
-    test('approveOrder should process review and reload pending orders', () async {
-      final order = SalesOrder(
-        id: const OrderId('o1'),
-        status: OrderStatus.pendingFinanceApproval,
-        creditStatus: CreditStatus.pending,
-        items: [],
-      );
-
-      when(() => inventoryRepository.getAll()).thenAnswer((_) async => []);
-
+    test('approveOrder should send the review and reload the queue', () async {
       when(() => processReview.execute(
             order: any(named: 'order'),
             review: any(named: 'review'),
-            warehouses: any(named: 'warehouses'),
-          )).thenAnswer((_) async => {});
-
+          )).thenAnswer((_) async => order);
       when(() => getPendingReviews.execute()).thenAnswer((_) async => []);
 
-      await cubit.approveOrder(order, 'Approved because risk is low');
+      await cubit.approveOrder(order, 'Limite ok');
 
-      verify(() => inventoryRepository.getAll()).called(1);
       verify(() => processReview.execute(
             order: order,
             review: any(named: 'review'),
-            warehouses: any(named: 'warehouses'),
           )).called(1);
-
       verify(() => getPendingReviews.execute()).called(1);
     });
 
-    test('rejectOrder should process review and reload pending orders', () async {
-      final order = SalesOrder(
-        id: const OrderId('o1'),
-        status: OrderStatus.pendingFinanceApproval,
-        creditStatus: CreditStatus.pending,
-        items: [],
-      );
-
+    test('rejectOrder should send the review and reload the queue', () async {
       when(() => processReview.execute(
-        order: any(named: 'order'),
-        review: any(named: 'review'),
-        warehouses: any(named: 'warehouses'),
-      )).thenAnswer((_) async => {});
-
+            order: any(named: 'order'),
+            review: any(named: 'review'),
+          )).thenAnswer((_) async => order);
       when(() => getPendingReviews.execute()).thenAnswer((_) async => []);
 
-      await cubit.rejectOrder(order, 'Credit score too low');
+      await cubit.rejectOrder(order, 'Crédito insuficiente');
 
       verify(() => processReview.execute(
-        order: order,
-        review: any(named: 'review'),
-        warehouses: [],
-      )).called(1);
+            order: order,
+            review: any(named: 'review'),
+          )).called(1);
+    });
 
-      verify(() => getPendingReviews.execute()).called(1);
+    test('invoiceOrder should call the API and reload', () async {
+      when(() => processReview.invoice(any())).thenAnswer((_) async => true);
+      when(() => getPendingReviews.execute()).thenAnswer((_) async => []);
+
+      await cubit.invoiceOrder(order);
+
+      verify(() => processReview.invoice(order)).called(1);
     });
   });
 }

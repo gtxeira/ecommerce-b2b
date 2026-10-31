@@ -12,7 +12,9 @@ class QuoteCubit extends Cubit<QuoteState> {
   Future<void> loadQuotes(UserSession session) async {
     emit(QuoteLoading());
     try {
-      final quotes = await _quoteRepository.findByRepresentativeId(session.userId.value);
+      final quotes = await _quoteRepository.findByRepresentativeId(
+        session.userId.value,
+      );
       emit(QuoteLoaded(quotes));
     } catch (e) {
       emit(QuoteError(e.toString()));
@@ -25,6 +27,7 @@ class QuoteCubit extends Cubit<QuoteState> {
       await loadQuotes(session);
     } catch (e) {
       emit(QuoteError(e.toString()));
+      rethrow;
     }
   }
 }

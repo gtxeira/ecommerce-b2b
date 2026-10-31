@@ -1,3 +1,4 @@
+// ignore_for_file: prefer_initializing_formals
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/cnpj.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/inscricao_estadual.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/base/base_aggregate_root.dart';

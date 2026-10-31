@@ -51,6 +51,13 @@ enum AppPage {
     icon: Icons.account_balance_wallet_rounded,
     colorType: CardColorType.surfaceVariant,
   ),
+  billing(
+    path: '/billing',
+    label: 'Faturamento',
+    subtitle: 'Pedidos entregues',
+    icon: Icons.receipt_long_rounded,
+    colorType: CardColorType.tertiaryContainer,
+  ),
   dashboard(
     path: '/dashboard',
     label: 'Dashboard',
@@ -71,6 +78,13 @@ enum AppPage {
     subtitle: 'Níveis de inventário',
     icon: Icons.inventory_rounded,
     colorType: CardColorType.surfaceVariant,
+  ),
+  users(
+    path: '/users',
+    label: 'Usuários',
+    subtitle: 'Acessos e papéis',
+    icon: Icons.manage_accounts_rounded,
+    colorType: CardColorType.secondaryContainer,
   ),
   portal(
     path: '/portal',
@@ -97,18 +111,34 @@ enum AppPage {
   /// Define quais páginas são visíveis para cada papel na barra lateral
   static List<AppPage> sidebarPagesFor(UserRole role) {
     return switch (role) {
-      UserRole.representative || UserRole.supervisor => [
-          AppPage.home,
-          AppPage.companies, // Carteira de clientes
-          AppPage.catalog,
-          AppPage.quotes,
-          AppPage.logistics,
-          AppPage.inventory,
-        ],
-      UserRole.finance => [
-          AppPage.home,
-          AppPage.finance,
-        ],
+      UserRole.representative => [
+        AppPage.home,
+        AppPage.companies,
+        AppPage.catalog,
+        AppPage.quotes,
+        AppPage.logistics,
+        AppPage.inventory,
+      ],
+      UserRole.supervisor => [
+        AppPage.home,
+        AppPage.companies,
+        AppPage.catalog,
+        AppPage.quotes,
+        AppPage.logistics,
+        AppPage.inventory,
+        AppPage.billing,
+      ],
+      UserRole.finance => [AppPage.home, AppPage.finance, AppPage.billing],
+      UserRole.admin => [
+        AppPage.home,
+        AppPage.companies,
+        AppPage.catalog,
+        AppPage.inventory,
+        AppPage.finance,
+        AppPage.billing,
+        AppPage.logistics,
+        AppPage.users,
+      ],
       UserRole.buyer => [], // Comprador não usa sidebar/MainLayout
     };
   }

@@ -1,3 +1,7 @@
+// ignore_for_file: prefer_initializing_formals
+import 'dart:async';
+
+import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/modules/identity_access/application/login/login_use_case.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/auth_repository.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
@@ -9,16 +13,27 @@ part 'auth_state.dart';
 class AuthCubit extends Cubit<AuthState> {
   final LoginUseCase _loginUseCase;
   final AuthRepository _authRepository;
+  final SessionEvents? _sessionEvents;
+  StreamSubscription<void>? _expiredSubscription;
 
   AuthCubit({
-    required this._loginUseCase,
-    required this._authRepository,
-  })  : super(AuthInitial()) {
+    required LoginUseCase loginUseCase,
+    required AuthRepository authRepository,
+    SessionEvents? sessionEvents,
+  }) : _loginUseCase = loginUseCase,
+       _authRepository = authRepository,
+       _sessionEvents = sessionEvents,
+       super(AuthInitial()) {
+    _expiredSubscription = _sessionEvents?.onExpired.listen((_) {
+      if (!isClosed) emit(AuthUnauthenticated());
+    });
     _checkInitialSession();
   }
 
   Future<void> _checkInitialSession() async {
     final session = await _authRepository.getCurrentSession();
+    if (isClosed || state is! AuthInitial) return;
+
     if (session != null) {
       emit(AuthAuthenticated(session));
     } else {
@@ -39,6 +54,12 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> logout() async {
     emit(AuthLoading());
     await _authRepository.logout();
-    emit(AuthUnauthenticated());
+    if (!isClosed) emit(AuthUnauthenticated());
+  }
+
+  @override
+  Future<void> close() async {
+    await _expiredSubscription?.cancel();
+    return super.close();
   }
 }

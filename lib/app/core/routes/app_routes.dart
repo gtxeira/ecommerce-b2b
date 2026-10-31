@@ -6,11 +6,13 @@ import 'package:ecommerce_b2b/app/presentation/pages/home_page.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/pages/login_page.dart';
+import 'package:ecommerce_b2b/modules/identity_access/presentation/pages/users_page.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_catalog_page.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_home_page.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/pages/representative_home_page.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/pages/finance_home_page.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/pages/finance_review_page.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/pages/billing_page.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/presentation/pages/company_list_page.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/pages/product_list_page.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/pages/quote_page.dart';
@@ -27,7 +29,13 @@ final appRouter = GoRouter(
     final authState = context.read<AuthCubit>().state;
     final isLoggingIn = state.matchedLocation == AppPage.login.path;
 
-    if (authState is AuthUnauthenticated || authState is AuthInitial) {
+    // Enquanto a sessão persistida é verificada, não redireciona: a rota raiz
+    // mostra o splash. Redirecionar aqui faria a tela de login piscar no boot.
+    if (authState is AuthInitial) {
+      return null;
+    }
+
+    if (authState is AuthUnauthenticated) {
       return isLoggingIn ? null : AppPage.login.path;
     }
 
@@ -45,9 +53,10 @@ final appRouter = GoRouter(
     ShellRoute(
       builder: (context, state, child) {
         final authState = context.watch<AuthCubit>().state;
-        
+
         // Se for comprador, não mostra o MainLayout (que parece ser para representantes/admin)
-        if (authState is AuthAuthenticated && authState.session.role == UserRole.buyer) {
+        if (authState is AuthAuthenticated &&
+            authState.session.role == UserRole.buyer) {
           return child;
         }
 
@@ -58,6 +67,9 @@ final appRouter = GoRouter(
           path: AppPage.home.path,
           builder: (context, state) {
             final authState = context.watch<AuthCubit>().state;
+            if (authState is AuthInitial) {
+              return const _SplashPage();
+            }
             if (authState is AuthAuthenticated) {
               if (authState.session.role == UserRole.buyer) {
                 return const BuyerHomePage();
@@ -69,6 +81,9 @@ final appRouter = GoRouter(
               if (authState.session.role == UserRole.finance) {
                 return const FinanceHomePage();
               }
+              if (authState.session.role == UserRole.admin) {
+                return const HomePage();
+              }
             }
             return const HomePage();
           },
@@ -76,6 +91,10 @@ final appRouter = GoRouter(
         GoRoute(
           path: AppPage.finance.path,
           builder: (context, state) => const FinanceReviewPage(),
+        ),
+        GoRoute(
+          path: AppPage.billing.path,
+          builder: (context, state) => const BillingPage(),
         ),
         GoRoute(
           path: AppPage.companies.path,
@@ -98,6 +117,10 @@ final appRouter = GoRouter(
           builder: (context, state) => const InventoryPage(),
         ),
         GoRoute(
+          path: AppPage.users.path,
+          builder: (context, state) => const UsersPage(),
+        ),
+        GoRoute(
           path: '/buyer-catalog',
           builder: (context, state) => const BuyerCatalogPage(),
         ),
@@ -105,6 +128,16 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+/// Enquanto os tokens persistidos são validados, evita exibir a Home ou o Login.
+class _SplashPage extends StatelessWidget {
+  const _SplashPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  }
+}
 
 /// Helper para notificar o GoRouter quando o estado do Cubit mudar
 class _AuthRefreshListenable extends ChangeNotifier {

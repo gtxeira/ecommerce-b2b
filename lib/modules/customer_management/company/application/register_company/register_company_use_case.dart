@@ -1,3 +1,5 @@
+import 'package:ecommerce_b2b/app/core/network/api_domain_error.dart';
+import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/customer_credit_account.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/repositories/company_repository.dart';
@@ -11,7 +13,6 @@ import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/phone_number.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/auth/errors/auth_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
 
 class RegisterCompanyUseCase {
@@ -43,10 +44,6 @@ class RegisterCompanyUseCase {
     required String shippingZipCode,
     required double creditLimit,
   }) async {
-    if (currentSession.isBuyer) {
-      return Failure(UnauthorizedError('Compradores não são autorizados a cadastrar empresas.'));
-    }
-
     final cnpjResult = Cnpj.create(cnpj);
     if (cnpjResult.isFailure) return Failure(cnpjResult.getFailureOrThrow());
 
@@ -68,7 +65,9 @@ class RegisterCompanyUseCase {
       state: billingState,
       zipCode: billingZipCode,
     );
-    if (billingAddressResult.isFailure) return Failure(billingAddressResult.getFailureOrThrow());
+    if (billingAddressResult.isFailure) {
+      return Failure(billingAddressResult.getFailureOrThrow());
+    }
 
     final shippingAddressResult = Address.create(
       street: shippingStreet,
@@ -79,13 +78,17 @@ class RegisterCompanyUseCase {
       state: shippingState,
       zipCode: shippingZipCode,
     );
-    if (shippingAddressResult.isFailure) return Failure(shippingAddressResult.getFailureOrThrow());
+    if (shippingAddressResult.isFailure) {
+      return Failure(shippingAddressResult.getFailureOrThrow());
+    }
 
     final stateResult = State.fromString(billingState);
     if (stateResult.isFailure) return Failure(stateResult.getFailureOrThrow());
 
     final creditLimitResult = Money.create(creditLimit);
-    if (creditLimitResult.isFailure) return Failure(creditLimitResult.getFailureOrThrow());
+    if (creditLimitResult.isFailure) {
+      return Failure(creditLimitResult.getFailureOrThrow());
+    }
 
     final companyId = CompanyId('c-${DateTime.now().millisecondsSinceEpoch}');
     final creditLimitObj = creditLimitResult.getOrThrow();
@@ -108,10 +111,15 @@ class RegisterCompanyUseCase {
         openBalance: Money.create(0).getOrThrow(),
         pendingOrdersBalance: Money.create(0).getOrThrow(),
       ),
-      representativeId: currentSession.isRepresentative ? currentSession.userId.value : null,
     );
 
-    await _companyRepository.save(company);
-    return Success(company);
+    try {
+      await _companyRepository.save(company);
+      return Success(company);
+    } on ApiException catch (error) {
+      return Failure(ApiDomainError.fromException(error));
+    } catch (error) {
+      return Failure(ApiDomainError(error.toString()));
+    }
   }
 }

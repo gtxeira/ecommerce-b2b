@@ -6,6 +6,7 @@ import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_variant_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/domain/logistics/value_objects/weight.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/money_input.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/not_empty_input.dart';
 import 'package:flutter/material.dart';
@@ -423,6 +424,7 @@ class ProductListView extends StatelessWidget {
     final colorCtrl = TextEditingController();
     final sizeCtrl = TextEditingController();
     final voltageCtrl = TextEditingController();
+    final weightCtrl = TextEditingController();
     final priceCtrl = TextEditingController();
     bool sameAsParent = true;
     bool hasSubmitted = false;
@@ -483,6 +485,15 @@ class ProductListView extends StatelessWidget {
                           controller: voltageCtrl,
                           decoration: const InputDecoration(labelText: 'Voltagem', prefixIcon: Icon(Icons.bolt_rounded)),
                         ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: weightCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(
+                            labelText: 'Peso (kg)',
+                            prefixIcon: Icon(Icons.scale_outlined),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -502,6 +513,7 @@ class ProductListView extends StatelessWidget {
                         voltage: voltageCtrl.text,
                         sameAsParent: sameAsParent,
                         price: sameAsParent ? null : Money.create(double.parse(priceCtrl.text)).getOrThrow(),
+                        weight: Weight.create(double.tryParse(weightCtrl.text) ?? 0).getOrThrow(),
                       );
                       product.addVariant(variant);
                       context.read<CatalogCubit>().saveProduct(product);

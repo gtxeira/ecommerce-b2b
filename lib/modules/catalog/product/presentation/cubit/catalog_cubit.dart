@@ -5,6 +5,7 @@ import 'package:ecommerce_b2b/modules/catalog/product/application/save_product/s
 import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_state.dart';
 import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/repositories/inventory_repository.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/stock_item.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_variant_id.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,10 +28,18 @@ class CatalogCubit extends Cubit<CatalogState> {
   Future<void> loadProducts({String? query}) async {
     emit(CatalogLoading());
     final result = await _getProductsUseCase.execute(query: query);
-    final consolidatedStock = await _inventoryRepository.getConsolidatedStock();
-    
+
+    // Estoque é complementar: se a chamada falhar, o catálogo ainda aparece.
+    var consolidatedStock = const <StockItem>[];
+    try {
+      consolidatedStock = await _inventoryRepository.getConsolidatedStock();
+    } catch (_) {
+      consolidatedStock = const <StockItem>[];
+    }
+
     final Map<String, int> stockMap = {
-      for (var item in consolidatedStock) item.productId.value: item.physicalQuantity.value
+      for (var item in consolidatedStock)
+        item.productId.value: item.physicalQuantity.value,
     };
 
     result.fold(
@@ -41,7 +50,7 @@ class CatalogCubit extends Cubit<CatalogState> {
 
   Future<void> saveProduct(Product product) async {
     final result = await _saveProductUseCase.execute(product);
-    
+
     result.fold(
       (error) => emit(CatalogError(error.toString())),
       (_) => loadProducts(),
@@ -50,25 +59,25 @@ class CatalogCubit extends Cubit<CatalogState> {
 
   Future<void> deleteProduct(ProductId productId) async {
     final result = await _deleteProductUseCase.execute(productId);
-    
-    result.fold(
-      (error) => emit(CatalogError(error.toString())),
-      (_) {
-        emit(CatalogProductDeleted());
-        loadProducts();
-      },
-    );
+
+    result.fold((error) => emit(CatalogError(error.toString())), (_) {
+      emit(CatalogProductDeleted());
+      loadProducts();
+    });
   }
 
-  Future<void> deleteVariant(ProductId productId, ProductVariantId variantId) async {
-    final result = await _deleteProductVariantUseCase.execute(productId, variantId);
-    
-    result.fold(
-      (error) => emit(CatalogError(error.toString())),
-      (_) {
-        emit(CatalogVariantDeleted());
-        loadProducts();
-      },
+  Future<void> deleteVariant(
+    ProductId productId,
+    ProductVariantId variantId,
+  ) async {
+    final result = await _deleteProductVariantUseCase.execute(
+      productId,
+      variantId,
     );
+
+    result.fold((error) => emit(CatalogError(error.toString())), (_) {
+      emit(CatalogVariantDeleted());
+      loadProducts();
+    });
   }
 }

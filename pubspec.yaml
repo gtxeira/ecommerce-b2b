@@ -19,12 +19,10 @@ dependencies:
   equatable: ^2.0.8
   formz: ^0.8.0
   mask_text_input_formatter: ^2.9.0
-  drift: ^2.16.0
-  sqlite3: ^2.4.2
-  path_provider: ^2.1.2
-  path: ^1.9.0
   uuid: ^4.4.0
-  bcrypt: ^1.2.0
+  dio: ^5.11.1
+  flutter_secure_storage: ^11.2.0
+  shared_preferences: ^2.5.6
 
 dev_dependencies:
   flutter_test:
@@ -32,9 +30,6 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
   mocktail: ^1.0.5
-  drift_dev: ^2.16.0
-  build_runner: ^2.4.8
-
 flutter:
   uses-material-design: true
 

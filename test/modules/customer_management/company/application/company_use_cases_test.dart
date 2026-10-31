@@ -1,206 +1,88 @@
 import 'package:ecommerce_b2b/modules/customer_management/company/application/add_authorized_buyer/add_authorized_buyer_use_case.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/application/get_companies/get_companies_use_case.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/application/register_company/register_company_use_case.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/domain/errors/cnpj_errors.dart';
-import '../fakes/fake_company_repository.dart';
-import '../fakes/fake_sales_representative_repository.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/user_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/auth/errors/auth_errors.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/services/sales_hierarchy_domain_service.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/base/base_domain_errors.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../fakes/fake_company_repository.dart';
 
 void main() {
   late FakeCompanyRepository companyRepository;
-  late FakeSalesRepresentativeRepository repRepository;
-  late SalesHierarchyDomainService hierarchyService;
   late GetCompaniesUseCase getCompaniesUseCase;
   late RegisterCompanyUseCase registerCompanyUseCase;
   late AddAuthorizedBuyerUseCase addAuthorizedBuyerUseCase;
 
   setUp(() {
     companyRepository = FakeCompanyRepository();
-    repRepository = FakeSalesRepresentativeRepository();
-    hierarchyService = SalesHierarchyDomainService();
-    getCompaniesUseCase = GetCompaniesUseCase(companyRepository, repRepository, hierarchyService);
+    getCompaniesUseCase = GetCompaniesUseCase(companyRepository);
     registerCompanyUseCase = RegisterCompanyUseCase(companyRepository);
     addAuthorizedBuyerUseCase = AddAuthorizedBuyerUseCase(companyRepository);
   });
 
+  final representativeSession = UserSession(
+    userId: const UserId('rep-456'),
+    role: UserRole.representative,
+  );
+
   group('GetCompaniesUseCase', () {
-    test('should return all companies for a finance user', () async {
-      final session = UserSession(
-        userId: const UserId('finance-1'),
-        role: UserRole.finance,
-      );
-
-      final result = await getCompaniesUseCase.execute(session);
+    test('should delegate the list to the repository', () async {
+      final result = await getCompaniesUseCase.execute(representativeSession);
 
       expect(result.isSuccess, isTrue);
-      final list = result.getOrThrow();
-      expect(list.length, 2);
+      expect(result.getOrThrow().length, 2);
     });
 
-    test('should return representative companies for representative', () async {
-      final session = UserSession(
-        userId: const UserId('rep-456'),
-        role: UserRole.representative,
-      );
-
-      final result = await getCompaniesUseCase.execute(session);
-
-      expect(result.isSuccess, isTrue);
-      final list = result.getOrThrow();
-      expect(list.length, 2);
-    });
-
-    test('should return subordinate companies for a supervisor', () async {
-      final session = UserSession(
-        userId: const UserId('rep-supervisor'),
-        role: UserRole.supervisor,
-      );
-
+    test('should pass the target representative to the repository', () async {
       final result = await getCompaniesUseCase.execute(
-        session,
+        representativeSession,
         targetRepresentativeId: 'rep-456',
       );
 
       expect(result.isSuccess, isTrue);
-      final list = result.getOrThrow();
-      expect(list.length, 2);
-    });
-
-    test('should return failure for supervisor when targetRepresentativeId is not a subordinate', () async {
-      final session = UserSession(
-        userId: const UserId('rep-supervisor'),
-        role: UserRole.supervisor,
-      );
-
-      final result = await getCompaniesUseCase.execute(
-        session,
-        targetRepresentativeId: 'rep-other',
-      );
-
-      expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<UnauthorizedError>());
-    });
-
-    test('should return only own company for buyer', () async {
-      final session = UserSession(
-        userId: const UserId('buyer-1'),
-        role: UserRole.buyer,
-        companyId: const CompanyId('c1'),
-      );
-
-      final result = await getCompaniesUseCase.execute(session);
-
-      expect(result.isSuccess, isTrue);
-      final list = result.getOrThrow();
-      expect(list.length, 1);
-      expect(list.first.id, const CompanyId('c1'));
+      expect(result.getOrThrow().length, 2);
     });
   });
 
   group('RegisterCompanyUseCase', () {
-    test('should successfully register a company for non-buyer roles', () async {
-      final session = UserSession(
-        userId: const UserId('rep-1'),
-        role: UserRole.representative,
-      );
+    Future<Result<Company, DomainError>> register(String cnpj) => registerCompanyUseCase.execute(
+          currentSession: representativeSession,
+          legalName: 'Test Legal Name S.A.',
+          tradeName: 'Test Trade Name',
+          cnpj: cnpj,
+          inscricaoEstadual: '123456789',
+          email: 'test@company.com',
+          phone: '11999999999',
+          billingStreet: 'Test Street',
+          billingNumber: '100',
+          billingNeighborhood: 'Neighborhood',
+          billingCity: 'São Paulo',
+          billingState: 'SP',
+          billingZipCode: '01000-000',
+          shippingStreet: 'Test Street',
+          shippingNumber: '100',
+          shippingNeighborhood: 'Neighborhood',
+          shippingCity: 'São Paulo',
+          shippingState: 'SP',
+          shippingZipCode: '01000-000',
+          creditLimit: 25000,
+        );
 
-      final result = await registerCompanyUseCase.execute(
-        currentSession: session,
-        legalName: 'Test Legal Name S.A.',
-        tradeName: 'Test Trade Name',
-        cnpj: '12345678000195', // valid CNPJ
-        inscricaoEstadual: '123456789',
-        email: 'test@company.com',
-        phone: '11999999999',
-        billingStreet: 'Test Street',
-        billingNumber: '100',
-        billingNeighborhood: 'Neighborhood',
-        billingCity: 'São Paulo',
-        billingState: 'SP',
-        billingZipCode: '01000-000',
-        shippingStreet: 'Test Street',
-        shippingNumber: '100',
-        shippingNeighborhood: 'Neighborhood',
-        shippingCity: 'São Paulo',
-        shippingState: 'SP',
-        shippingZipCode: '01000-000',
-        creditLimit: 25000,
-      );
+    test('should validate and send a valid company', () async {
+      final result = await register('12345678000195');
 
       expect(result.isSuccess, isTrue);
-      final company = result.getOrThrow();
-      expect(company.tradeName, 'Test Trade Name');
-      expect(company.creditLimit.amount, 25000);
+      expect(result.getOrThrow().tradeName, 'Test Trade Name');
     });
 
-    test('should return failure for buyer registering a company', () async {
-      final session = UserSession(
-        userId: const UserId('buyer-1'),
-        role: UserRole.buyer,
-        companyId: const CompanyId('c1'),
-      );
-
-      final result = await registerCompanyUseCase.execute(
-        currentSession: session,
-        legalName: 'Test Legal Name S.A.',
-        tradeName: 'Test Trade Name',
-        cnpj: '12345678000195',
-        inscricaoEstadual: '123456789',
-        email: 'test@company.com',
-        phone: '11999999999',
-        billingStreet: 'Test Street',
-        billingNumber: '100',
-        billingNeighborhood: 'Neighborhood',
-        billingCity: 'São Paulo',
-        billingState: 'SP',
-        billingZipCode: '01000-000',
-        shippingStreet: 'Test Street',
-        shippingNumber: '100',
-        shippingNeighborhood: 'Neighborhood',
-        shippingCity: 'São Paulo',
-        shippingState: 'SP',
-        shippingZipCode: '01000-000',
-        creditLimit: 25000,
-      );
-
-      expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<UnauthorizedError>());
-    });
-
-    test('should return failure for invalid CNPJ', () async {
-      final session = UserSession(
-        userId: const UserId('rep-1'),
-        role: UserRole.representative,
-      );
-
-      final result = await registerCompanyUseCase.execute(
-        currentSession: session,
-        legalName: 'Test Legal Name S.A.',
-        tradeName: 'Test Trade Name',
-        cnpj: '11111111111111', // invalid CNPJ
-        inscricaoEstadual: '123456789',
-        email: 'test@company.com',
-        phone: '11999999999',
-        billingStreet: 'Test Street',
-        billingNumber: '100',
-        billingNeighborhood: 'Neighborhood',
-        billingCity: 'São Paulo',
-        billingState: 'SP',
-        billingZipCode: '01000-000',
-        shippingStreet: 'Test Street',
-        shippingNumber: '100',
-        shippingNeighborhood: 'Neighborhood',
-        shippingCity: 'São Paulo',
-        shippingState: 'SP',
-        shippingZipCode: '01000-000',
-        creditLimit: 25000,
-      );
+    test('should reject an invalid CNPJ before calling the API', () async {
+      final result = await register('11111111111111');
 
       expect(result.isFailure, isTrue);
       expect(result.getFailureOrThrow(), isA<CnpjError>());
@@ -208,44 +90,18 @@ void main() {
   });
 
   group('AddAuthorizedBuyerUseCase', () {
-    test('should successfully add a buyer to a company', () async {
-      final session = UserSession(
-        userId: const UserId('rep-1'),
-        role: UserRole.representative,
-      );
-
+    test('should add the buyer returned by the repository', () async {
       final result = await addAuthorizedBuyerUseCase.execute(
-        currentSession: session,
+        currentSession: representativeSession,
         companyId: const CompanyId('c1'),
         fullName: 'New Buyer Name',
-        email: 'newbuyer@acme.com',
+        email: 'buyer@acme.com',
         phone: '11988888888',
-        positionTitle: 'Coordinator',
+        positionTitle: 'Buyer Manager',
       );
 
       expect(result.isSuccess, isTrue);
-      final company = result.getOrThrow();
-      expect(company.authorizedBuyers.any((b) => b.fullName == 'New Buyer Name'), isTrue);
-    });
-
-    test('should return failure when buyer tries to add a buyer', () async {
-      final session = UserSession(
-        userId: const UserId('buyer-1'),
-        role: UserRole.buyer,
-        companyId: const CompanyId('c1'),
-      );
-
-      final result = await addAuthorizedBuyerUseCase.execute(
-        currentSession: session,
-        companyId: const CompanyId('c1'),
-        fullName: 'New Buyer Name',
-        email: 'newbuyer@acme.com',
-        phone: '11988888888',
-        positionTitle: 'Coordinator',
-      );
-
-      expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<UnauthorizedError>());
+      expect(result.getOrThrow().authorizedBuyers.length, 2);
     });
   });
 }

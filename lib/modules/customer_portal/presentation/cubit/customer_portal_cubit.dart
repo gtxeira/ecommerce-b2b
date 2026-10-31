@@ -6,9 +6,6 @@ import 'package:ecommerce_b2b/modules/customer_portal/return_request/application
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/return_request.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/return_request_item.dart';
 import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/repositories/shipment_repository.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/repositories/tracking_repository.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
@@ -24,23 +21,17 @@ class CustomerPortalCubit extends Cubit<CustomerPortalState> {
   final GetReturnRequestsUseCase _getReturnRequests;
   final DownloadBoletoUseCase _downloadBoleto;
   final OpenReturnRequestUseCase _openReturnRequest;
-  final ShipmentRepository _shipmentRepository;
-  final TrackingRepository _trackingRepository;
 
   CustomerPortalCubit({
     required GetPurchaseHistoryUseCase getPurchaseHistoryUseCase,
     required GetReturnRequestsUseCase getReturnRequestsUseCase,
     required DownloadBoletoUseCase downloadBoletoUseCase,
     required OpenReturnRequestUseCase openReturnRequestUseCase,
-    required ShipmentRepository shipmentRepository,
-    required TrackingRepository trackingRepository,
-  })  : _getPurchaseHistory = getPurchaseHistoryUseCase,
-        _getReturnRequests = getReturnRequestsUseCase,
-        _downloadBoleto = downloadBoletoUseCase,
-        _openReturnRequest = openReturnRequestUseCase,
-        _shipmentRepository = shipmentRepository,
-        _trackingRepository = trackingRepository,
-        super(CustomerPortalInitial());
+  }) : _getPurchaseHistory = getPurchaseHistoryUseCase,
+       _getReturnRequests = getReturnRequestsUseCase,
+       _downloadBoleto = downloadBoletoUseCase,
+       _openReturnRequest = openReturnRequestUseCase,
+       super(CustomerPortalInitial());
 
   /// Carrega todo o histórico de compras e as solicitações de RMA em paralelo.
   Future<void> loadPortalData({
@@ -49,29 +40,27 @@ class CustomerPortalCubit extends Cubit<CustomerPortalState> {
   }) async {
     emit(CustomerPortalLoading());
     try {
-      final historyResult = await _getPurchaseHistory.execute(companyId, session);
+      final historyResult = await _getPurchaseHistory.execute(
+        companyId,
+        session,
+      );
       final rmaResult = await _getReturnRequests.execute(companyId, session);
 
       if (historyResult.isSuccess && rmaResult.isSuccess) {
         final orders = historyResult.getOrThrow();
-        
-        // Sincroniza rastreamento para pedidos Em Transporte (RF17, RN1)
-        for (final order in orders) {
-          if (order.status == OrderStatus.inTransit) {
-            final shipment = await _shipmentRepository.getByOrderId(order.id.value);
-            if (shipment != null) {
-              await _trackingRepository.syncTracking(shipment);
-              await _shipmentRepository.save(shipment);
-            }
-          }
-        }
 
-        emit(CustomerPortalLoaded(
-          orders: orders,
-          returnRequests: rmaResult.getOrThrow(),
-        ));
+        // O rastreamento é sincronizado pela operação (API); o portal apenas lê
+        // o estado atual do pedido.
+        emit(
+          CustomerPortalLoaded(
+            orders: orders,
+            returnRequests: rmaResult.getOrThrow(),
+          ),
+        );
       } else {
-        final error = historyResult.isFailure ? historyResult.getFailureOrThrow() : rmaResult.getFailureOrThrow();
+        final error = historyResult.isFailure
+            ? historyResult.getFailureOrThrow()
+            : rmaResult.getFailureOrThrow();
         emit(CustomerPortalFailure(error.message));
       }
     } catch (e) {
@@ -120,14 +109,16 @@ class CustomerPortalCubit extends Cubit<CustomerPortalState> {
 
     try {
       final rmaId = RmaId(const Uuid().v7());
-      
+
       // Mapeia os itens do pedido completo para a devolução
       final List<ReturnRequestItem> rmaItems = order.items
-          .map((item) => ReturnRequestItem(
-                productId: item.productId,
-                quantity: item.quantity,
-                problemDescription: reason,
-              ))
+          .map(
+            (item) => ReturnRequestItem(
+              productId: item.productId,
+              quantity: item.quantity,
+              problemDescription: reason,
+            ),
+          )
           .toList();
 
       await _openReturnRequest.execute(
@@ -138,17 +129,25 @@ class CustomerPortalCubit extends Cubit<CustomerPortalState> {
       );
 
       // Recarrega todos os dados do portal
-      final historyResult = await _getPurchaseHistory.execute(companyId, session);
+      final historyResult = await _getPurchaseHistory.execute(
+        companyId,
+        session,
+      );
       final rmaResult = await _getReturnRequests.execute(companyId, session);
 
       if (historyResult.isSuccess && rmaResult.isSuccess) {
-        emit(CustomerPortalLoaded(
-          orders: historyResult.getOrThrow(),
-          returnRequests: rmaResult.getOrThrow(),
-          successMessage: 'Solicitação de devolução (RMA) aberta com sucesso!',
-        ));
+        emit(
+          CustomerPortalLoaded(
+            orders: historyResult.getOrThrow(),
+            returnRequests: rmaResult.getOrThrow(),
+            successMessage:
+                'Solicitação de devolução (RMA) aberta com sucesso!',
+          ),
+        );
       } else {
-        final error = historyResult.isFailure ? historyResult.getFailureOrThrow() : rmaResult.getFailureOrThrow();
+        final error = historyResult.isFailure
+            ? historyResult.getFailureOrThrow()
+            : rmaResult.getFailureOrThrow();
         emit(CustomerPortalFailure(error.message));
       }
     } catch (e) {

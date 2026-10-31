@@ -13,5 +13,7 @@ enum OrderStatus {
   /// Pedido cancelado.
   cancelled,
   /// Pedido em RMA.
-  rma;
+  rma,
+  /// Pedido faturado (a comissão do representante nasce aqui).
+  invoiced;
 }

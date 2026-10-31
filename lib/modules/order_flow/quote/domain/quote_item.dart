@@ -10,13 +10,20 @@ class QuoteItem extends ValueObject {
   final Quantity quantity;
   final Money unitPrice;
 
+  /// Tabela usada na precificação. Necessária para criar o orçamento na API.
+  final String? priceTableId;
+
   const QuoteItem({
     required this.productId,
     required this.quantity,
     required this.unitPrice,
+    this.priceTableId,
   });
 
-  Money get subtotal => Money.create(unitPrice.amount * quantity.value, currency: unitPrice.currency).getOrThrow();
+  Money get subtotal => Money.create(
+    unitPrice.amount * quantity.value,
+    currency: unitPrice.currency,
+  ).getOrThrow();
 
   @override
   bool operator ==(Object other) =>
@@ -28,5 +35,6 @@ class QuoteItem extends ValueObject {
           unitPrice == other.unitPrice;
 
   @override
-  int get hashCode => productId.hashCode ^ quantity.hashCode ^ unitPrice.hashCode;
+  int get hashCode =>
+      productId.hashCode ^ quantity.hashCode ^ unitPrice.hashCode;
 }

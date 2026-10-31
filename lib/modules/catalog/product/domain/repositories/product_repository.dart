@@ -17,11 +17,4 @@ abstract class ProductRepository implements BaseRepository<Product> {
 
   /// Retorna todos os produtos.
   Future<List<Product>> getAll();
-
-  /// Retorna um produto pelo ID.
-  Future<Product?> getById(ProductId id);
-
-  /// Verifica se o produto possui vínculos ativos (pedidos, cotações, estoque, tabelas de preço).
-  /// Retorna true se houver vínculos que impeçam a exclusão.
-  Future<bool> hasActiveLinks(ProductId id);
 }
