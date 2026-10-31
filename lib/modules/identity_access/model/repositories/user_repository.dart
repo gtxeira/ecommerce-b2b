@@ -16,6 +16,8 @@ abstract class UserRepository {
     required String password,
     required UserRole role,
     String? companyId,
+    String? phone,
+    String? positionTitle,
   });
 
   Future<UserAccount> update({

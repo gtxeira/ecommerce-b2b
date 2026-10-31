@@ -82,10 +82,14 @@ void main() {
         password: 'senha1234',
         role: UserRole.buyer,
         companyId: 'c1',
+        phone: '11988888888',
+        positionTitle: 'Compras',
       );
 
       expect(body!['role'], 'Buyer');
       expect(body!['companyId'], 'c1');
+      expect(body!['phone'], '11988888888');
+      expect(body!['positionTitle'], 'Compras');
       expect(user.role, UserRole.buyer);
     });
 

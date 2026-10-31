@@ -38,6 +38,8 @@ class UserManagementCubit extends Cubit<UserManagementState> {
     required String password,
     required UserRole role,
     String? companyId,
+    String? phone,
+    String? positionTitle,
   }) async {
     try {
       await _repository.create(
@@ -46,6 +48,8 @@ class UserManagementCubit extends Cubit<UserManagementState> {
         password: password,
         role: role,
         companyId: companyId,
+        phone: phone,
+        positionTitle: positionTitle,
       );
       await _reload();
       emit(const UserManagementSuccess('Usuário cadastrado com sucesso!'));

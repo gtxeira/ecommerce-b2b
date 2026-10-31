@@ -1,5 +1,6 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
+import 'package:ecommerce_b2b/app/presentation/widgets/buyer_person_fields.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/cnpj.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/inscricao_estadual.dart';
@@ -719,11 +720,6 @@ class CompanyListPage extends StatelessWidget {
     final positionCtrl = TextEditingController();
     final passwordCtrl = TextEditingController();
 
-    final phoneFormatter = MaskTextInputFormatter(
-      mask: '(##) #####-####',
-      filter: {"#": RegExp(r'[0-9]')},
-    );
-
     bool hasSubmitted = false;
 
     showDialog(
@@ -745,55 +741,11 @@ class CompanyListPage extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        TextFormField(
-                          controller: fullNameCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Nome Completo *',
-                            prefixIcon: Icon(Icons.person_rounded),
-                          ),
-                          validator: (v) {
-                            final input = NotEmptyInput.dirty(v ?? '');
-                            return input.isValid ? null : 'Campo obrigatório';
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: emailCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'E-mail *',
-                            prefixIcon: Icon(Icons.email_rounded),
-                          ),
-                          validator: (v) {
-                            final input = EmailInput.dirty(v ?? '');
-                            return input.isValid ? null : 'E-mail inválido';
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: phoneCtrl,
-                          inputFormatters: [phoneFormatter],
-                          decoration: const InputDecoration(
-                            labelText: 'Telefone *',
-                            hintText: '(00) 00000-0000',
-                            prefixIcon: Icon(Icons.phone_rounded),
-                          ),
-                          validator: (v) {
-                            final input = PhoneInput.dirty(v ?? '');
-                            return input.isValid ? null : 'Telefone inválido';
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: positionCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Cargo *',
-                            hintText: 'Ex: Gerente de Compras',
-                            prefixIcon: Icon(Icons.badge_rounded),
-                          ),
-                          validator: (v) {
-                            final input = NotEmptyInput.dirty(v ?? '');
-                            return input.isValid ? null : 'Campo obrigatório';
-                          },
+                        BuyerPersonFields(
+                          fullNameController: fullNameCtrl,
+                          emailController: emailCtrl,
+                          phoneController: phoneCtrl,
+                          positionController: positionCtrl,
                         ),
                         const Divider(height: 32),
                         const Align(

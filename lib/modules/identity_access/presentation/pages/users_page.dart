@@ -1,5 +1,6 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
+import 'package:ecommerce_b2b/app/presentation/widgets/buyer_person_fields.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
 import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/model/user_account.dart';
@@ -215,14 +216,19 @@ class _UsersViewState extends State<_UsersView> {
     if (!context.mounted) return;
 
     final cubit = context.read<UserManagementCubit>();
+    final formKey = GlobalKey<FormState>();
     final fullNameCtrl = TextEditingController(text: user?.fullName ?? '');
     final emailCtrl = TextEditingController(text: user?.email ?? '');
+    final phoneCtrl = TextEditingController(text: user?.phone ?? '');
+    final positionCtrl = TextEditingController(text: user?.positionTitle ?? '');
     final passwordCtrl = TextEditingController();
-    var role = user?.role ?? UserRole.representative;
+    var role = user?.role ?? UserRole.buyer;
     var active = user?.active ?? true;
-    final roleOptions = UserRole.values.where(
-      (item) => item != UserRole.buyer || user?.role == UserRole.buyer,
-    );
+    final roleOptions = user == null
+        ? UserRole.values
+        : UserRole.values.where(
+            (item) => item != UserRole.buyer || user.role == UserRole.buyer,
+          );
     String? companyId =
         user?.companyId ??
         (companies.isNotEmpty ? companies.first.id.value : null);
@@ -233,86 +239,95 @@ class _UsersViewState extends State<_UsersView> {
         builder: (context, setDialogState) => AlertDialog(
           title: Text(user == null ? 'Novo usuário' : 'Editar usuário'),
           content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: fullNameCtrl,
-                  decoration: const InputDecoration(labelText: 'Nome completo'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: emailCtrl,
-                  enabled: user == null,
-                  decoration: const InputDecoration(labelText: 'E-mail'),
-                ),
-                if (user == null) ...[
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: passwordCtrl,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Senha inicial',
-                      helperText: 'Mínimo 8 caracteres, com letra e dígito',
-                    ),
+            child: Form(
+              key: formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  BuyerPersonFields(
+                    fullNameController: fullNameCtrl,
+                    emailController: emailCtrl,
+                    phoneController: phoneCtrl,
+                    positionController: positionCtrl,
+                    showBuyerFields: user == null && role == UserRole.buyer,
+                    emailEnabled: user == null,
+                    spacing: 12,
                   ),
-                ],
-                const SizedBox(height: 12),
-                DropdownButtonFormField<UserRole>(
-                  initialValue: role,
-                  decoration: const InputDecoration(labelText: 'Papel'),
-                  items: roleOptions
-                      .map(
-                        (item) => DropdownMenuItem(
-                          value: item,
-                          child: Text(item.label),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setDialogState(() {
-                      role = value;
-                      if (role != UserRole.buyer) companyId = null;
-                    });
-                  },
-                ),
-                if (user == null && role != UserRole.buyer)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Text(
-                      'Compradores são cadastrados na tela de Empresas, '
-                      'junto com o acesso ao portal.',
-                      style: TextStyle(fontSize: 12),
+                  if (user == null) ...[
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: passwordCtrl,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Senha inicial *',
+                        helperText:
+                            'Mínimo 8 caracteres, com pelo menos uma letra e um número',
+                      ),
+                      validator: (v) {
+                        final value = v ?? '';
+                        if (value.length < 8) {
+                          return 'A senha deve ter ao menos 8 caracteres';
+                        }
+                        if (!RegExp(r'[A-Za-z]').hasMatch(value) ||
+                            !RegExp(r'\d').hasMatch(value)) {
+                          return 'A senha deve conter letra e número';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                if (role == UserRole.buyer) ...[
+                  ],
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: companyId,
-                    decoration: const InputDecoration(labelText: 'Empresa'),
-                    items: companies
+                  DropdownButtonFormField<UserRole>(
+                    initialValue: role,
+                    decoration: const InputDecoration(labelText: 'Papel'),
+                    items: roleOptions
                         .map(
-                          (company) => DropdownMenuItem(
-                            value: company.id.value,
-                            child: Text(company.tradeName),
+                          (item) => DropdownMenuItem(
+                            value: item,
+                            child: Text(item.label),
                           ),
                         )
                         .toList(),
-                    onChanged: (value) =>
-                        setDialogState(() => companyId = value),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setDialogState(() {
+                        role = value;
+                        if (role != UserRole.buyer) companyId = null;
+                      });
+                    },
                   ),
+                  if (role == UserRole.buyer) ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: companyId,
+                      decoration: const InputDecoration(labelText: 'Empresa *'),
+                      items: companies
+                          .map(
+                            (company) => DropdownMenuItem(
+                              value: company.id.value,
+                              child: Text(company.tradeName),
+                            ),
+                          )
+                          .toList(),
+                      validator: (value) =>
+                          value == null ? 'Selecione a empresa' : null,
+                      onChanged: (value) =>
+                          setDialogState(() => companyId = value),
+                    ),
+                  ],
+                  if (user != null) ...[
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Ativo'),
+                      value: active,
+                      onChanged: (value) =>
+                          setDialogState(() => active = value),
+                    ),
+                  ],
                 ],
-                if (user != null) ...[
-                  const SizedBox(height: 8),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Ativo'),
-                    value: active,
-                    onChanged: (value) => setDialogState(() => active = value),
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
           actions: [
@@ -322,6 +337,7 @@ class _UsersViewState extends State<_UsersView> {
             ),
             ElevatedButton(
               onPressed: () {
+                if (!(formKey.currentState?.validate() ?? false)) return;
                 if (user == null) {
                   cubit.createUser(
                     fullName: fullNameCtrl.text.trim(),
@@ -329,6 +345,10 @@ class _UsersViewState extends State<_UsersView> {
                     password: passwordCtrl.text,
                     role: role,
                     companyId: role == UserRole.buyer ? companyId : null,
+                    phone: role == UserRole.buyer ? phoneCtrl.text : null,
+                    positionTitle: role == UserRole.buyer
+                        ? positionCtrl.text
+                        : null,
                   );
                 } else {
                   cubit.updateUser(

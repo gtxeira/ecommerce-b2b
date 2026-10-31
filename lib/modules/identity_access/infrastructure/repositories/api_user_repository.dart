@@ -39,6 +39,8 @@ class ApiUserRepository implements UserRepository {
     required String password,
     required UserRole role,
     String? companyId,
+    String? phone,
+    String? positionTitle,
   }) async {
     final data = await _api.post(
       '/api/users',
@@ -48,6 +50,8 @@ class ApiUserRepository implements UserRepository {
         'password': password,
         'role': role.apiName,
         'companyId': companyId,
+        'phone': phone,
+        'positionTitle': positionTitle,
       },
     );
     return _fromJson(Map<String, dynamic>.from(data as Map));

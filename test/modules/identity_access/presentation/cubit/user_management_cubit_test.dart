@@ -61,6 +61,8 @@ void main() {
           password: any(named: 'password'),
           role: any(named: 'role'),
           companyId: any(named: 'companyId'),
+          phone: any(named: 'phone'),
+          positionTitle: any(named: 'positionTitle'),
         ),
       ).thenAnswer((_) async => user);
       when(() => repository.findAll()).thenAnswer((_) async => [user]);
