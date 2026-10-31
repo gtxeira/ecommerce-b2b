@@ -3,7 +3,6 @@ import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/auth_r
 import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/auth/errors/auth_errors.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/id_generator.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/user_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
@@ -12,7 +11,7 @@ class FakeAuthRepository implements AuthRepository {
   UserSession? _currentSession;
   late final Map<String, _FakeUserRecord> _users = {
     'buyer@test.com': _FakeUserRecord(
-      userId: UserId(generateId()),
+      userId: const UserId('buyer-001'),
       role: UserRole.buyer,
       companyId: CompanyId('c1'),
       password: 'password123',
@@ -28,7 +27,7 @@ class FakeAuthRepository implements AuthRepository {
       password: 'password123',
     ),
     'finance@test.com': _FakeUserRecord(
-      userId: UserId(generateId()),
+      userId: const UserId('finance-001'),
       role: UserRole.finance,
       password: 'password123',
     ),
