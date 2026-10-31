@@ -15,6 +15,6 @@ abstract class ProductRepository implements BaseRepository<Product> {
   /// Exclui uma variante específica de um produto.
   Future<void> deleteVariant(ProductId productId, ProductVariantId variantId);
 
-  /// Retorna todos os produtos.
-  Future<List<Product>> getAll();
+  /// Retorna os produtos, opcionalmente filtrados por nome ou SKU na API.
+  Future<List<Product>> getAll({String? query});
 }

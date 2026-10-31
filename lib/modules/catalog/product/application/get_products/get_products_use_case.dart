@@ -7,20 +7,10 @@ class GetProductsUseCase {
 
   GetProductsUseCase(this._productRepository);
 
+  /// O filtro de busca é da API: o cliente só repassa o termo em `?query`.
   Future<Result<List<Product>, Exception>> execute({String? query}) async {
     try {
-      final products = await _productRepository.getAll();
-      
-      if (query != null && query.isNotEmpty) {
-        final filtered = products.where((p) {
-          final q = query.toLowerCase();
-          return p.name.toLowerCase().contains(q) || 
-                 p.sku.toLowerCase().contains(q);
-        }).toList();
-        return Success(filtered);
-      }
-      
-      return Success(products);
+      return Success(await _productRepository.getAll(query: query));
     } catch (e) {
       return Failure(Exception(e.toString()));
     }

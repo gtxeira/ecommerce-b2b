@@ -107,6 +107,30 @@ void main() {
       expect((body!['variants'] as List).single['weight'], 1.2);
     });
 
+    test('should send the search term as ?query', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope([])),
+      );
+      final repository = buildRepository(adapter);
+
+      await repository.getAll(query: 'furadeira');
+
+      expect(adapter.requests.single.uri.queryParameters, {
+        'query': 'furadeira',
+      });
+    });
+
+    test('should not send ?query when the term is empty', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope([])),
+      );
+      final repository = buildRepository(adapter);
+
+      await repository.getAll(query: '   ');
+
+      expect(adapter.requests.single.uri.queryParameters, isEmpty);
+    });
+
     test('should delete product and variant via the API', () async {
       final calls = <String>[];
       final adapter = FakeHttpAdapter((options) async {

@@ -14,8 +14,11 @@ class ApiProductRepository implements ProductRepository {
   ApiProductRepository(this._api);
 
   @override
-  Future<List<Product>> getAll() async {
-    final data = await _api.get('/api/products');
+  Future<List<Product>> getAll({String? query}) async {
+    final data = await _api.get(
+      '/api/products',
+      query: query == null || query.trim().isEmpty ? null : {'query': query.trim()},
+    );
     if (data is! List) return const [];
     return data
         .whereType<Map>()

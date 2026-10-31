@@ -29,47 +29,31 @@ void main() {
   }
 
   group('GetProductsUseCase', () {
-    test('should return all products when no query is provided', () async {
+    test('should delegate to the repository without a query', () async {
       final products = [
         createProduct('1', 'Notebook', 'SKU-001'),
         createProduct('2', 'Monitor', 'SKU-002'),
       ];
-      when(() => productRepository.getAll()).thenAnswer((_) async => products);
+      when(() => productRepository.getAll(query: null))
+          .thenAnswer((_) async => products);
 
       final result = await useCase.execute();
 
       expect(result.isSuccess, isTrue);
-      expect(result.getOrThrow(), hasLength(2));
+      expect(result.getOrThrow(), products);
+      verify(() => productRepository.getAll(query: null)).called(1);
     });
 
-    test('should filter products by name', () async {
-      final products = [
-        createProduct('1', 'Notebook', 'SKU-001'),
-        createProduct('2', 'Monitor', 'SKU-002'),
-      ];
-      when(() => productRepository.getAll()).thenAnswer((_) async => products);
+    test('should delegate the query to the repository', () async {
+      final products = [createProduct('1', 'Notebook', 'SKU-001')];
+      when(() => productRepository.getAll(query: 'Note'))
+          .thenAnswer((_) async => products);
 
       final result = await useCase.execute(query: 'Note');
 
       expect(result.isSuccess, isTrue);
-      final filtered = result.getOrThrow();
-      expect(filtered, hasLength(1));
-      expect(filtered.first.name, contains('Notebook'));
-    });
-
-    test('should filter products by SKU', () async {
-      final products = [
-        createProduct('1', 'Notebook', 'SKU-001'),
-        createProduct('2', 'Monitor', 'SKU-002'),
-      ];
-      when(() => productRepository.getAll()).thenAnswer((_) async => products);
-
-      final result = await useCase.execute(query: '002');
-
-      expect(result.isSuccess, isTrue);
-      final filtered = result.getOrThrow();
-      expect(filtered, hasLength(1));
-      expect(filtered.first.sku, contains('002'));
+      expect(result.getOrThrow(), products);
+      verify(() => productRepository.getAll(query: 'Note')).called(1);
     });
   });
 }
