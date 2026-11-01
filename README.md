@@ -115,7 +115,7 @@ lib/
 | Responsabilidade | Onde mora |
 |---|---|
 | CNPJ, crédito, hierarquia comercial, preço, transição de pedido, estoque | **API C#** |
-| Busca e filtros de listagem (`?query`, recortes por papel) | **API C#** |
+| Busca, filtros e paginação de listagem (`?query`, `page`, `pageSize`) | **API C#** |
 | Validação de formulário, máscara e formatação para o usuário | Cliente (espelho de UX) |
 | Tradução dos enums PascalCase da API (`Representative`, `SaoPaulo`, ...) | `infrastructure/repositories/api_*` |
 | Envelope `{ data, meta }` / `{ errors, meta }` e refresh de token | `app/core/network` |

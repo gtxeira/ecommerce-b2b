@@ -1,6 +1,7 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product_page.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/product_variant.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
@@ -9,23 +10,64 @@ import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/
 import 'package:ecommerce_b2b/modules/shared_kernel/model/logistics/value_objects/weight.dart';
 
 class ApiProductRepository implements ProductRepository {
+  static const int allPageSize = 100;
+
   final ApiClient _api;
 
   ApiProductRepository(this._api);
 
   @override
-  Future<List<Product>> getAll({String? query}) async {
-    final data = await _api.get(
+  Future<ProductPage> getPage({
+    String? query,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final envelope = await _api.getEnvelope(
       '/api/products',
-      query: query == null || query.trim().isEmpty
-          ? null
-          : {'query': query.trim()},
+      query: {
+        if (query != null && query.trim().isNotEmpty) 'query': query.trim(),
+        'page': page,
+        'pageSize': pageSize,
+      },
     );
-    if (data is! List) return const [];
-    return data
-        .whereType<Map>()
-        .map((item) => _fromJson(Map<String, dynamic>.from(item)))
-        .toList();
+
+    final data = envelope.data;
+    final items = data is List
+        ? data
+              .whereType<Map>()
+              .map((item) => _fromJson(Map<String, dynamic>.from(item)))
+              .toList()
+        : <Product>[];
+
+    final pagination = readMap(envelope.meta, 'pagination');
+    return ProductPage(
+      items: items,
+      page: readInt(pagination, 'page', page),
+      pageSize: readInt(pagination, 'pageSize', pageSize),
+      totalItems: readInt(pagination, 'totalItems', items.length),
+      // Sem meta (servidor antigo), não anuncia uma próxima página.
+      totalPages: readInt(pagination, 'totalPages', items.isEmpty ? 0 : page),
+    );
+  }
+
+  @override
+  Future<List<Product>> getAll({String? query}) async {
+    final all = <Product>[];
+    var page = 1;
+
+    while (true) {
+      final result = await getPage(
+        query: query,
+        page: page,
+        pageSize: allPageSize,
+      );
+      all.addAll(result.items);
+
+      if (!result.hasMore || result.items.isEmpty) break;
+      page = result.page + 1;
+    }
+
+    return all;
   }
 
   @override

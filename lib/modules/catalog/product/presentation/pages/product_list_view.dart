@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/product_variant.dart';
@@ -14,8 +16,41 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
-class ProductListView extends StatelessWidget {
+class ProductListView extends StatefulWidget {
   const ProductListView({super.key});
+
+  @override
+  State<ProductListView> createState() => _ProductListViewState();
+}
+
+class _ProductListViewState extends State<ProductListView> {
+  Timer? _debounce;
+  String _query = '';
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(BuildContext context, String value) {
+    _query = value;
+    final cubit = context.read<CatalogCubit>();
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      cubit.loadProducts(query: value);
+    });
+  }
+
+  void _loadMoreIfNeeded(
+    BuildContext context,
+    ScrollNotification notification,
+  ) {
+    if (notification.metrics.extentAfter < 240) {
+      context.read<CatalogCubit>().loadMore();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +70,13 @@ class ProductListView extends StatelessWidget {
               const SnackBar(
                 content: Text('Variante excluída com sucesso!'),
                 backgroundColor: Colors.green,
+              ),
+            );
+          } else if (state is CatalogLoadMoreFailed) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red.shade700,
               ),
             );
           } else if (state is CatalogError) {
@@ -60,24 +102,42 @@ class ProductListView extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Pesquisar produtos por nome ou SKU...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Pesquisar produtos por nome ou SKU...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onChanged: (query) => _onSearchChanged(context, query),
                       ),
-                    ),
-                    onChanged: (query) {
-                      context.read<CatalogCubit>().loadProducts(query: query);
-                    },
+                      if (state is CatalogLoaded) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          '${state.totalItems} produto(s) encontrado(s)',
+                          textAlign: TextAlign.end,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 Expanded(
                   child: RefreshIndicator(
-                    onRefresh: () =>
-                        context.read<CatalogCubit>().loadProducts(),
-                    child: _buildList(context, state, theme, colorScheme),
+                    onRefresh: () => context.read<CatalogCubit>().loadProducts(
+                      query: _query,
+                    ),
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (notification) {
+                        _loadMoreIfNeeded(context, notification);
+                        return false;
+                      },
+                      child: _buildList(context, state, theme, colorScheme),
+                    ),
                   ),
                 ),
               ],
@@ -108,8 +168,29 @@ class ProductListView extends StatelessWidget {
 
       return ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: products.length,
+        itemCount:
+            products.length + (state.isLoadingMore || state.hasMore ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index >= products.length) {
+            if (state.isLoadingMore) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: TextButton.icon(
+                  onPressed: () => context.read<CatalogCubit>().loadMore(),
+                  icon: const Icon(Icons.expand_more_rounded),
+                  label: const Text('Carregar mais'),
+                ),
+              ),
+            );
+          }
+
           final product = products[index];
           return Card(
             margin: const EdgeInsets.only(bottom: 12),

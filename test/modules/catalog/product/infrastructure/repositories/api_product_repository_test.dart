@@ -31,6 +31,35 @@ void main() {
   setUp(() => events = SessionEvents());
   tearDown(() => events.dispose());
 
+  Map<String, dynamic> productJson(String id, String name) => {
+    'id': id,
+    'sku': 'SKU-$id',
+    'name': name,
+    'description': 'Desc $name',
+    'basePrice': 10.0,
+    'active': true,
+    'variants': <Map<String, dynamic>>[],
+  };
+
+  Map<String, dynamic> pageEnvelope({
+    required List<Map<String, dynamic>> data,
+    required int page,
+    required int pageSize,
+    required int totalItems,
+    required int totalPages,
+  }) => {
+    'data': data,
+    'meta': {
+      'timestamp': '2026-09-21T10:00:00.000+00:00',
+      'pagination': {
+        'page': page,
+        'pageSize': pageSize,
+        'totalItems': totalItems,
+        'totalPages': totalPages,
+      },
+    },
+  };
+
   group('ApiProductRepository', () {
     test(
       'should map products, variants and weight from the envelope',
@@ -107,17 +136,64 @@ void main() {
       expect((body!['variants'] as List).single['weight'], 1.2);
     });
 
-    test('should send the search term as ?query', () async {
+    test('should send query and pagination and read meta.pagination', () async {
       final adapter = FakeHttpAdapter(
-        (options) async => jsonResponse(successEnvelope([])),
+        (options) async => jsonResponse(
+          pageEnvelope(
+            data: [productJson('p1', 'Furadeira')],
+            page: 2,
+            pageSize: 5,
+            totalItems: 6,
+            totalPages: 2,
+          ),
+        ),
       );
       final repository = buildRepository(adapter);
 
-      await repository.getAll(query: 'furadeira');
+      final page = await repository.getPage(
+        query: 'furadeira',
+        page: 2,
+        pageSize: 5,
+      );
 
       expect(adapter.requests.single.uri.queryParameters, {
         'query': 'furadeira',
+        'page': '2',
+        'pageSize': '5',
       });
+      expect(page.items.single.name, 'Furadeira');
+      expect(page.page, 2);
+      expect(page.pageSize, 5);
+      expect(page.totalItems, 6);
+      expect(page.totalPages, 2);
+      expect(page.hasMore, isFalse);
+    });
+
+    test('should walk all pages in getAll', () async {
+      final adapter = FakeHttpAdapter((options) async {
+        final page = int.parse(options.uri.queryParameters['page']!);
+        return jsonResponse(
+          pageEnvelope(
+            data: page == 1
+                ? [productJson('p1', 'Primeiro'), productJson('p2', 'Segundo')]
+                : [productJson('p3', 'Terceiro')],
+            page: page,
+            pageSize: 100,
+            totalItems: 3,
+            totalPages: 2,
+          ),
+        );
+      });
+      final repository = buildRepository(adapter);
+
+      final products = await repository.getAll();
+
+      expect(products.map((p) => p.id.value), ['p1', 'p2', 'p3']);
+      expect(adapter.requests, hasLength(2));
+      expect(adapter.requests.map((r) => r.uri.queryParameters['page']), [
+        '1',
+        '2',
+      ]);
     });
 
     test('should not send ?query when the term is empty', () async {
@@ -128,7 +204,10 @@ void main() {
 
       await repository.getAll(query: '   ');
 
-      expect(adapter.requests.single.uri.queryParameters, isEmpty);
+      final params = adapter.requests.single.uri.queryParameters;
+      expect(params.containsKey('query'), isFalse);
+      expect(params['page'], '1');
+      expect(params['pageSize'], '100');
     });
 
     test('should delete product and variant via the API', () async {

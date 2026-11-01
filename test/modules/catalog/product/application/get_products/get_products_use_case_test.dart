@@ -1,5 +1,6 @@
 import 'package:ecommerce_b2b/modules/catalog/product/application/get_products/get_products_use_case.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product_page.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
@@ -29,33 +30,49 @@ void main() {
   }
 
   group('GetProductsUseCase', () {
-    test('should delegate to the repository without a query', () async {
-      final products = [
-        createProduct('1', 'Notebook', 'SKU-001'),
-        createProduct('2', 'Monitor', 'SKU-002'),
-      ];
+    test('should delegate executePage with page and pageSize', () async {
+      final page = ProductPage(
+        items: [createProduct('1', 'Notebook', 'SKU-001')],
+        page: 2,
+        pageSize: 10,
+        totalItems: 11,
+        totalPages: 2,
+      );
       when(
-        () => productRepository.getAll(query: null),
-      ).thenAnswer((_) async => products);
+        () => productRepository.getPage(query: 'Note', page: 2, pageSize: 10),
+      ).thenAnswer((_) async => page);
 
-      final result = await useCase.execute();
+      final result = await useCase.executePage(
+        query: 'Note',
+        page: 2,
+        pageSize: 10,
+      );
 
       expect(result.isSuccess, isTrue);
-      expect(result.getOrThrow(), products);
-      verify(() => productRepository.getAll(query: null)).called(1);
+      expect(result.getOrThrow(), same(page));
+      verify(
+        () => productRepository.getPage(query: 'Note', page: 2, pageSize: 10),
+      ).called(1);
     });
 
-    test('should delegate the query to the repository', () async {
-      final products = [createProduct('1', 'Notebook', 'SKU-001')];
+    test('should use the defaults when executePage has no arguments', () async {
+      final page = ProductPage(
+        items: const [],
+        page: 1,
+        pageSize: 20,
+        totalItems: 0,
+        totalPages: 0,
+      );
       when(
-        () => productRepository.getAll(query: 'Note'),
-      ).thenAnswer((_) async => products);
+        () => productRepository.getPage(query: null, page: 1, pageSize: 20),
+      ).thenAnswer((_) async => page);
 
-      final result = await useCase.execute(query: 'Note');
+      final result = await useCase.executePage();
 
       expect(result.isSuccess, isTrue);
-      expect(result.getOrThrow(), products);
-      verify(() => productRepository.getAll(query: 'Note')).called(1);
+      verify(
+        () => productRepository.getPage(query: null, page: 1, pageSize: 20),
+      ).called(1);
     });
   });
 }
