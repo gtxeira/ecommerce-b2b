@@ -123,7 +123,7 @@ class FinanceReviewPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Pedido #${order.id.value.substring(0, 8)}',
+                                    'Pedido #${order.id.displayCode}',
                                     style: theme.textTheme.titleLarge?.copyWith(
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: -0.5,
@@ -184,7 +184,7 @@ class FinanceReviewPage extends StatelessWidget {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        '${item.quantity.value}x Produto #${item.productId.value.substring(0, 8)}',
+                                        '${item.quantity.value}x Produto #${item.productId.displayCode}',
                                         style: theme.textTheme.bodyMedium,
                                       ),
                                     ),
@@ -303,8 +303,8 @@ class FinanceReviewPage extends StatelessWidget {
           children: [
             Text(
               approve
-                  ? 'Você está prestes a aprovar o pedido #${order.id.value.substring(0, 8)}. O estoque será alocado e o fluxo de expedição iniciado.'
-                  : 'Você está prestes a reprovar o pedido #${order.id.value.substring(0, 8)}. O pedido será cancelado no sistema.',
+                  ? 'Você está prestes a aprovar o pedido #${order.id.displayCode}. O estoque será alocado e o fluxo de expedição iniciado.'
+                  : 'Você está prestes a reprovar o pedido #${order.id.displayCode}. O pedido será cancelado no sistema.',
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 20),

@@ -270,7 +270,7 @@ class RepresentativeHomePage extends StatelessWidget {
                                   ),
                                 ),
                                 title: Text(
-                                  'Orçamento #${quote.id.value.substring(0, 8)}',
+                                  'Orçamento #${quote.id.displayCode}',
                                 ),
                                 subtitle: Text(
                                   'Total: ${quote.total.formatted} - ${quote.status.label}',

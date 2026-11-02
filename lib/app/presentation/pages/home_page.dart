@@ -1,12 +1,43 @@
+import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  List<SalesOrder> _recentOrders = const [];
+  bool _loadingOrders = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentOrders();
+  }
+
+  Future<void> _loadRecentOrders() async {
+    try {
+      final orders = await getIt<SalesOrderRepository>().getAll();
+      if (!mounted) return;
+      setState(() {
+        _recentOrders = orders.take(3).toList();
+        _loadingOrders = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingOrders = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,20 +84,48 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.history, size: 20),
-                ),
-                title: Text('Pedido #100${5 - index} atualizado'),
-                subtitle: const Text('Status alterado para "Em Transporte"'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {},
+          if (_loadingOrders)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
               ),
-              childCount: 3,
+            )
+          else if (_recentOrders.isEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 8.0,
+                ),
+                child: Text(
+                  'Nenhum pedido registrado.',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final order = _recentOrders[index];
+                return ListTile(
+                  leading: const CircleAvatar(
+                    child: Icon(Icons.history, size: 20),
+                  ),
+                  title: Text(
+                    'Pedido #${order.id.displayCode}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    'Status: ${order.status.label} • Total: ${order.total.formatted}',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {},
+                );
+              }, childCount: _recentOrders.length),
             ),
-          ),
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
       ),

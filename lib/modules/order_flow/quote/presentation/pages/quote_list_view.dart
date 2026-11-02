@@ -74,7 +74,7 @@ class _QuoteListViewState extends State<QuoteListView> {
                   ),
                   child: ListTile(
                     title: Text(
-                      'Orçamento #${quote.id.value.substring(0, 8)}',
+                      'Orçamento #${quote.id.displayCode}',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(

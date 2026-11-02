@@ -103,7 +103,7 @@ class _PackingPageState extends State<PackingPage> {
         trackingCode: TrackingCode.create(
           'TRK-${const Uuid().v4().substring(0, 8).toUpperCase()}',
         ).getOrThrow(),
-        labelNumber: 'LABEL-${order.id.value.substring(0, 8)}',
+        labelNumber: 'LABEL-${order.id.displayCode}',
         packageDescription: 'Caixa padrão',
       );
 
@@ -111,7 +111,7 @@ class _PackingPageState extends State<PackingPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Pedido #${order.id.value.substring(0, 8)} despachado com sucesso!',
+            'Pedido #${order.id.displayCode} despachado com sucesso!',
           ),
         ),
       );
@@ -154,7 +154,7 @@ class _PackingPageState extends State<PackingPage> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'Pedido #${order.id.value.substring(0, 8)}',
+                                      'Pedido #${order.id.displayCode}',
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleMedium

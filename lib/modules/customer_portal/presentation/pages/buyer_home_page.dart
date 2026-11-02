@@ -373,7 +373,7 @@ class BuyerHomePage extends StatelessWidget {
                                   ),
                                 ),
                                 title: Text(
-                                  'Pedido #${order.id.value.substring(0, 8)}',
+                                  'Pedido #${order.id.displayCode}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -455,7 +455,7 @@ class BuyerHomePage extends StatelessWidget {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        'RMA #${rma.id.value.substring(0, 8)}',
+                                        'RMA #${rma.id.displayCode}',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
@@ -486,9 +486,7 @@ class BuyerHomePage extends StatelessWidget {
                                     ],
                                   ),
                                   const SizedBox(height: 8),
-                                  Text(
-                                    'Pedido Original: #${rma.orderId.substring(0, 8)}',
-                                  ),
+                                  Text('Pedido Original: #${rma.orderId}'),
                                   Text('Motivo: ${rma.reason}'),
                                   const Divider(height: 24),
                                   _buildRmaStatusStepper(
@@ -780,7 +778,7 @@ class BuyerHomePage extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Pedido #${order.id.value.substring(0, 8)}',
+                                      'Pedido #${order.id.displayCode}',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -922,7 +920,7 @@ class BuyerHomePage extends StatelessWidget {
                       return DropdownMenuItem<SalesOrder>(
                         value: order,
                         child: Text(
-                          'Pedido #${order.id.value.substring(0, 8)} - ${order.total.toString()}',
+                          'Pedido #${order.id.displayCode} - ${order.total.toString()}',
                         ),
                       );
                     }).toList(),
@@ -992,7 +990,7 @@ class BuyerHomePage extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: Text('Detalhes do Pedido #${order.id.value.substring(0, 8)}'),
+        title: Text('Detalhes do Pedido #${order.id.displayCode}'),
         content: SizedBox(
           width: double.maxFinite,
           child: Column(
@@ -1027,7 +1025,7 @@ class BuyerHomePage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '${item.quantity.value}x Produto #${item.productId.value.substring(0, 5)}',
+                              '${item.quantity.value}x Produto #${item.productId.displayCode}',
                             ),
                             Text(item.unitPriceSnapshot.toString()),
                           ],
@@ -1131,7 +1129,7 @@ class BuyerHomePage extends StatelessWidget {
                         ),
                       ),
                       title: Text(
-                        'Pedido #${order.id.value.substring(0, 8)}',
+                        'Pedido #${order.id.displayCode}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text(

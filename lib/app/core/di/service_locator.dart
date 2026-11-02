@@ -217,6 +217,7 @@ Future<void> setupServiceLocator() async {
     () => FinanceReviewCubit(
       getPendingReviews: getIt<GetPendingFinanceReviewsUseCase>(),
       processReview: getIt<ProcessFinanceReviewUseCase>(),
+      orderRepository: getIt<SalesOrderRepository>(),
     ),
   );
 

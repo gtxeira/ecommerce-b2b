@@ -1,6 +1,7 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,9 +23,11 @@ class FinanceHomePage extends StatelessWidget {
           builder: (context, state) {
             int pendingCount = 0;
             bool isLoading = state is FinanceReviewLoading;
+            List<SalesOrder> recentReleases = const [];
 
             if (state is FinanceReviewLoaded) {
               pendingCount = state.pendingOrders.length;
+              recentReleases = state.recentReleases;
             }
 
             return RefreshIndicator(
@@ -120,42 +123,64 @@ class FinanceHomePage extends StatelessWidget {
                     ),
                   ),
 
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          color: colorScheme.surfaceContainerLow,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                  if (isLoading)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    )
+                  else if (recentReleases.isEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          'Nenhuma liberação recente.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                           ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16),
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.green.withValues(alpha: 0.15),
-                              child: const Icon(
-                                Icons.check_circle_outline_rounded,
-                                color: Colors.green,
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final order = recentReleases[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            color: colorScheme.surfaceContainerLow,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(16),
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.green.withValues(
+                                  alpha: 0.15,
+                                ),
+                                child: const Icon(
+                                  Icons.check_circle_outline_rounded,
+                                  color: Colors.green,
+                                ),
                               ),
+                              title: Text(
+                                'Pedido #${order.id.displayCode}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Status: ${order.status.label} • Total: ${order.total.formatted}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              trailing: const Icon(Icons.chevron_right_rounded),
                             ),
-                            title: Text(
-                              'Pedido #100${102 - index} Liberado',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                              index == 0
-                                  ? 'Cliente: Metalúrgica Silva S.A.\nLimite de crédito aprovado por faturamento'
-                                  : 'Cliente: Distribuidora Nordeste Ltda\nOrdem aprovada sem restrições',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            isThreeLine: true,
-                            trailing: const Icon(Icons.chevron_right_rounded),
-                          ),
-                        );
-                      }, childCount: 2),
+                          );
+                        }, childCount: recentReleases.length),
+                      ),
                     ),
-                  ),
 
                   const SliverToBoxAdapter(child: SizedBox(height: 32)),
                 ],

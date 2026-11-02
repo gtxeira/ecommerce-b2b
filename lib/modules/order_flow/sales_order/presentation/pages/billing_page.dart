@@ -88,9 +88,7 @@ class _BillingPageState extends State<BillingPage> {
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
                           child: ListTile(
-                            title: Text(
-                              'Pedido #${order.id.value.substring(0, 8)}',
-                            ),
+                            title: Text('Pedido #${order.id.displayCode}'),
                             subtitle: Text(
                               'Total: ${order.total.formatted} • Empresa: ${order.companyId ?? '-'}',
                             ),

@@ -13,10 +13,14 @@ class FinanceReviewLoading extends FinanceReviewState {}
 
 class FinanceReviewLoaded extends FinanceReviewState {
   final List<SalesOrder> pendingOrders;
-  const FinanceReviewLoaded(this.pendingOrders);
+  final List<SalesOrder> recentReleases;
+  const FinanceReviewLoaded(
+    this.pendingOrders, {
+    this.recentReleases = const [],
+  });
 
   @override
-  List<Object?> get props => [pendingOrders];
+  List<Object?> get props => [pendingOrders, recentReleases];
 }
 
 class FinanceReviewFailure extends FinanceReviewState {

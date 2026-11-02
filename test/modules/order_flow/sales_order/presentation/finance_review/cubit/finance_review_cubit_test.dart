@@ -3,6 +3,7 @@ import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_pending_finance_reviews/get_pending_finance_reviews_use_case.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/process_finance_review/process_finance_review_use_case.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/finance_review.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
@@ -14,6 +15,8 @@ class MockGetPendingFinanceReviewsUseCase extends Mock
 
 class MockProcessFinanceReviewUseCase extends Mock
     implements ProcessFinanceReviewUseCase {}
+
+class MockSalesOrderRepository extends Mock implements SalesOrderRepository {}
 
 class SalesOrderFake extends Fake implements SalesOrder {}
 
@@ -28,6 +31,7 @@ void main() {
   group('FinanceReviewCubit', () {
     late MockGetPendingFinanceReviewsUseCase getPendingReviews;
     late MockProcessFinanceReviewUseCase processReview;
+    late MockSalesOrderRepository orderRepository;
     late FinanceReviewCubit cubit;
 
     final order = SalesOrder(
@@ -40,9 +44,12 @@ void main() {
     setUp(() {
       getPendingReviews = MockGetPendingFinanceReviewsUseCase();
       processReview = MockProcessFinanceReviewUseCase();
+      orderRepository = MockSalesOrderRepository();
+      when(() => orderRepository.getAll()).thenAnswer((_) async => []);
       cubit = FinanceReviewCubit(
         getPendingReviews: getPendingReviews,
         processReview: processReview,
+        orderRepository: orderRepository,
       );
     });
 
@@ -64,6 +71,30 @@ void main() {
       expect(states, [isA<FinanceReviewLoading>(), isA<FinanceReviewLoaded>()]);
       expect((states[1] as FinanceReviewLoaded).pendingOrders, [order]);
     });
+
+    test(
+      'loadPendingOrders should expose approved orders as recent releases',
+      () async {
+        final approved = SalesOrder(
+          id: const OrderId('o2'),
+          status: OrderStatus.delivered,
+          creditStatus: CreditStatus.approved,
+          items: [],
+        );
+
+        when(
+          () => getPendingReviews.execute(),
+        ).thenAnswer((_) async => [order]);
+        when(
+          () => orderRepository.getAll(),
+        ).thenAnswer((_) async => [approved, order]);
+
+        await cubit.loadPendingOrders();
+
+        final loaded = cubit.state as FinanceReviewLoaded;
+        expect(loaded.recentReleases, [approved]);
+      },
+    );
 
     test('loadPendingOrders should emit Failure on exception', () async {
       when(() => getPendingReviews.execute()).thenThrow(Exception('API error'));
