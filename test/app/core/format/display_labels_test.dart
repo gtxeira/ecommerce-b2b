@@ -55,6 +55,19 @@ void main() {
     test('sinaliza produto não encontrado', () {
       expect(productLabel(id: 'p1'), 'Produto não encontrado · #p1');
     });
+
+    test('usa o SKU e o rótulo da variante quando informados', () {
+      expect(
+        productLabel(
+          name: 'Notebook',
+          sku: 'SKU-1',
+          variantSku: 'SKU-1-V2',
+          variantLabel: 'Prata · 15pol',
+          id: 'p1',
+        ),
+        'Notebook (SKU-1-V2) · Prata · 15pol · #p1',
+      );
+    });
   });
 
   group('personLabel', () {

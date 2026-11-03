@@ -121,6 +121,98 @@ void main() {
       });
     });
 
+    test('should map the variant in the preview', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(
+          successEnvelope({
+            'productId': 'p1',
+            'variantId': 'p1-v2',
+            'quantity': 1,
+            'unitPrice': 5800.0,
+            'referenceUnitPrice': 5800.0,
+            'subtotal': 5800.0,
+          }),
+        ),
+      );
+      final repository = buildRepository(adapter);
+
+      final preview = await repository.preview(
+        companyId: 'c1',
+        productId: 'p1',
+        variantId: 'p1-v2',
+        quantity: 1,
+      );
+
+      expect(preview.variantId, 'p1-v2');
+      expect(preview.unitPrice.amount, 5800);
+    });
+
+    test('should send variant and omit an empty price table', () async {
+      Map<String, dynamic>? body;
+      final adapter = FakeHttpAdapter((options) async {
+        body = Map<String, dynamic>.from(options.data as Map);
+        return jsonResponse(
+          successEnvelope({
+            'productId': 'p1',
+            'variantId': 'p1-v2',
+            'quantity': 1,
+            'unitPrice': 5800.0,
+            'referenceUnitPrice': 5800.0,
+            'subtotal': 5800.0,
+          }),
+        );
+      });
+      final repository = buildRepository(adapter);
+
+      await repository.preview(
+        companyId: 'c1',
+        productId: 'p1',
+        variantId: 'p1-v2',
+        quantity: 1,
+      );
+
+      expect(body, {
+        'companyId': 'c1',
+        'productId': 'p1',
+        'quantity': 1,
+        'variantId': 'p1-v2',
+      });
+    });
+
+    test('should map variant fields in price tiers', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(
+          successEnvelope([
+            {
+              'productId': 'p1',
+              'productName': 'Notebook Pro 15',
+              'productSku': 'SKU-001',
+              'variantId': 'p1-v2',
+              'variantSku': 'SKU-001-S15',
+              'variantLabel': 'Prata · 15pol · Bivolt',
+              'priceTableId': 'pt-1',
+              'priceTableName': 'Tabela Atacado SP',
+              'scopeType': 'Regional',
+              'minQuantity': 10,
+              'maxQuantity': 999,
+              'state': 'SaoPaulo',
+              'unitPrice': 5000.0,
+              'referenceUnitPrice': 5800.0,
+              'discountPerUnit': 800.0,
+              'discountPercentage': 13.79,
+            },
+          ]),
+        ),
+      );
+      final repository = buildRepository(adapter);
+
+      final tier = (await repository.findPriceTiers()).single;
+
+      expect(tier.variantId, 'p1-v2');
+      expect(tier.variantSku, 'SKU-001-S15');
+      expect(tier.variantLabel, 'Prata · 15pol · Bivolt');
+    });
+
     test('should map eligible price tiers', () async {
       final adapter = FakeHttpAdapter(
         (options) async => jsonResponse(

@@ -133,6 +133,66 @@ void main() {
       expect(item['quantity'], 2);
     });
 
+    test('should send variant and omit an empty price table', () async {
+      Map<String, dynamic>? body;
+      final adapter = FakeHttpAdapter((options) async {
+        body = Map<String, dynamic>.from(options.data as Map);
+        return jsonResponse(
+          successEnvelope(quoteJson(status: 'Sent')),
+          statusCode: 201,
+        );
+      });
+      final repository = buildRepository(adapter);
+
+      await repository.save(
+        Quote(
+          id: const QuoteId('q1'),
+          companyId: 'c1',
+          representativeId: null,
+          status: QuoteStatus.sent,
+          items: [
+            QuoteItem(
+              productId: const ProductId('p1'),
+              variantId: 'p1-v2',
+              quantity: Quantity.create(1).getOrThrow(),
+              unitPrice: Money.create(120).getOrThrow(),
+            ),
+          ],
+        ),
+      );
+
+      final item = (body!['items'] as List).single;
+      expect(item['variantId'], 'p1-v2');
+      expect(item.containsKey('priceTableId'), isFalse);
+    });
+
+    test('should map variant fields from the item payload', () async {
+      final json = quoteJson();
+      (json['items'] as List)[0] = {
+        'productId': 'p1',
+        'productName': 'Monitor UltraWide 34',
+        'productSku': 'SKU-002',
+        'variantId': 'p2-v1',
+        'variantSku': 'SKU-002-P34',
+        'variantLabel': 'Preto · 34pol · Bivolt',
+        'quantity': 1,
+        'unitPrice': 120,
+      };
+
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(json)),
+      );
+      final repository = buildRepository(adapter);
+
+      final item = (await repository.getById(
+        const QuoteId('q1'),
+      ))!.items.single;
+
+      expect(item.variantId, 'p2-v1');
+      expect(item.variantSku, 'SKU-002-P34');
+      expect(item.variantLabel, 'Preto · 34pol · Bivolt');
+    });
+
     test('should query by representative', () async {
       RequestOptions? captured;
       final adapter = FakeHttpAdapter((options) async {
@@ -144,6 +204,21 @@ void main() {
       final quotes = await repository.findByRepresentativeId('rep-456');
 
       expect(captured!.queryParameters['representativeId'], 'rep-456');
+      expect(quotes.single.status, QuoteStatus.sent);
+    });
+
+    test('should query by company for the buyer', () async {
+      RequestOptions? captured;
+      final adapter = FakeHttpAdapter((options) async {
+        captured = options;
+        return jsonResponse(successEnvelope([quoteJson(status: 'Sent')]));
+      });
+      final repository = buildRepository(adapter);
+
+      final quotes = await repository.findByCompanyId('c1');
+
+      expect(captured!.path, '/api/quotes');
+      expect(captured!.queryParameters['companyId'], 'c1');
       expect(quotes.single.status, QuoteStatus.sent);
     });
 

@@ -49,6 +49,9 @@ void main() {
         'productId': 'p1',
         'productName': 'Notebook',
         'productSku': 'SKU-1',
+        'variantId': 'p1-v2',
+        'variantSku': 'SKU-1-S15',
+        'variantLabel': 'Prata · 15pol',
         'quantity': 2,
         'unitPrice': 50,
       },
@@ -81,6 +84,9 @@ void main() {
       expect(order.items.single.quantity.value, 2);
       expect(order.items.single.productName, 'Notebook');
       expect(order.items.single.productSku, 'SKU-1');
+      expect(order.items.single.variantId, 'p1-v2');
+      expect(order.items.single.variantSku, 'SKU-1-S15');
+      expect(order.items.single.variantLabel, 'Prata · 15pol');
       expect(order.financeReview!.decision, FinanceDecision.approved);
       expect(order.financeReview!.reviewerName, 'Maria Financeiro');
       expect(order.financeReview!.reviewerRole, 'Finance');

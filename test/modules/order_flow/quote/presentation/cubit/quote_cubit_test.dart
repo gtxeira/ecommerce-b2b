@@ -9,6 +9,7 @@ import 'package:ecommerce_b2b/modules/order_flow/quote/model/repositories/quote_
 import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_state.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/quote_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/user_id.dart';
@@ -66,6 +67,27 @@ void main() {
     verify(() => repository.getAll()).called(1);
     verifyNever(() => repository.findByRepresentativeId(any()));
   });
+
+  test(
+    'loadQuotes do comprador consulta os orçamentos da própria empresa',
+    () async {
+      final buyer = UserSession(
+        userId: const UserId('buyer-1'),
+        role: UserRole.buyer,
+        companyId: const CompanyId('c1'),
+      );
+      when(
+        () => repository.findByCompanyId('c1'),
+      ).thenAnswer((_) async => [quote]);
+
+      await cubit.loadQuotes(buyer);
+
+      expect((cubit.state as QuoteLoaded).quotes, [quote]);
+      verify(() => repository.findByCompanyId('c1')).called(1);
+      verifyNever(() => repository.getAll());
+      verifyNever(() => repository.findByRepresentativeId(any()));
+    },
+  );
 
   test('loadQuotes do representante continua na própria carteira', () async {
     when(

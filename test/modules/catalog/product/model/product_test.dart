@@ -106,5 +106,17 @@ void main() {
       expect(removed, isFalse);
       expect(product.variants, isEmpty);
     });
+
+    test('variant label joins only the filled attributes', () {
+      final variant = ProductVariant(
+        id: const ProductVariantId('v1'),
+        variantSku: 'SKU-001',
+        color: 'Prata',
+        size: '15pol',
+        voltage: '',
+      );
+
+      expect(variant.label, 'Prata · 15pol');
+    });
   });
 }
