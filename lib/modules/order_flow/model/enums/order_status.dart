@@ -36,3 +36,39 @@ enum OrderStatus {
     OrderStatus.invoiced => 'Faturado',
   };
 }
+
+/// Agrupamento de exibição dos status: o que ainda está em andamento e o que
+/// já terminou. Usado pelos filtros da listagem de pedidos.
+enum OrderStatusGroup {
+  /// Pedido ainda em fluxo (aguardando análise, bloqueado, em separação ou em
+  /// transporte).
+  open,
+
+  /// Pedido encerrado (entregue, faturado, cancelado ou em RMA).
+  closed;
+
+  /// Nome de exibição em português.
+  String get label => switch (this) {
+    OrderStatusGroup.open => 'Abertos',
+    OrderStatusGroup.closed => 'Encerrados',
+  };
+}
+
+/// Classifica o status do pedido no agrupamento de exibição.
+extension OrderStatusGrouping on OrderStatus {
+  /// `true` enquanto o pedido ainda está em fluxo operacional.
+  bool get isOpen => switch (this) {
+    OrderStatus.pendingFinanceApproval ||
+    OrderStatus.blockedByFinance ||
+    OrderStatus.pickingPacking ||
+    OrderStatus.inTransit => true,
+    OrderStatus.delivered ||
+    OrderStatus.invoiced ||
+    OrderStatus.cancelled ||
+    OrderStatus.rma => false,
+  };
+
+  /// Agrupamento ao qual o status pertence.
+  OrderStatusGroup get group =>
+      isOpen ? OrderStatusGroup.open : OrderStatusGroup.closed;
+}

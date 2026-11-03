@@ -7,6 +7,8 @@ import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_details_content.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_status_visuals.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -345,7 +347,7 @@ class BuyerHomePage extends StatelessWidget {
                             }
                             final order = orders[index];
                             final orderStatusLabel = order.status.label;
-                            final orderStatusColor = _getOrderStatusColor(
+                            final statusColor = orderStatusColor(
                               order.status,
                               colorScheme,
                             );
@@ -362,14 +364,12 @@ class BuyerHomePage extends StatelessWidget {
                                 leading: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: orderStatusColor.withValues(
-                                      alpha: 0.15,
-                                    ),
+                                    color: statusColor.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Icon(
-                                    _getOrderStatusIcon(order.status),
-                                    color: orderStatusColor,
+                                    orderStatusIcon(order.status),
+                                    color: statusColor,
                                   ),
                                 ),
                                 title: Text(
@@ -386,7 +386,7 @@ class BuyerHomePage extends StatelessWidget {
                                   Icons.chevron_right_rounded,
                                 ),
                                 onTap: () =>
-                                    _showOrderDetailsDialog(context, order),
+                                    showOrderDetailsSheet(context, order),
                               ),
                             );
                           },
@@ -982,89 +982,6 @@ class BuyerHomePage extends StatelessWidget {
     );
   }
 
-  void _showOrderDetailsDialog(BuildContext context, SalesOrder order) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: Text('Detalhes do Pedido #${order.id.displayCode}'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Status: ${order.status.label}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                'Limite Financeiro: ${order.creditStatus.label}',
-              ),
-              const Divider(height: 24),
-              const Text(
-                'Itens do Pedido:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              if (order.items.isEmpty)
-                const Text('Nenhum item adicionado.')
-              else
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: order.items.length,
-                    itemBuilder: (itemContext, index) {
-                      final item = order.items[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${item.quantity.value}x Produto #${item.productId.displayCode}',
-                            ),
-                            Text(item.unitPriceSnapshot.toString()),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              const Divider(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Total:',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  Text(
-                    order.total.toString(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('FECHAR'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showAllOrdersPage(BuildContext context, List<SalesOrder> orders) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -1106,7 +1023,7 @@ class BuyerHomePage extends StatelessWidget {
                 itemBuilder: (listContext, index) {
                   final order = orders[index];
                   final orderStatusLabel = order.status.label;
-                  final orderStatusColor = _getOrderStatusColor(
+                  final statusColor = orderStatusColor(
                     order.status,
                     colorScheme,
                   );
@@ -1120,12 +1037,10 @@ class BuyerHomePage extends StatelessWidget {
                     child: ListTile(
                       contentPadding: const EdgeInsets.all(16),
                       leading: CircleAvatar(
-                        backgroundColor: orderStatusColor.withValues(
-                          alpha: 0.15,
-                        ),
+                        backgroundColor: statusColor.withValues(alpha: 0.15),
                         child: Icon(
-                          _getOrderStatusIcon(order.status),
-                          color: orderStatusColor,
+                          orderStatusIcon(order.status),
+                          color: statusColor,
                         ),
                       ),
                       title: Text(
@@ -1138,7 +1053,7 @@ class BuyerHomePage extends StatelessWidget {
                       isThreeLine: true,
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: () {
-                        _showOrderDetailsDialog(context, order);
+                        showOrderDetailsSheet(context, order);
                       },
                     ),
                   );
@@ -1152,48 +1067,6 @@ class BuyerHomePage extends StatelessWidget {
   }
 
   // --- Conversores de Status e Helpers ---
-
-  Color _getOrderStatusColor(OrderStatus status, ColorScheme colorScheme) {
-    switch (status) {
-      case OrderStatus.pendingFinanceApproval:
-        return colorScheme.tertiary;
-      case OrderStatus.blockedByFinance:
-        return colorScheme.error;
-      case OrderStatus.pickingPacking:
-        return colorScheme.primary;
-      case OrderStatus.inTransit:
-        return Colors.orange;
-      case OrderStatus.delivered:
-        return Colors.green;
-      case OrderStatus.invoiced:
-        return Colors.teal;
-      case OrderStatus.rma:
-        return colorScheme.secondary;
-      case OrderStatus.cancelled:
-        return colorScheme.outline;
-    }
-  }
-
-  IconData _getOrderStatusIcon(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pendingFinanceApproval:
-        return Icons.hourglass_empty_rounded;
-      case OrderStatus.blockedByFinance:
-        return Icons.lock_rounded;
-      case OrderStatus.pickingPacking:
-        return Icons.inventory_2_outlined;
-      case OrderStatus.inTransit:
-        return Icons.local_shipping_outlined;
-      case OrderStatus.delivered:
-        return Icons.check_circle_outline_rounded;
-      case OrderStatus.invoiced:
-        return Icons.receipt_long_outlined;
-      case OrderStatus.rma:
-        return Icons.assignment_return_outlined;
-      case OrderStatus.cancelled:
-        return Icons.cancel_outlined;
-    }
-  }
 
   Color _getRmaStatusColor(RmaStatus status, ColorScheme colorScheme) {
     switch (status) {

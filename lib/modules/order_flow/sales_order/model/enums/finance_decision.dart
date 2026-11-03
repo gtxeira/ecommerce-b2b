@@ -7,5 +7,12 @@ enum FinanceDecision {
   rejected,
 
   /// Solicitar mais informações
-  requestMoreInfo,
+  requestMoreInfo;
+
+  /// Nome de exibição em português.
+  String get label => switch (this) {
+    FinanceDecision.approved => 'Aprovado',
+    FinanceDecision.rejected => 'Reprovado',
+    FinanceDecision.requestMoreInfo => 'Mais informações solicitadas',
+  };
 }
