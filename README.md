@@ -151,6 +151,10 @@ app recarrega a lista, notifica `OrderEvents` (badge de pedidos em aberto) e ofe
 para `/orders/:id`. Orçamento `Expired` ou já convertido não mostra a ação; a validade aparece
 como “Válido até …”.
 
+O Admin também acessa a tela, mas vê **todos** os orçamentos (`getAll()`); para representante e
+supervisor a lista continua sendo a própria carteira. Na visão do Admin, os seletores de
+representante e empresa filtram a lista já carregada, sem chamada extra à API.
+
 ---
 
 ## Divisão dos módulos
@@ -230,10 +234,10 @@ Todo ID exibido leva `#` (`#order-102`, `#c1`, `#p1`), sempre pelo helper
 | Fallbacks | `Empresa não encontrada · #id`, `Produto não encontrado · #id`, `Papel · #id` |
 
 Empresa e produto vêm resolvidos pela API (`companyName`/`companyLegalName`,
-`productName`/`productSku`); pessoa vem do **snapshot congelado** no evento (`actorName`/
-`reviewerName`), então renomear um usuário não reescreve a análise/histórico. Payload antigo
-(só IDs) continua funcionando: a UI cai no fallback. A busca de `/orders` aceita o `#` e
-também procura por nome fantasia/razão social.
+`productName`/`productSku`) em pedidos e orçamentos; pessoa vem do **snapshot congelado** no
+evento (`actorName`/`reviewerName`), então renomear um usuário não reescreve a análise/histórico.
+Payload antigo (só IDs) continua funcionando: a UI cai no fallback. A busca de `/orders` aceita o
+`#` e também procura por nome fantasia/razão social.
 
 ## Timeline do pedido
 
