@@ -53,11 +53,39 @@ void main() {
     await events.dispose();
   });
 
+  test('loadQuotes do Admin busca todos os orçamentos', () async {
+    final admin = UserSession(
+      userId: const UserId('admin-1'),
+      role: UserRole.admin,
+    );
+    when(() => repository.getAll()).thenAnswer((_) async => [quote]);
+
+    await cubit.loadQuotes(admin);
+
+    expect((cubit.state as QuoteLoaded).quotes, [quote]);
+    verify(() => repository.getAll()).called(1);
+    verifyNever(() => repository.findByRepresentativeId(any()));
+  });
+
+  test('loadQuotes do representante continua na própria carteira', () async {
+    when(
+      () => repository.findByRepresentativeId('rep-456'),
+    ).thenAnswer((_) async => [quote]);
+
+    await cubit.loadQuotes(session);
+
+    expect((cubit.state as QuoteLoaded).quotes, [quote]);
+    verify(() => repository.findByRepresentativeId('rep-456')).called(1);
+    verifyNever(() => repository.getAll());
+  });
+
   test('convertQuote recarrega a lista e notifica OrderEvents', () async {
-    when(() => repository.findByRepresentativeId('rep-456'))
-        .thenAnswer((_) async => [quote]);
-    when(() => repository.convert(const QuoteId('q1'), companyId: 'c1'))
-        .thenAnswer((_) async => order);
+    when(
+      () => repository.findByRepresentativeId('rep-456'),
+    ).thenAnswer((_) async => [quote]);
+    when(
+      () => repository.convert(const QuoteId('q1'), companyId: 'c1'),
+    ).thenAnswer((_) async => order);
 
     var notifications = 0;
     final subscription = events.onChanged.listen((_) => notifications++);
@@ -68,14 +96,16 @@ void main() {
     expect(cubit.state, isA<QuoteLoaded>());
     await Future<void>.delayed(Duration.zero);
     expect(notifications, 1);
-    verify(() => repository.convert(const QuoteId('q1'), companyId: 'c1'))
-        .called(1);
+    verify(
+      () => repository.convert(const QuoteId('q1'), companyId: 'c1'),
+    ).called(1);
     await subscription.cancel();
   });
 
   test('convertQuote emite erro quando a API recusa', () async {
-    when(() => repository.convert(const QuoteId('q1'), companyId: 'c1'))
-        .thenThrow(Exception('orçamento expirado'));
+    when(
+      () => repository.convert(const QuoteId('q1'), companyId: 'c1'),
+    ).thenThrow(Exception('orçamento expirado'));
 
     await expectLater(
       () => cubit.convertQuote(quote, session),

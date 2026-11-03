@@ -36,4 +36,28 @@ void main() {
       }
     });
   });
+
+  group('AppPage.quotes', () {
+    test('aparece para os papéis que podem ver ou converter orçamentos', () {
+      for (final role in [
+        UserRole.admin,
+        UserRole.representative,
+        UserRole.supervisor,
+      ]) {
+        expect(
+          AppPage.sidebarPagesFor(role),
+          contains(AppPage.quotes),
+          reason: 'papel $role',
+        );
+      }
+    });
+
+    test('não aparece para financeiro nem comprador', () {
+      expect(
+        AppPage.sidebarPagesFor(UserRole.finance),
+        isNot(contains(AppPage.quotes)),
+      );
+      expect(AppPage.sidebarPagesFor(UserRole.buyer), isEmpty);
+    });
+  });
 }

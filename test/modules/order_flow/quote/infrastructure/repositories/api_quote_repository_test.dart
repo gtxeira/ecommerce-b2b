@@ -44,7 +44,13 @@ void main() {
     'shippingCost': 22,
     'total': 122,
     'items': [
-      {'productId': 'p1', 'quantity': 2, 'unitPrice': 50},
+      {
+        'productId': 'p1',
+        'productName': 'Produto',
+        'productSku': 'SKU-1',
+        'quantity': 2,
+        'unitPrice': 50,
+      },
     ],
   };
 
@@ -75,26 +81,23 @@ void main() {
   tearDown(() => events.dispose());
 
   group('ApiQuoteRepository', () {
-    test(
-      'should map ConvertedToOrder and include freight',
-      () async {
-        final adapter = FakeHttpAdapter(
-          (options) async => jsonResponse(successEnvelope(quoteJson())),
-        );
-        final repository = buildRepository(adapter);
+    test('should map ConvertedToOrder and include freight', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(quoteJson())),
+      );
+      final repository = buildRepository(adapter);
 
-        final quote = (await repository.getById(const QuoteId('q1')))!;
+      final quote = (await repository.getById(const QuoteId('q1')))!;
 
-        expect(quote.status, QuoteStatus.convertedToOrder);
-        expect(quote.companyId, 'c1');
-        expect(quote.companyName, 'ACME');
-        expect(quote.companyLegalName, 'ACME Ltda');
-        expect(quote.representativeId, 'rep-456');
-        expect(quote.representativeName, 'Representante Mock');
-        expect(quote.shippingCost.amount, 22);
-        expect(quote.total.amount, 122);
-      },
-    );
+      expect(quote.status, QuoteStatus.convertedToOrder);
+      expect(quote.companyId, 'c1');
+      expect(quote.companyName, 'ACME');
+      expect(quote.companyLegalName, 'ACME Ltda');
+      expect(quote.representativeId, 'rep-456');
+      expect(quote.representativeName, 'Representante Mock');
+      expect(quote.shippingCost.amount, 22);
+      expect(quote.total.amount, 122);
+    });
 
     test('should send company and price table when creating a quote', () async {
       Map<String, dynamic>? body;
@@ -220,6 +223,19 @@ void main() {
       expect(pricing.discountTotal.amount, 5000);
       expect(pricing.priceTableName, 'Tabela Atacado SP');
       expect(pricing.locationLabel, 'São Paulo (SP)');
+    });
+
+    test('should map the product name and sku resolved by the API', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(quoteJson())),
+      );
+      final repository = buildRepository(adapter);
+
+      final quote = (await repository.getById(const QuoteId('q1')))!;
+      final item = quote.items.single;
+
+      expect(item.productName, 'Produto');
+      expect(item.productSku, 'SKU-1');
     });
   });
 }

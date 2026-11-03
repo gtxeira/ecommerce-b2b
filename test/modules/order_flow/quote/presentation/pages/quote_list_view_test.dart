@@ -9,6 +9,23 @@ import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+Quote _quote({
+  required String id,
+  String? representativeId,
+  String? representativeName,
+  String? companyId,
+  String? companyName,
+  String? companyLegalName,
+}) => Quote(
+  id: QuoteId(id),
+  representativeId: representativeId,
+  representativeName: representativeName,
+  companyId: companyId,
+  companyName: companyName,
+  companyLegalName: companyLegalName,
+  status: QuoteStatus.sent,
+);
+
 void main() {
   final pricing = PricingExplanation.fromJson({
     'referenceUnitPrice': 5500.0,
@@ -54,5 +71,104 @@ void main() {
     );
 
     expect(quoteSavings(quote), isNull);
+  });
+
+  group('filterQuotes', () {
+    final quotes = [
+      _quote(id: 'q1', representativeId: 'rep-1', companyId: 'c1'),
+      _quote(id: 'q2', representativeId: 'rep-1', companyId: 'c2'),
+      _quote(id: 'q3', representativeId: 'rep-2', companyId: 'c2'),
+    ];
+
+    test('sem filtro devolve tudo', () {
+      expect(filterQuotes(quotes), hasLength(3));
+    });
+
+    test('filtra por representante', () {
+      final result = filterQuotes(quotes, representativeId: 'rep-1');
+
+      expect(result.map((quote) => quote.id.value), ['q1', 'q2']);
+    });
+
+    test('filtra por empresa', () {
+      final result = filterQuotes(quotes, companyId: 'c2');
+
+      expect(result.map((quote) => quote.id.value), ['q2', 'q3']);
+    });
+
+    test('combina representante e empresa', () {
+      final result = filterQuotes(
+        quotes,
+        representativeId: 'rep-1',
+        companyId: 'c2',
+      );
+
+      expect(result.map((quote) => quote.id.value), ['q2']);
+    });
+  });
+
+  group('quoteFilterOptions', () {
+    test('lista representantes e empresas distintos, ordenados pelo nome', () {
+      final options = quoteFilterOptions([
+        _quote(
+          id: 'q1',
+          representativeId: 'rep-2',
+          representativeName: 'Zé',
+          companyId: 'c1',
+          companyName: 'Beta',
+        ),
+        _quote(
+          id: 'q2',
+          representativeId: 'rep-1',
+          representativeName: 'Ana',
+          companyId: 'c2',
+          companyLegalName: 'Alfa Ltda',
+        ),
+        _quote(
+          id: 'q3',
+          representativeId: 'rep-1',
+          representativeName: 'Ana',
+          companyId: 'c1',
+          companyName: 'Beta',
+        ),
+      ]);
+
+      expect(options.representatives.map((option) => option.id), [
+        'rep-1',
+        'rep-2',
+      ]);
+      expect(options.representatives.map((option) => option.label), [
+        'Ana',
+        'Zé',
+      ]);
+      expect(options.companies.map((option) => option.id), ['c2', 'c1']);
+      expect(options.companies.map((option) => option.label), [
+        'Alfa Ltda',
+        'Beta',
+      ]);
+    });
+
+    test('usa #id quando o nome não veio e ignora orçamento sem vínculo', () {
+      final options = quoteFilterOptions([
+        _quote(id: 'q1', representativeId: 'rep-1'),
+        _quote(id: 'q2'),
+      ]);
+
+      expect(options.representatives.single.label, '#rep-1');
+      expect(options.companies, isEmpty);
+    });
+  });
+
+  group('effectiveQuoteFilter', () {
+    const options = [QuoteFilterOption(id: 'rep-1', label: 'Ana')];
+
+    test('mantém um id presente nas opções', () {
+      expect(effectiveQuoteFilter(options, 'rep-1'), 'rep-1');
+    });
+
+    test('zera filtro nulo ou que sumiu da lista', () {
+      expect(effectiveQuoteFilter(options, null), isNull);
+      expect(effectiveQuoteFilter(options, 'rep-9'), isNull);
+    });
   });
 }
