@@ -206,6 +206,7 @@ class Quote {
     +QuoteId id
     +QuoteStatus status
     +Money total
+    +DateTime? createdAt
 }
 
 class QuoteItem {
@@ -218,6 +219,7 @@ class SalesOrder {
     +OrderStatus status
     +Money total
     +CreditStatus creditStatus
+    +DateTime? createdAt
 }
 
 class OrderItem {

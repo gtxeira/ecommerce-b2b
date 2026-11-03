@@ -43,6 +43,11 @@ flutter analyze
 flutter test
 ```
 
+> **Cobertura atual:** o foco está em cubits, repositórios HTTP, formatação e widgets
+> reutilizáveis. Páginas completas (`order_list_page`, `order_detail_page`) ainda não têm widget
+> test: elas dependem do `B2BAppBar`, que lê o `AuthCubit` pelo `UserProfileDropdown`. Os pedaços
+> testáveis já foram extraídos (`OrderSearchField`, `OrderSummaryTile`, `OpenOrdersBadge`).
+
 ### 4. Executar o aplicativo
 
 ```bash
@@ -88,9 +93,11 @@ lib/
 ├── app/                             # Infraestrutura transversal do app
 │   ├── core/
 │   │   ├── errors/                  # AppError + AppErrorCodes (mesmo vocabulário da API)
+│   │   ├── events/                  # Canais de evento (invalidação de sessão e de pedidos)
+│   │   ├── format/                  # Formatação de exibição (datas)
 │   │   ├── network/                 # ApiClient, JWT/refresh, envelope { data, meta }
 │   │   ├── result/                  # Result/Success/Failure
-│   │   ├── routes/                  # go_router
+│   │   ├── routes/                  # go_router (AppPage, OrderRoutes)
 │   │   └── di/                      # get_it
 │   └── presentation/                # Layout, tema, widgets globais e inputs formz
 │
@@ -152,3 +159,47 @@ lib/modules/
 - **Enums da API:** a camada `infrastructure/repositories/api_*` traduz os nomes PascalCase da API
   (`Representative`, `Invoicing`, `Converted`, `SaoPaulo`, etc.) para os enums do modelo Flutter.
 
+---
+
+## Estado, invalidação e notificações
+
+O cliente **não mantém store global**: cada tela carrega seus dados ao montar (e por
+pull-to-refresh). Para o pouco estado que precisa sobreviver à tela, existe um canal de eventos em
+`app/core/events/`.
+
+```text
+mutação confirmada → evento (sem payload) → consumidor relê da API → rebuild
+```
+
+| Canal | Emissor | Consumidor | Efeito |
+|---|---|---|---|
+| `SessionEvents.onExpired` | `ApiClient` (refresh falhou) | `AuthCubit` | derruba a sessão e volta ao login |
+| `OrderEvents.onChanged` | `FinanceReviewCubit` (aprovar/reprovar/faturar), `BillingPage` (faturar) | `OpenOrdersCubit` | recalcula o selo de pedidos em aberto |
+
+**O evento não transporta dados.** Quem escuta relê a fonte
+(`SalesOrderRepository.getAll()`, já escopada por papel no backend), então o selo e a lista nunca
+divergem. Uma falha na releitura mantém o último valor conhecido em vez de derrubar a tela.
+
+**Regras**
+
+1. Emita **só depois** do sucesso da API — nunca de forma otimista.
+2. Emita de quem executou a mutação, não de quem apenas navegou.
+3. O evento é global do app, não da tela: o consumidor precisa tolerar falha sem propagar.
+4. Listas de tela (`/orders`, "Atividades Recentes") **não** assinam o evento — recarregam ao
+   montar e por pull-to-refresh.
+5. `OpenOrdersCubit` vive no `MyApp` (acima do router), carrega quando a sessão autentica e zera
+   no logout ou para o comprador, que não usa a navegação.
+
+## Rotas de pedidos
+
+`/orders` (abertos x encerrados, com busca por id, empresa ou nome fantasia; `?group=closed` abre
+direto no grupo) e `/orders/:id` (detalhe). Ficam fora de `AppPage`-como-módulo apenas no
+cadastro de rotas: a entrada `AppPage.orders` existe para a sidebar e leva o mesmo caminho.
+Comprador é redirecionado para o portal por um `redirect` na própria rota.
+
+## Datas
+
+A API expõe `createdAt` em **UTC**. O cliente converte para o fuso local e formata com
+`formatDate`/`formatDateTime` (`app/core/format/`) — helper próprio, no mesmo espírito de
+`Money.formatted`, para não adicionar o pacote `intl` por um único formato. Ordenação de
+"recentes" usa `mostRecentSalesOrders` (`sales_order_sort.dart`).
