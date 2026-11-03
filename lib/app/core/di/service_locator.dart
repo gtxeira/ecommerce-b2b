@@ -263,7 +263,9 @@ Future<void> setupServiceLocator() async {
     ),
   );
 
-  getIt.registerFactory(() => QuoteCubit(getIt<QuoteRepository>()));
+  getIt.registerFactory(
+    () => QuoteCubit(getIt<QuoteRepository>(), getIt<OrderEvents>()),
+  );
 
   getIt.registerFactory(
     () => OrderListCubit(

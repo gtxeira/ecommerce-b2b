@@ -22,7 +22,10 @@ enum OrderStatus {
   rma,
 
   /// Pedido faturado (a comissão do representante nasce aqui).
-  invoiced;
+  invoiced,
+
+  /// Pedido bloqueado cuja análise financeira pediu mais informações ao cliente.
+  awaitingInfo;
 
   /// Converte o nome devolvido pela API (case-insensitive).
   static OrderStatus fromApi(String value) => switch (value.toLowerCase()) {
@@ -34,6 +37,7 @@ enum OrderStatus {
     'cancelled' => OrderStatus.cancelled,
     'rma' => OrderStatus.rma,
     'invoiced' => OrderStatus.invoiced,
+    'awaitinginfo' => OrderStatus.awaitingInfo,
     _ => OrderStatus.pendingFinanceApproval,
   };
 
@@ -47,6 +51,7 @@ enum OrderStatus {
     OrderStatus.cancelled => 'Cancelado',
     OrderStatus.rma => 'Devolução / RMA',
     OrderStatus.invoiced => 'Faturado',
+    OrderStatus.awaitingInfo => 'Aguardando Informações',
   };
 }
 
@@ -73,6 +78,7 @@ extension OrderStatusGrouping on OrderStatus {
   bool get isOpen => switch (this) {
     OrderStatus.pendingFinanceApproval ||
     OrderStatus.blockedByFinance ||
+    OrderStatus.awaitingInfo ||
     OrderStatus.pickingPacking ||
     OrderStatus.inTransit => true,
     OrderStatus.delivered ||

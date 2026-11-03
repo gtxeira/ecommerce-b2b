@@ -249,7 +249,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   /// Próximo passo operacional do pedido, quando existe uma tela para ele.
   Widget? _buildNextStepAction(BuildContext context, SalesOrder order) {
     final (label, icon, path) = switch (order.status) {
-      OrderStatus.pendingFinanceApproval || OrderStatus.blockedByFinance => (
+      OrderStatus.pendingFinanceApproval ||
+      OrderStatus.blockedByFinance ||
+      OrderStatus.awaitingInfo => (
         'Ir para análise de crédito',
         Icons.gpp_maybe_rounded,
         AppPage.finance.path,

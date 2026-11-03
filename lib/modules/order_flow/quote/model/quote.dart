@@ -24,6 +24,10 @@ class Quote extends Entity<QuoteId> {
   /// existir no contrato).
   final DateTime? createdAt;
 
+  /// Validade do orçamento, em UTC. `null` em orçamentos antigos, anteriores ao
+  /// campo; nesse caso não há expiração automática.
+  final DateTime? expiresAt;
+
   Quote({
     required QuoteId id,
     this.companyId,
@@ -35,6 +39,7 @@ class Quote extends Entity<QuoteId> {
     List<QuoteItem>? items,
     Money? shippingCost,
     this.createdAt,
+    this.expiresAt,
   }) : _status = status,
        _items = items ?? [],
        _shippingCost = shippingCost ?? Money.create(0).getOrThrow(),

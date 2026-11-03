@@ -1,6 +1,11 @@
+import 'package:ecommerce_b2b/app/core/format/date_format.dart';
 import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
+import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/discount_badge.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/enums/quote_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote_item.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_cubit.dart';
@@ -8,6 +13,7 @@ import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class QuoteListView extends StatefulWidget {
   const QuoteListView({super.key});
@@ -30,10 +36,81 @@ class _QuoteListViewState extends State<QuoteListView> {
     }
   }
 
+  Future<void> _convertQuote(
+    BuildContext context,
+    Quote quote,
+    UserSession session,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Converter em pedido'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Orçamento #${quote.id.displayCode}'),
+            const SizedBox(height: 4),
+            Text('Total: ${quote.total.formatted}'),
+            const SizedBox(height: 12),
+            const Text(
+              'O pedido pode nascer bloqueado se o valor exceder o limite de crédito da empresa.',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Converter'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final order = await context.read<QuoteCubit>().convertQuote(quote, session);
+      if (!context.mounted) return;
+
+      final waitingFinance = order.status == OrderStatus.blockedByFinance ||
+          order.status == OrderStatus.pendingFinanceApproval ||
+          order.status == OrderStatus.awaitingInfo;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            waitingFinance
+                ? 'Pedido criado e enviado para análise financeira.'
+                : 'Pedido criado em separação e embalagem.',
+          ),
+          action: SnackBarAction(
+            label: 'Ver pedido',
+            onPressed: () => context.push(OrderRoutes.detail(order.id.value)),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Não foi possível converter o orçamento: $error'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final authState = context.read<AuthCubit>().state;
+    final session = authState is AuthAuthenticated ? authState.session : null;
 
     return BlocBuilder<QuoteCubit, QuoteState>(
       builder: (context, state) {
@@ -75,6 +152,9 @@ class _QuoteListViewState extends State<QuoteListView> {
               itemBuilder: (context, index) {
                 final quote = quotes[index];
                 final savings = quoteSavings(quote);
+                final canConvert = session != null
+                    && (session.isRepresentative || session.isAdmin)
+                    && quote.status == QuoteStatus.sent;
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -98,11 +178,19 @@ class _QuoteListViewState extends State<QuoteListView> {
                           'Empresa: ${companyLabel(tradeName: quote.companyName, legalName: quote.companyLegalName, id: quote.companyId!)}',
                         if (quote.representativeId != null)
                           'Representante: ${personLabel(name: quote.representativeName, role: 'Representative', id: quote.representativeId!)}',
+                        if (quote.expiresAt != null)
+                          'Válido até ${formatDate(quote.expiresAt!)}',
                       ].join('\n'),
                     ),
                     isThreeLine: true,
                     trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => showQuoteDetailsSheet(context, quote),
+                    onTap: () => showQuoteDetailsSheet(
+                      context,
+                      quote,
+                      onConvert: canConvert
+                          ? () => _convertQuote(context, quote, session)
+                          : null,
+                    ),
                   ),
                 );
               },
@@ -126,7 +214,11 @@ Money? quoteSavings(Quote quote) {
   return Money.create(cents / 100).getOrThrow();
 }
 
-Future<void> showQuoteDetailsSheet(BuildContext context, Quote quote) {
+Future<void> showQuoteDetailsSheet(
+  BuildContext context,
+  Quote quote, {
+  Future<void> Function()? onConvert,
+}) {
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
   final savings = quoteSavings(quote);
@@ -173,6 +265,15 @@ Future<void> showQuoteDetailsSheet(BuildContext context, Quote quote) {
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
+              if (quote.expiresAt != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Válido até ${formatDate(quote.expiresAt!)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
               const Divider(height: 32),
               Text(
                 'Itens',
@@ -221,6 +322,20 @@ Future<void> showQuoteDetailsSheet(BuildContext context, Quote quote) {
                   ),
                 ],
               ),
+              if (onConvert != null) ...[
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    onConvert();
+                  },
+                  icon: const Icon(Icons.shopping_cart_checkout_rounded),
+                  label: const Text('Converter em pedido'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

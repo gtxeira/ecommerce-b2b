@@ -7,6 +7,7 @@ Color orderStatusColor(OrderStatus status, ColorScheme colorScheme) {
   return switch (status) {
     OrderStatus.pendingFinanceApproval => colorScheme.tertiary,
     OrderStatus.blockedByFinance => colorScheme.error,
+    OrderStatus.awaitingInfo => Colors.amber.shade800,
     OrderStatus.pickingPacking => colorScheme.primary,
     OrderStatus.inTransit => Colors.orange,
     OrderStatus.delivered => Colors.green,
@@ -21,6 +22,7 @@ IconData orderStatusIcon(OrderStatus status) {
   return switch (status) {
     OrderStatus.pendingFinanceApproval => Icons.hourglass_empty_rounded,
     OrderStatus.blockedByFinance => Icons.lock_rounded,
+    OrderStatus.awaitingInfo => Icons.help_outline_rounded,
     OrderStatus.pickingPacking => Icons.inventory_2_outlined,
     OrderStatus.inTransit => Icons.local_shipping_outlined,
     OrderStatus.delivered => Icons.check_circle_outline_rounded,

@@ -5,6 +5,8 @@ import 'package:ecommerce_b2b/modules/order_flow/quote/model/enums/quote_status.
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote_item.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/repositories/quote_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/repositories/api_sales_order_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/quote_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
@@ -31,6 +33,25 @@ class ApiQuoteRepository implements QuoteRepository {
   Future<List<Quote>> getAll() async {
     final data = await _api.get('/api/quotes');
     return _mapList(data);
+  }
+
+  @override
+  Future<SalesOrder> convert(QuoteId id, {String? companyId}) async {
+    final body = <String, dynamic>{};
+    if (companyId != null) body['companyId'] = companyId;
+
+    final data = await _api.post(
+      '/api/quotes/${id.value}/convert',
+      data: body,
+    );
+
+    if (data is! Map) {
+      throw StateError('A API não devolveu o pedido convertido.');
+    }
+
+    return ApiSalesOrderRepository.fromJson(
+      Map<String, dynamic>.from(data),
+    );
   }
 
   @override
@@ -73,6 +94,7 @@ class ApiQuoteRepository implements QuoteRepository {
     representativeName: readNullableString(json, 'representativeName'),
     status: _statusFromApi(readString(json, 'status')),
     createdAt: readDate(json, 'createdAt'),
+    expiresAt: readDate(json, 'expiresAt'),
     shippingCost: Money.create(readDouble(json, 'shippingCost')).getOrThrow(),
     items: readMapList(json, 'items')
         .map(
@@ -95,7 +117,7 @@ class ApiQuoteRepository implements QuoteRepository {
         'draft' => QuoteStatus.draft,
         'sent' => QuoteStatus.sent,
         'expired' => QuoteStatus.expired,
-        'converted' => QuoteStatus.convertedToOrder,
+        'convertedtoorder' => QuoteStatus.convertedToOrder,
         'cancelled' => QuoteStatus.cancelled,
         _ => QuoteStatus.draft,
       };
