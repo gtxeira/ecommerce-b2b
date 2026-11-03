@@ -143,8 +143,17 @@ O cliente não replica a precedência de tabela/variante/UF. A API expõe
   UF, preço de catálogo e economia;
 - mostrar o mesmo motivo no detalhe do pedido/orçamento, a partir do snapshot congelado no item.
 
-O botão “Solicitar orçamento” do catálogo cria um orçamento `Sent` com a quantidade simulada; a
-API recalcula o preço e grava o snapshot no item.
+O catálogo do comprador monta um **carrinho**: “Adicionar ao orçamento” soma o produto (ou a
+quantidade, se o produto já está no carrinho) e o FAB envia todos os itens de uma vez. A API
+recalcula os preços e grava o snapshot de cada item. Produtos com variação têm um seletor de
+cor/tamanho/voltagem; a escolha vai no item e é preservada no orçamento e no pedido convertido.
+Quando não há faixa de desconto elegível, o item entra pelo **preço de catálogo** (ou da
+variação), sem exigir tabela de preços. Depois do envio, “Meus Orçamentos”
+(`/buyer-quotes`) lista os orçamentos da empresa do comprador, com status, validade e itens —
+somente leitura.
+
+Os cards “Pedidos Ativos” e “Financeiro” da home do comprador abrem, respectivamente, a lista de
+pedidos ativos e os boletos em aberto.
 
 O representante/supervisor converte um orçamento `Sent` em pedido pela tela de Orçamentos. O
 app recarrega a lista, notifica `OrderEvents` (badge de pedidos em aberto) e oferece “Ver pedido”
