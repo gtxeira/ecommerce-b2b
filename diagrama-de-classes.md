@@ -204,6 +204,11 @@ Esse é o coração do sistema.
 
 class Quote {
     +QuoteId id
+    +String? companyId
+    +String? companyName
+    +String? companyLegalName
+    +String? representativeId
+    +String? representativeName
     +QuoteStatus status
     +Money total
     +DateTime? createdAt
@@ -216,6 +221,9 @@ class QuoteItem {
 
 class SalesOrder {
     +OrderId id
+    +String? companyId
+    +String? companyName
+    +String? companyLegalName
     +OrderStatus status
     +Money total
     +CreditStatus creditStatus
@@ -234,16 +242,22 @@ class OrderTimelineEntry {
     +FinanceDecision? decision
     +String? actorId
     +String? actorRole
+    +String? actorName
     +String? note
 }
 
 class OrderItem {
+    +String? productName
+    +String? productSku
     +Quantity quantity
     +Money unitPriceSnapshot
 }
 
 class FinanceReview {
     +FinanceDecision decision
+    +String reviewerId
+    +String? reviewerName
+    +String? reviewerRole
     +String reason
 }
 

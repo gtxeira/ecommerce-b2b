@@ -198,6 +198,24 @@ direto no grupo) e `/orders/:id` (detalhe). Ficam fora de `AppPage`-como-módulo
 cadastro de rotas: a entrada `AppPage.orders` existe para a sidebar e leva o mesmo caminho.
 Comprador é redirecionado para o portal por um `redirect` na própria rota.
 
+## Nomes e IDs
+
+Todo ID exibido leva `#` (`#order-102`, `#c1`, `#p1`), sempre pelo helper
+`app/core/format/display_labels.dart`:
+
+| Coisa | Formato |
+|---|---|
+| Empresa | `Nome Fantasia (Razão Social) · #id` |
+| Produto | `Nome (SKU) · #id` |
+| Pessoa | `Nome (Papel) · #id` |
+| Fallbacks | `Empresa não encontrada · #id`, `Produto não encontrado · #id`, `Papel · #id` |
+
+Empresa e produto vêm resolvidos pela API (`companyName`/`companyLegalName`,
+`productName`/`productSku`); pessoa vem do **snapshot congelado** no evento (`actorName`/
+`reviewerName`), então renomear um usuário não reescreve a análise/histórico. Payload antigo
+(só IDs) continua funcionando: a UI cai no fallback. A busca de `/orders` aceita o `#` e
+também procura por nome fantasia/razão social.
+
 ## Timeline do pedido
 
 O detalhe (`/orders/:id`) mostra o histórico logo abaixo do resumo e também em um bottom sheet
@@ -208,8 +226,8 @@ pelo ícone `history` da AppBar. Os dois usam o mesmo widget `OrderTimeline`
   falham de forma independente: uma timeline indisponível não derruba o detalhe (e vice-versa).
   Pull-to-refresh recarrega os dois; o erro da timeline tem "Tentar novamente".
 - A exibição é do mais recente para o mais antigo. Cada item traz o fato (criação, transição
-  `De → Para`, análise financeira), a data/hora **local** e o ator: papel + id curto
-  (`Financeiro · fin-1`) ou `Sistema`.
+  `De → Para`, análise financeira), a data/hora **local** e o ator:
+  `Nome (Papel) · #id` ou `Sistema`.
 - O rótulo é composto no cliente a partir dos enums (`OrderStatus`, `FinanceDecision`); a API não
   envia texto em português. Um tipo de evento novo cai em "Evento do pedido" sem quebrar a tela.
 - Entram na timeline: criação, mudança de status e análise financeira. Rastreio da transportadora
