@@ -21,6 +21,10 @@ class SalesOrder extends Entity<OrderId> {
   /// existir no contrato); a UI trata a ausência como "data desconhecida".
   final DateTime? createdAt;
 
+  /// Instante do último evento do histórico, em UTC. É o critério de ordenação
+  /// por atividade; `null` em payloads antigos e cai para [createdAt].
+  final DateTime? lastActivityAt;
+
   /// Construtor do Pedido de Venda.
   SalesOrder({
     required OrderId id,
@@ -31,6 +35,7 @@ class SalesOrder extends Entity<OrderId> {
     FinanceReview? financeReview,
     Money? shippingCost,
     this.createdAt,
+    this.lastActivityAt,
   }) : _status = status,
        _creditStatus = creditStatus,
        _items = items,
@@ -52,6 +57,10 @@ class SalesOrder extends Entity<OrderId> {
 
   /// Frete herdado do orçamento, em reais.
   Money get shippingCost => _shippingCost;
+
+  /// Instante que representa a recência do pedido: a última atividade quando
+  /// existe, senão a criação. Pedidos antigos não viram "recentes" por engano.
+  DateTime? get activityAt => lastActivityAt ?? createdAt;
 
   /// Calcula o valor total do pedido somando os subtotais de cada item e o frete.
   Money get total {

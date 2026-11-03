@@ -55,7 +55,7 @@ class OrderListLoaded extends OrderListState {
         );
         if (byPriority != 0) return byPriority;
       }
-      return compareSalesOrdersByCreatedAtDesc(a, b);
+      return compareSalesOrdersByLastActivityDesc(a, b);
     });
 
     return orders;

@@ -24,6 +24,19 @@ enum OrderStatus {
   /// Pedido faturado (a comissão do representante nasce aqui).
   invoiced;
 
+  /// Converte o nome devolvido pela API (case-insensitive).
+  static OrderStatus fromApi(String value) => switch (value.toLowerCase()) {
+    'pendingfinanceapproval' => OrderStatus.pendingFinanceApproval,
+    'blockedbyfinance' => OrderStatus.blockedByFinance,
+    'pickingpacking' => OrderStatus.pickingPacking,
+    'intransit' => OrderStatus.inTransit,
+    'delivered' => OrderStatus.delivered,
+    'cancelled' => OrderStatus.cancelled,
+    'rma' => OrderStatus.rma,
+    'invoiced' => OrderStatus.invoiced,
+    _ => OrderStatus.pendingFinanceApproval,
+  };
+
   /// Nome de exibição em português.
   String get label => switch (this) {
     OrderStatus.pendingFinanceApproval => 'Aguardando Aprovação Financeira',

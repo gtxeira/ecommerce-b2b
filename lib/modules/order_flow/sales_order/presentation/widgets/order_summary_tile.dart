@@ -50,7 +50,8 @@ class OrderSummaryTile extends StatelessWidget {
           [
             'Status: ${order.status.label}',
             if (companyName != null) 'Empresa: $companyName',
-            'Total: ${order.total.formatted} · ${formatDateOrDash(order.createdAt)}',
+            'Total: ${order.total.formatted}',
+            'Última atividade: ${formatDateTimeOrDash(order.activityAt)}',
           ].join('\n'),
         ),
         isThreeLine: true,

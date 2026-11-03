@@ -5,6 +5,7 @@ import 'package:ecommerce_b2b/app/core/network/token_store.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/enums/finance_decision.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/order_timeline_entry.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/repositories/api_sales_order_repository.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
@@ -34,6 +35,7 @@ void main() {
   }) => {
     'id': 'o1',
     'createdAt': '2026-09-21T10:00:00.000+00:00',
+    'lastActivityAt': '2026-09-23T15:40:00.000+00:00',
     'companyId': 'c1',
     'status': status,
     'creditStatus': creditStatus,
@@ -109,8 +111,12 @@ void main() {
 
       final order = (await repository.getById(const OrderId('o1')))!;
       expect(order.createdAt, DateTime.utc(2026, 9, 21, 10));
+      expect(order.lastActivityAt, DateTime.utc(2026, 9, 23, 15, 40));
+      expect(order.activityAt, order.lastActivityAt);
 
-      final legacy = orderJson()..remove('createdAt');
+      final legacy = orderJson()
+        ..remove('createdAt')
+        ..remove('lastActivityAt');
       final legacyAdapter = FakeHttpAdapter(
         (options) async => jsonResponse(successEnvelope(legacy)),
       );
@@ -120,6 +126,56 @@ void main() {
         const OrderId('o1'),
       ))!;
       expect(legacyOrder.createdAt, isNull);
+      expect(legacyOrder.lastActivityAt, isNull);
+      expect(legacyOrder.activityAt, isNull);
+    });
+
+    test('should load the timeline from the dedicated endpoint', () async {
+      RequestOptions? captured;
+      final adapter = FakeHttpAdapter((options) async {
+        captured = options;
+        return jsonResponse(
+          successEnvelope([
+            {
+              'id': 'e2',
+              'occurredAt': '2026-09-22T10:00:00.000+00:00',
+              'type': 'StatusChanged',
+              'fromStatus': 'PendingFinanceApproval',
+              'toStatus': 'PickingPacking',
+              'actorId': 'fin-1',
+              'actorRole': 'Finance',
+            },
+            {
+              'id': 'e1',
+              'occurredAt': '2026-09-21T10:00:00.000+00:00',
+              'type': 'Created',
+              'toStatus': 'PendingFinanceApproval',
+              'toCreditStatus': 'Approved',
+              'actorRole': 'System',
+            },
+          ]),
+        );
+      });
+      final repository = buildRepository(adapter);
+
+      final entries = await repository.getTimeline(const OrderId('o1'));
+
+      expect(captured!.path, '/api/orders/o1/timeline');
+      expect(entries, hasLength(2));
+      expect(entries.first.type, OrderTimelineEventType.statusChanged);
+      expect(entries.last.type, OrderTimelineEventType.created);
+    });
+
+    test('timeline tolera resposta vazia', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope([])),
+      );
+
+      final entries = await buildRepository(
+        adapter,
+      ).getTimeline(const OrderId('o1'));
+
+      expect(entries, isEmpty);
     });
   });
 }

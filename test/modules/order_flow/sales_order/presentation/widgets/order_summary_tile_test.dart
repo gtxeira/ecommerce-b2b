@@ -28,6 +28,7 @@ void main() {
     ],
     shippingCost: Money.create(5).getOrThrow(),
     createdAt: DateTime(2026, 9, 21, 10, 0),
+    lastActivityAt: DateTime(2026, 9, 22, 15, 30),
   );
 
   Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
@@ -55,12 +56,16 @@ void main() {
       expect(find.textContaining('Empresa: ACME'), findsOneWidget);
     });
 
-    testWidgets('mostra a data de criação', (tester) async {
+    testWidgets('mostra a última atividade, não a criação', (tester) async {
       await tester.pumpWidget(
         wrap(OrderSummaryTile(order: order, onTap: () {})),
       );
 
-      expect(find.textContaining('21/09/2026'), findsOneWidget);
+      expect(
+        find.textContaining('Última atividade: 22/09/2026'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('21/09/2026'), findsNothing);
     });
 
     testWidgets('sem data mostra travessão', (tester) async {
@@ -78,7 +83,7 @@ void main() {
         ),
       );
 
-      expect(find.textContaining('· -'), findsOneWidget);
+      expect(find.textContaining('Última atividade: -'), findsOneWidget);
     });
 
     testWidgets('tocar no tile dispara onTap', (tester) async {
@@ -102,6 +107,10 @@ void main() {
       expect(find.text('Frete'), findsOneWidget);
       expect(find.text('Total'), findsOneWidget);
       expect(find.text(order.total.formatted), findsOneWidget);
+      expect(
+        find.textContaining('Última atividade: 22/09/2026'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('mostra a decisão financeira quando existe', (tester) async {

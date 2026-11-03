@@ -5,6 +5,7 @@ import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/enums/finance_decision.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/finance_review.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/order_item.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/order_timeline_entry.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
@@ -53,6 +54,19 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
     return _mapList(data);
   }
 
+  @override
+  Future<List<OrderTimelineEntry>> getTimeline(OrderId id) async {
+    final data = await _api.get('/api/orders/${id.value}/timeline');
+    if (data is! List) return const [];
+    return data
+        .whereType<Map>()
+        .map(
+          (item) =>
+              OrderTimelineEntry.fromJson(Map<String, dynamic>.from(item)),
+        )
+        .toList();
+  }
+
   List<SalesOrder> _mapList(dynamic data) {
     if (data is! List) return const [];
     return data
@@ -69,7 +83,7 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
     final financeReview = decision == null
         ? null
         : FinanceReview(
-            decision: _decisionFromApi(decision),
+            decision: FinanceDecision.fromApi(decision),
             reviewerId: reviewer ?? '',
             reviewedAt: DateTime.now(),
             justification: justification ?? '',
@@ -78,8 +92,8 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
     return SalesOrder(
       id: OrderId(readString(json, 'id')),
       companyId: readNullableString(json, 'companyId'),
-      status: _statusFromApi(readString(json, 'status')),
-      creditStatus: _creditFromApi(readString(json, 'creditStatus')),
+      status: OrderStatus.fromApi(readString(json, 'status')),
+      creditStatus: CreditStatus.fromApi(readString(json, 'creditStatus')),
       items: readMapList(json, 'items')
           .map(
             (item) => OrderItem(
@@ -93,35 +107,8 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
           .toList(),
       financeReview: financeReview,
       createdAt: readDate(json, 'createdAt'),
+      lastActivityAt: readDate(json, 'lastActivityAt'),
       shippingCost: Money.create(readDouble(json, 'shippingCost')).getOrThrow(),
     );
   }
-
-  static OrderStatus _statusFromApi(String value) =>
-      switch (value.toLowerCase()) {
-        'pendingfinanceapproval' => OrderStatus.pendingFinanceApproval,
-        'blockedbyfinance' => OrderStatus.blockedByFinance,
-        'pickingpacking' => OrderStatus.pickingPacking,
-        'intransit' => OrderStatus.inTransit,
-        'delivered' => OrderStatus.delivered,
-        'cancelled' => OrderStatus.cancelled,
-        'rma' => OrderStatus.rma,
-        'invoiced' => OrderStatus.invoiced,
-        _ => OrderStatus.pendingFinanceApproval,
-      };
-
-  static CreditStatus _creditFromApi(String value) =>
-      switch (value.toLowerCase()) {
-        'approved' => CreditStatus.approved,
-        'rejected' => CreditStatus.rejected,
-        'blocked' => CreditStatus.blocked,
-        _ => CreditStatus.pending,
-      };
-
-  static FinanceDecision _decisionFromApi(String value) =>
-      switch (value.toLowerCase()) {
-        'approved' => FinanceDecision.approved,
-        'rejected' => FinanceDecision.rejected,
-        _ => FinanceDecision.requestMoreInfo,
-      };
 }

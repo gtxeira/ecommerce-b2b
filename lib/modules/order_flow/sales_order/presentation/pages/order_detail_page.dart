@@ -2,9 +2,11 @@ import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/order_timeline_entry.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_details_content.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_timeline.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +28,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   bool _loading = true;
   String? _error;
 
+  List<OrderTimelineEntry> _timeline = const [];
+  bool _timelineLoading = true;
+  String? _timelineError;
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +41,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Future<void> _load() async {
+    // Pedido e histórico falham de forma independente: a timeline não pode
+    // derrubar o detalhe, e vice-versa.
+    await Future.wait([_loadOrder(), _loadTimeline()]);
+  }
+
+  Future<void> _loadOrder() async {
     try {
       final order = await getIt<SalesOrderRepository>().getById(
         OrderId(widget.orderId),
@@ -55,6 +67,29 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     }
   }
 
+  Future<void> _loadTimeline() async {
+    setState(() {
+      _timelineLoading = true;
+      _timelineError = null;
+    });
+    try {
+      final entries = await getIt<SalesOrderRepository>().getTimeline(
+        OrderId(widget.orderId),
+      );
+      if (!mounted) return;
+      setState(() {
+        _timeline = entries;
+        _timelineLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _timelineLoading = false;
+        _timelineError = error.toString();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final order = _order;
@@ -62,6 +97,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     return Scaffold(
       appBar: B2BAppBar(
         title: 'Pedido #${order?.id.displayCode ?? widget.orderId}',
+        actions: [
+          IconButton(
+            tooltip: 'Histórico do pedido',
+            icon: const Icon(Icons.history_rounded),
+            onPressed: order == null ? null : () => _showTimeline(order),
+          ),
+        ],
       ),
       body: _buildBody(context, order),
     );
@@ -84,6 +126,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         padding: const EdgeInsets.all(20),
         children: [
           OrderDetailsContent(order: order),
+          const SizedBox(height: 24),
+          OrderTimeline(
+            entries: _timeline,
+            loading: _timelineLoading,
+            error: _timelineError,
+            onRetry: _loadTimeline,
+          ),
           if (action != null) ...[const SizedBox(height: 24), action],
         ],
       ),
@@ -134,6 +183,64 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Mesmo histórico da seção, em um bottom sheet para consultar sem rolar a
+  /// página. O retry recarrega e re-renderiza o sheet junto com a tela.
+  Future<void> _showTimeline(SalesOrder order) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetContext).size.height * 0.85,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setSheetState) => SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          sheetContext,
+                        ).colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Pedido #${order.id.displayCode}',
+                    style: Theme.of(sheetContext).textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 16),
+                  OrderTimeline(
+                    entries: _timeline,
+                    loading: _timelineLoading,
+                    error: _timelineError,
+                    onRetry: () async {
+                      await _loadTimeline();
+                      if (mounted) setSheetState(() {});
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

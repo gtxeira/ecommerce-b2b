@@ -102,6 +102,34 @@ void main() {
       },
     );
 
+    test('recent releases should be ordered by last activity', () async {
+      final createdEarlier = SalesOrder(
+        id: const OrderId('o2'),
+        status: OrderStatus.delivered,
+        creditStatus: CreditStatus.approved,
+        items: [],
+        createdAt: DateTime.utc(2026, 9, 1),
+        lastActivityAt: DateTime.utc(2026, 9, 25),
+      );
+      final createdLater = SalesOrder(
+        id: const OrderId('o3'),
+        status: OrderStatus.invoiced,
+        creditStatus: CreditStatus.approved,
+        items: [],
+        createdAt: DateTime.utc(2026, 9, 20),
+      );
+
+      when(() => getPendingReviews.execute()).thenAnswer((_) async => [order]);
+      when(
+        () => orderRepository.getAll(),
+      ).thenAnswer((_) async => [createdLater, createdEarlier]);
+
+      await cubit.loadPendingOrders();
+
+      final loaded = cubit.state as FinanceReviewLoaded;
+      expect(loaded.recentReleases, [createdEarlier, createdLater]);
+    });
+
     test('loadPendingOrders should emit Failure on exception', () async {
       when(() => getPendingReviews.execute()).thenThrow(Exception('API error'));
 

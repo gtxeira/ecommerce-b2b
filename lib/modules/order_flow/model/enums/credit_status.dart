@@ -12,6 +12,14 @@ enum CreditStatus {
   /// Pedido bloqueado.
   blocked;
 
+  /// Converte o nome devolvido pela API (case-insensitive).
+  static CreditStatus fromApi(String value) => switch (value.toLowerCase()) {
+    'approved' => CreditStatus.approved,
+    'rejected' => CreditStatus.rejected,
+    'blocked' => CreditStatus.blocked,
+    _ => CreditStatus.pending,
+  };
+
   /// Nome de exibição em português.
   String get label => switch (this) {
     CreditStatus.approved => 'Aprovado',

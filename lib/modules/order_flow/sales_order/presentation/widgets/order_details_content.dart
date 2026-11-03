@@ -58,6 +58,13 @@ class OrderDetailsContent extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
             ),
           ),
+        if (order.lastActivityAt != null)
+          Text(
+            'Última atividade: ${formatDateTime(order.lastActivityAt!)}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
         const Divider(height: 32),
         Text(
           'Itens do Pedido',

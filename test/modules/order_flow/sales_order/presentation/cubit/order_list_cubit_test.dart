@@ -39,6 +39,7 @@ void main() {
       OrderStatus status, {
       String? companyId,
       DateTime? createdAt,
+      DateTime? lastActivityAt,
     }) => SalesOrder(
       id: OrderId(id),
       companyId: companyId,
@@ -46,6 +47,7 @@ void main() {
       creditStatus: CreditStatus.approved,
       items: const [],
       createdAt: createdAt,
+      lastActivityAt: lastActivityAt,
     );
 
     final orders = [
@@ -217,6 +219,60 @@ void main() {
         expect(
           (cubit.state as OrderListLoaded).visibleOrders.map((o) => o.id.value),
           ['newer', 'older'],
+        );
+      });
+
+      test('encerrados: última atividade vence a data de criação', () async {
+        // Espelha o seed: criado há dias, entregue agora, aparece antes de um
+        // pedido criado ontem e nunca tocado.
+        when(() => repository.getAll()).thenAnswer(
+          (_) async => [
+            order(
+              'created-long-ago-delivered-now',
+              OrderStatus.delivered,
+              createdAt: DateTime.utc(2026, 9, 1),
+              lastActivityAt: DateTime.utc(2026, 9, 25),
+            ),
+            order(
+              'created-yesterday',
+              OrderStatus.cancelled,
+              createdAt: DateTime.utc(2026, 9, 24),
+            ),
+          ],
+        );
+
+        await cubit.load();
+        cubit.setFilter(OrderStatusGroup.closed);
+
+        expect(
+          (cubit.state as OrderListLoaded).visibleOrders.map((o) => o.id.value),
+          ['created-long-ago-delivered-now', 'created-yesterday'],
+        );
+      });
+
+      test('abertos: mesma prioridade desempata pela atividade', () async {
+        when(() => repository.getAll()).thenAnswer(
+          (_) async => [
+            order(
+              'older-activity',
+              OrderStatus.pickingPacking,
+              createdAt: DateTime.utc(2026, 9, 20),
+              lastActivityAt: DateTime.utc(2026, 9, 21),
+            ),
+            order(
+              'newer-activity',
+              OrderStatus.pickingPacking,
+              createdAt: DateTime.utc(2026, 9, 19),
+              lastActivityAt: DateTime.utc(2026, 9, 22),
+            ),
+          ],
+        );
+
+        await cubit.load();
+
+        expect(
+          (cubit.state as OrderListLoaded).visibleOrders.map((o) => o.id.value),
+          ['newer-activity', 'older-activity'],
         );
       });
 

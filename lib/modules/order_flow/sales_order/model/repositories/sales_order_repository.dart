@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/order_timeline_entry.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
@@ -12,4 +13,8 @@ abstract class SalesOrderRepository {
   Future<List<SalesOrder>> findByCompanyId(CompanyId companyId);
 
   Future<List<SalesOrder>> findByStatus(String status);
+
+  /// Histórico do pedido, já ordenado pela API do mais recente para o mais
+  /// antigo.
+  Future<List<OrderTimelineEntry>> getTimeline(OrderId id);
 }
