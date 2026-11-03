@@ -7,6 +7,7 @@ import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/cubit/representative_dashboard_cubit.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/utils/commission_permissions.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/widgets/commission_details_sheet.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/widgets/commission_tile.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
@@ -331,16 +332,40 @@ class RepresentativeHomePage extends StatelessWidget {
                             index,
                           ) {
                             final commission = state.commissions[index];
+                            final repName = state.isTeamView
+                                ? commission.representativeName
+                                : null;
                             return CommissionTile(
                               commission: commission,
-                              representativeName: state.isTeamView
-                                  ? commission.representativeName
-                                  : null,
+                              representativeName: repName,
                               onTap: () => showCommissionDetailsSheet(
                                 context,
                                 commission,
-                                representativeName: state.isTeamView
-                                    ? commission.representativeName
+                                representativeName: repName,
+                                onStatusChange:
+                                    canManageCommissionStatus(
+                                      session,
+                                      commission,
+                                    )
+                                    ? (target) async {
+                                        final error = await context
+                                            .read<
+                                              RepresentativeDashboardCubit
+                                            >()
+                                            .updateStatus(
+                                              session,
+                                              commission,
+                                              target,
+                                            );
+                                        if (context.mounted && error != null) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(content: Text(error)),
+                                          );
+                                        }
+                                        return error;
+                                      }
                                     : null,
                               ),
                             );

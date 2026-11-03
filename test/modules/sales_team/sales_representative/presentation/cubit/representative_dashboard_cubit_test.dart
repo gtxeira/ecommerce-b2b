@@ -4,6 +4,7 @@ import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_commissions/get_representative_commissions_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_customers/get_customer_portfolio_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_quotes/get_recent_quotes_use_case.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/update_commission_status/update_commission_status_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/customer_assignment.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/enums/commission_status.dart';
@@ -25,6 +26,9 @@ class MockGetPortfolio extends Mock implements GetCustomerPortfolioUseCase {}
 
 class MockGetQuotes extends Mock implements GetRecentQuotesUseCase {}
 
+class MockUpdateCommissionStatus extends Mock
+    implements UpdateCommissionStatusUseCase {}
+
 class MockSalesRepresentativeRepository extends Mock
     implements SalesRepresentativeRepository {}
 
@@ -32,6 +36,7 @@ void main() {
   late MockGetCommissions getCommissions;
   late MockGetPortfolio getPortfolio;
   late MockGetQuotes getQuotes;
+  late MockUpdateCommissionStatus updateCommissionStatus;
   late MockSalesRepresentativeRepository repository;
   late RepresentativeDashboardCubit cubit;
 
@@ -49,25 +54,29 @@ void main() {
     commissionRate: Percentage.create(5).getOrThrow(),
   );
 
-  Commission commission(String repId, double amount) => Commission(
-    baseAmount: Money.create(1000).getOrThrow(),
-    rate: Percentage.create(5).getOrThrow(),
-    amount: Money.create(amount).getOrThrow(),
-    status: CommissionStatus.pending,
-    representativeId: repId,
-    representativeName: repId,
-  );
+  Commission commission(String repId, double amount, {int id = 0}) =>
+      Commission(
+        id: id,
+        baseAmount: Money.create(1000).getOrThrow(),
+        rate: Percentage.create(5).getOrThrow(),
+        amount: Money.create(amount).getOrThrow(),
+        status: CommissionStatus.pending,
+        representativeId: repId,
+        representativeName: repId,
+      );
 
   setUp(() {
     getCommissions = MockGetCommissions();
     getPortfolio = MockGetPortfolio();
     getQuotes = MockGetQuotes();
+    updateCommissionStatus = MockUpdateCommissionStatus();
     repository = MockSalesRepresentativeRepository();
     cubit = RepresentativeDashboardCubit(
       getCommissionsUseCase: getCommissions,
       getCustomerPortfolioUseCase: getPortfolio,
       getRecentQuotesUseCase: getQuotes,
       representativeRepository: repository,
+      updateCommissionStatusUseCase: updateCommissionStatus,
     );
 
     when(() => repository.findAll()).thenAnswer(
@@ -120,5 +129,28 @@ void main() {
     expect(supervisor.clientsCount, 1);
     expect(subordinate.commissionTotal.amount, 25);
     expect(subordinate.clientsCount, 1);
+  });
+
+  test('updateStatus changes the status and reloads the same scope', () async {
+    await cubit.loadDashboard(session, teamView: true);
+    final pending = commission('rep-1', 25, id: 7);
+    when(
+      () => updateCommissionStatus.execute(7, CommissionStatus.paid),
+    ).thenAnswer(
+      (_) async => Success(pending.copyWithStatus(CommissionStatus.paid)),
+    );
+
+    final error = await cubit.updateStatus(
+      session,
+      pending,
+      CommissionStatus.paid,
+    );
+
+    expect(error, isNull);
+    verify(
+      () => updateCommissionStatus.execute(7, CommissionStatus.paid),
+    ).called(1);
+    final loaded = cubit.state as RepresentativeDashboardLoaded;
+    expect(loaded.isTeamView, isTrue);
   });
 }

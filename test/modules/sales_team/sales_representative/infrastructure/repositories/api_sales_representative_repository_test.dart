@@ -68,10 +68,11 @@ void main() {
           return jsonResponse(
             successEnvelope([
               {
+                'commissionId': 12,
                 'baseAmount': 1000,
                 'rate': 5,
                 'amount': 50,
-                'status': 'Approved',
+                'status': 'Paid',
                 'orderId': 'o1',
                 'createdAt': '2026-11-03T14:30:00Z',
                 'representativeId': 'rep-456',
@@ -99,7 +100,8 @@ void main() {
         representativeId: 'rep-456',
       );
 
-      expect(commissions.single.status, CommissionStatus.approved);
+      expect(commissions.single.status, CommissionStatus.paid);
+      expect(commissions.single.id, 12);
       expect(commissions.single.orderId, 'o1');
       expect(commissions.single.createdAt, DateTime.utc(2026, 11, 3, 14, 30));
       expect(commissions.single.representativeId, 'rep-456');
@@ -164,6 +166,38 @@ void main() {
 
       expect(rep!.fullName, 'Representante');
       expect(rep.commissionRate.value, 5);
+    });
+
+    test('should patch the commission status and map the response', () async {
+      RequestOptions? captured;
+      final adapter = FakeHttpAdapter((options) async {
+        captured = options;
+        return jsonResponse(
+          successEnvelope({
+            'commissionId': 12,
+            'baseAmount': 1000,
+            'rate': 5,
+            'amount': 50,
+            'status': 'Paid',
+            'orderId': 'o1',
+            'createdAt': '2026-11-03T14:30:00Z',
+            'representativeId': 'rep-456',
+            'representativeName': 'Representante Mock',
+          }),
+        );
+      });
+      final repository = buildRepository(adapter);
+
+      final updated = await repository.updateCommissionStatus(
+        commissionId: 12,
+        status: CommissionStatus.paid,
+      );
+
+      expect(captured!.method, 'PATCH');
+      expect(captured!.path, '/api/me/commissions/12/status');
+      expect((captured!.data as Map)['status'], 'Paid');
+      expect(updated.id, 12);
+      expect(updated.status, CommissionStatus.paid);
     });
   });
 }

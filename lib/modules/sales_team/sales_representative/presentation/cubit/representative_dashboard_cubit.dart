@@ -3,8 +3,10 @@ import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_commissions/get_representative_commissions_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_customers/get_customer_portfolio_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_quotes/get_recent_quotes_use_case.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/update_commission_status/update_commission_status_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/customer_assignment.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/enums/commission_status.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/repositories/sales_representative_repository.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_representative.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
@@ -19,12 +21,14 @@ class RepresentativeDashboardCubit extends Cubit<RepresentativeDashboardState> {
   final GetCustomerPortfolioUseCase _getCustomerPortfolioUseCase;
   final GetRecentQuotesUseCase _getRecentQuotesUseCase;
   final SalesRepresentativeRepository _representativeRepository;
+  final UpdateCommissionStatusUseCase _updateCommissionStatusUseCase;
 
   RepresentativeDashboardCubit({
     required this._getCommissionsUseCase,
     required this._getCustomerPortfolioUseCase,
     required this._getRecentQuotesUseCase,
     required this._representativeRepository,
+    required this._updateCommissionStatusUseCase,
   }) : super(RepresentativeDashboardInitial());
 
   Future<void> loadDashboard(
@@ -194,5 +198,30 @@ class RepresentativeDashboardCubit extends Cubit<RepresentativeDashboardState> {
       return a.name.compareTo(b.name);
     });
     return performances;
+  }
+
+  /// Altera o status e recarrega o painel no mesmo escopo.
+  ///
+  /// Devolve a mensagem de erro para a tela exibir no SnackBar; `null` = sucesso.
+  Future<String?> updateStatus(
+    UserSession session,
+    Commission commission,
+    CommissionStatus target,
+  ) async {
+    final current = state;
+    if (current is! RepresentativeDashboardLoaded) return null;
+
+    final result = await _updateCommissionStatusUseCase.execute(
+      commission.id,
+      target,
+    );
+    if (result.isFailure) return result.getFailureOrThrow().message;
+
+    await loadDashboard(
+      session,
+      targetRepId: current.isTeamView ? null : current.selectedRepId,
+      teamView: current.isTeamView,
+    );
+    return null;
   }
 }

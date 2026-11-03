@@ -1,5 +1,6 @@
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/customer_assignment.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/enums/commission_status.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_representative.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
 
@@ -20,5 +21,14 @@ abstract class SalesRepresentativeRepository {
   Future<List<CustomerAssignment>> getPortfolio({
     String? representativeId,
     bool teamScope = false,
+  });
+
+  /// Altera o status de uma comissão (PATCH /api/me/commissions/{id}/status).
+  ///
+  /// A API só aceita `Pending -> Paid` e `Pending -> Cancelled`; estados finais
+  /// respondem 409.
+  Future<Commission> updateCommissionStatus({
+    required int commissionId,
+    required CommissionStatus status,
   });
 }

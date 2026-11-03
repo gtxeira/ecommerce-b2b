@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/app/core/routes/commission_routes.dart';
 import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +52,13 @@ enum AppPage {
     subtitle: 'Gestão de propostas',
     icon: Icons.receipt_long_rounded,
     colorType: CardColorType.primary,
+  ),
+  commissions(
+    path: CommissionRoutes.list,
+    label: 'Comissões',
+    subtitle: 'Valores e repasses',
+    icon: Icons.payments_rounded,
+    colorType: CardColorType.primaryContainer,
   ),
   finance(
     path: '/finance',
@@ -125,6 +133,7 @@ enum AppPage {
         AppPage.companies,
         AppPage.catalog,
         AppPage.quotes,
+        AppPage.commissions,
         AppPage.logistics,
         AppPage.inventory,
       ],
@@ -134,6 +143,7 @@ enum AppPage {
         AppPage.companies,
         AppPage.catalog,
         AppPage.quotes,
+        AppPage.commissions,
         AppPage.logistics,
         AppPage.inventory,
         AppPage.billing,

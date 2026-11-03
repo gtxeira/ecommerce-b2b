@@ -35,7 +35,7 @@ void main() {
           baseAmount: Money.create(1000).getOrThrow(),
           rate: Percentage.create(5).getOrThrow(),
           amount: Money.create(50).getOrThrow(),
-          status: CommissionStatus.approved,
+          status: CommissionStatus.paid,
         );
         when(
           () => repository.getCommissions(representativeId: 'rep-1'),

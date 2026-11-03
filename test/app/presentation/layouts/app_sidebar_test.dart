@@ -72,6 +72,7 @@ void main() {
       expect(find.text('OPERAÇÕES'), findsOneWidget);
       expect(find.text('FINANCEIRO'), findsNothing);
       expect(find.text('GESTÃO'), findsNothing);
+      expect(find.text('Comissões'), findsOneWidget);
     });
 
     testWidgets('só renderiza as páginas recebidas', (tester) async {

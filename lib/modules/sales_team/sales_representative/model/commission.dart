@@ -5,6 +5,10 @@ import 'package:flutter/foundation.dart';
 
 @immutable
 class Commission {
+  /// Identificador de persistência, usado para alterar o status.
+  /// Zero em comissões construídas localmente (fixtures/testes).
+  final int id;
+
   final Money baseAmount;
   final Percentage rate;
   final Money amount;
@@ -22,6 +26,7 @@ class Commission {
   final String? representativeName;
 
   const Commission({
+    this.id = 0,
     required this.baseAmount,
     required this.rate,
     required this.amount,
@@ -32,11 +37,27 @@ class Commission {
     this.representativeName,
   });
 
+  /// Uma comissão com status terminal não aceita nova transição.
+  bool get canChangeStatus => id > 0 && status == CommissionStatus.pending;
+
+  Commission copyWithStatus(CommissionStatus newStatus) => Commission(
+    id: id,
+    baseAmount: baseAmount,
+    rate: rate,
+    amount: amount,
+    status: newStatus,
+    orderId: orderId,
+    createdAt: createdAt,
+    representativeId: representativeId,
+    representativeName: representativeName,
+  );
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Commission &&
           runtimeType == other.runtimeType &&
+          id == other.id &&
           baseAmount == other.baseAmount &&
           rate == other.rate &&
           amount == other.amount &&
@@ -48,6 +69,7 @@ class Commission {
 
   @override
   int get hashCode =>
+      id.hashCode ^
       baseAmount.hashCode ^
       rate.hashCode ^
       amount.hashCode ^

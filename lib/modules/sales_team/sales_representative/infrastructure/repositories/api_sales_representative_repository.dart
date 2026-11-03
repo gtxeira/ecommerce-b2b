@@ -119,20 +119,43 @@ class ApiSalesRepresentativeRepository
     );
     if (data is! List) return const [];
 
-    return data.whereType<Map>().map((raw) {
-      final json = Map<String, dynamic>.from(raw);
-      return Commission(
-        baseAmount: Money.create(readDouble(json, 'baseAmount')).getOrThrow(),
-        rate: Percentage.create(readDouble(json, 'rate')).getOrThrow(),
-        amount: Money.create(readDouble(json, 'amount')).getOrThrow(),
-        status: _commissionStatusFromApi(readString(json, 'status')),
-        orderId: readNullableString(json, 'orderId'),
-        createdAt: readDate(json, 'createdAt'),
-        representativeId: readNullableString(json, 'representativeId'),
-        representativeName: readNullableString(json, 'representativeName'),
-      );
-    }).toList();
+    return data
+        .whereType<Map>()
+        .map((raw) => _mapCommission(Map<String, dynamic>.from(raw)))
+        .toList();
   }
+
+  @override
+  Future<Commission> updateCommissionStatus({
+    required int commissionId,
+    required CommissionStatus status,
+  }) async {
+    final data = await _api.patch(
+      '/api/me/commissions/$commissionId/status',
+      data: {'status': _commissionStatusToApi(status)},
+    );
+    if (data is! Map) {
+      throw const ApiException(
+        statusCode: 0,
+        code: 'INVALID_RESPONSE',
+        message: 'Resposta inválida ao alterar o status da comissão.',
+      );
+    }
+
+    return _mapCommission(Map<String, dynamic>.from(data));
+  }
+
+  Commission _mapCommission(Map<String, dynamic> json) => Commission(
+    id: readInt(json, 'commissionId'),
+    baseAmount: Money.create(readDouble(json, 'baseAmount')).getOrThrow(),
+    rate: Percentage.create(readDouble(json, 'rate')).getOrThrow(),
+    amount: Money.create(readDouble(json, 'amount')).getOrThrow(),
+    status: _commissionStatusFromApi(readString(json, 'status')),
+    orderId: readNullableString(json, 'orderId'),
+    createdAt: readDate(json, 'createdAt'),
+    representativeId: readNullableString(json, 'representativeId'),
+    representativeName: readNullableString(json, 'representativeName'),
+  );
 
   @override
   Future<List<CustomerAssignment>> getPortfolio({
@@ -161,10 +184,16 @@ class ApiSalesRepresentativeRepository
 
   static CommissionStatus _commissionStatusFromApi(String value) =>
       switch (value.toLowerCase()) {
-        'approved' => CommissionStatus.approved,
         'paid' => CommissionStatus.paid,
         'cancelled' => CommissionStatus.cancelled,
         _ => CommissionStatus.pending,
+      };
+
+  static String _commissionStatusToApi(CommissionStatus status) =>
+      switch (status) {
+        CommissionStatus.paid => 'Paid',
+        CommissionStatus.cancelled => 'Cancelled',
+        CommissionStatus.pending => 'Pending',
       };
 
   SalesRepresentative _rep(

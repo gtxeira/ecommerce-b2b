@@ -4,6 +4,7 @@ import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/cubit/commission_list_cubit.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/utils/commission_permissions.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/widgets/commission_details_sheet.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/widgets/commission_tile.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
@@ -17,11 +18,13 @@ class CommissionListPage extends StatelessWidget {
   const CommissionListPage({
     super.key,
     this.initialRepresentativeId,
-    this.initialTeamView = false,
+    this.initialTeamView,
   });
 
   final String? initialRepresentativeId;
-  final bool initialTeamView;
+
+  /// Quando nulo, o supervisor abre no consolidado e o representante no pessoal.
+  final bool? initialTeamView;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +42,7 @@ class CommissionListPage extends StatelessWidget {
           targetRepId: initialRepresentativeId == null
               ? null
               : RepresentativeId(initialRepresentativeId!),
-          teamView: initialTeamView,
+          teamView: initialTeamView ?? session.isSupervisor,
         ),
       child: Scaffold(
         appBar: const B2BAppBar(title: 'Comissões'),
@@ -102,8 +105,31 @@ class CommissionListPage extends StatelessWidget {
                         (commission) => CommissionTile(
                           commission: commission,
                           representativeName: commission.representativeName,
-                          onTap: () =>
-                              showCommissionDetailsSheet(context, commission),
+                          onTap: () => showCommissionDetailsSheet(
+                            context,
+                            commission,
+                            representativeName: commission.representativeName,
+                            onStatusChange:
+                                canManageCommissionStatus(session, commission)
+                                ? (target) async {
+                                    final error = await context
+                                        .read<CommissionListCubit>()
+                                        .updateStatus(
+                                          session,
+                                          commission,
+                                          target,
+                                        );
+                                    if (context.mounted && error != null) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text(error)),
+                                      );
+                                    }
+                                    return error;
+                                  }
+                                : null,
+                          ),
                         ),
                       ),
                   ],

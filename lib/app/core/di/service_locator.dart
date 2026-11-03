@@ -63,6 +63,7 @@ import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/process
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_commissions/get_representative_commissions_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_customers/get_customer_portfolio_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_quotes/get_recent_quotes_use_case.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/update_commission_status/update_commission_status_use_case.dart';
 
 // Cubits
 import 'package:ecommerce_b2b/modules/catalog/price_table/presentation/cubit/price_table_cubit.dart';
@@ -160,6 +161,9 @@ Future<void> setupServiceLocator() async {
     () => GetRecentQuotesUseCase(getIt<QuoteRepository>()),
   );
   getIt.registerLazySingleton(
+    () => UpdateCommissionStatusUseCase(getIt<SalesRepresentativeRepository>()),
+  );
+  getIt.registerLazySingleton(
     () => GetProductsUseCase(getIt<ProductRepository>()),
   );
   getIt.registerLazySingleton(
@@ -228,6 +232,7 @@ Future<void> setupServiceLocator() async {
       getCustomerPortfolioUseCase: getIt<GetCustomerPortfolioUseCase>(),
       getRecentQuotesUseCase: getIt<GetRecentQuotesUseCase>(),
       representativeRepository: getIt<SalesRepresentativeRepository>(),
+      updateCommissionStatusUseCase: getIt<UpdateCommissionStatusUseCase>(),
     ),
   );
 
@@ -235,6 +240,7 @@ Future<void> setupServiceLocator() async {
     () => CommissionListCubit(
       getCommissionsUseCase: getIt<GetRepresentativeCommissionsUseCase>(),
       representativeRepository: getIt<SalesRepresentativeRepository>(),
+      updateCommissionStatusUseCase: getIt<UpdateCommissionStatusUseCase>(),
     ),
   );
 

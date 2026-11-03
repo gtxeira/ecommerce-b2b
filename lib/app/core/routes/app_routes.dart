@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
-import 'package:ecommerce_b2b/app/core/routes/commission_routes.dart';
 import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/core/routes/quote_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/layouts/main_layout.dart';
@@ -144,13 +143,16 @@ final appRouter = GoRouter(
           ),
         ),
         GoRoute(
-          path: CommissionRoutes.list,
+          path: AppPage.commissions.path,
           redirect: _buyerGuard,
-          builder: (context, state) => CommissionListPage(
-            initialRepresentativeId:
-                state.uri.queryParameters['representativeId'],
-            initialTeamView: state.uri.queryParameters['scope'] == 'team',
-          ),
+          builder: (context, state) {
+            final scope = state.uri.queryParameters['scope'];
+            return CommissionListPage(
+              initialRepresentativeId:
+                  state.uri.queryParameters['representativeId'],
+              initialTeamView: scope == null ? null : scope == 'team',
+            );
+          },
         ),
         GoRoute(
           path: AppPage.catalog.path,

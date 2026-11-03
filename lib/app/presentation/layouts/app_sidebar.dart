@@ -25,6 +25,7 @@ enum SidebarSection {
       AppPage.companies,
       AppPage.catalog,
       AppPage.quotes,
+      AppPage.commissions,
     ],
     SidebarSection.financial => const [AppPage.finance, AppPage.billing],
     SidebarSection.operations => const [AppPage.inventory, AppPage.logistics],

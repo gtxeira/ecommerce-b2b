@@ -46,6 +46,15 @@ class SalesRepresentative extends Entity<RepresentativeId> {
     _commissions.add(commission);
   }
 
+  /// Substitui a comissão de mesmo [Commission.id], mantendo a posição na lista.
+  void replaceCommission(Commission commission) {
+    final index = _commissions.indexWhere((c) => c.id == commission.id);
+    if (index < 0) {
+      throw StateError('Comissão ${commission.id} não pertence a $id.');
+    }
+    _commissions[index] = commission;
+  }
+
   void setSupervisor(RepresentativeId supervisorId) {
     _supervisorLink = SalesHierarchyLink(
       supervisorId: supervisorId,

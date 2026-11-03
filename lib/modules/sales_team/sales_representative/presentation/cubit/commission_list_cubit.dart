@@ -1,6 +1,8 @@
 import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_commissions/get_representative_commissions_use_case.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/update_commission_status/update_commission_status_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/enums/commission_status.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/repositories/sales_representative_repository.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_representative.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
@@ -12,10 +14,12 @@ part 'commission_list_state.dart';
 class CommissionListCubit extends Cubit<CommissionListState> {
   final GetRepresentativeCommissionsUseCase _getCommissionsUseCase;
   final SalesRepresentativeRepository _representativeRepository;
+  final UpdateCommissionStatusUseCase _updateCommissionStatusUseCase;
 
   CommissionListCubit({
     required this._getCommissionsUseCase,
     required this._representativeRepository,
+    required this._updateCommissionStatusUseCase,
   }) : super(CommissionListInitial());
 
   Future<void> load(
@@ -64,5 +68,30 @@ class CommissionListCubit extends Cubit<CommissionListState> {
       if (rep.id == id) return rep.fullName;
     }
     return 'Representante';
+  }
+
+  /// Altera o status e recarrega a lista no mesmo escopo.
+  ///
+  /// Devolve a mensagem de erro para a tela exibir no SnackBar; `null` = sucesso.
+  Future<String?> updateStatus(
+    UserSession session,
+    Commission commission,
+    CommissionStatus target,
+  ) async {
+    final current = state;
+    if (current is! CommissionListLoaded) return null;
+
+    final result = await _updateCommissionStatusUseCase.execute(
+      commission.id,
+      target,
+    );
+    if (result.isFailure) return result.getFailureOrThrow().message;
+
+    await load(
+      session,
+      targetRepId: current.isTeamView ? null : current.selectedRepId,
+      teamView: current.isTeamView,
+    );
+    return null;
   }
 }

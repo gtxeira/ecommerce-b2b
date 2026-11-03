@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
+import 'package:ecommerce_b2b/app/core/routes/commission_routes.dart';
 import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -58,6 +59,32 @@ void main() {
         isNot(contains(AppPage.quotes)),
       );
       expect(AppPage.sidebarPagesFor(UserRole.buyer), isEmpty);
+    });
+  });
+
+  group('AppPage.commissions', () {
+    test('usa a rota dedicada de comissões', () {
+      expect(AppPage.commissions.path, CommissionRoutes.list);
+    });
+
+    test('aparece na sidebar de representante e supervisor', () {
+      for (final role in [UserRole.representative, UserRole.supervisor]) {
+        expect(
+          AppPage.sidebarPagesFor(role),
+          contains(AppPage.commissions),
+          reason: 'papel $role',
+        );
+      }
+    });
+
+    test('não aparece para financeiro, admin nem comprador', () {
+      for (final role in [UserRole.finance, UserRole.admin, UserRole.buyer]) {
+        expect(
+          AppPage.sidebarPagesFor(role),
+          isNot(contains(AppPage.commissions)),
+          reason: 'papel $role',
+        );
+      }
     });
   });
 }

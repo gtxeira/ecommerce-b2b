@@ -1,5 +1,6 @@
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/customer_assignment.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/enums/commission_status.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/repositories/sales_representative_repository.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_representative.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
@@ -84,5 +85,22 @@ class FakeSalesRepresentativeRepository
         )
         .expand((r) => r.assignments)
         .toList();
+  }
+
+  @override
+  Future<Commission> updateCommissionStatus({
+    required int commissionId,
+    required CommissionStatus status,
+  }) async {
+    for (final rep in _reps) {
+      for (final commission in rep.commissions) {
+        if (commission.id == commissionId) {
+          final updated = commission.copyWithStatus(status);
+          rep.replaceCommission(updated);
+          return updated;
+        }
+      }
+    }
+    throw StateError('Comissão não encontrada: $commissionId');
   }
 }
