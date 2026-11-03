@@ -269,6 +269,17 @@ pelo ícone `history` da AppBar. Os dois usam o mesmo widget `OrderTimeline`
 - Entram na timeline: criação, mudança de status e análise financeira. Rastreio da transportadora
   continua no detalhe do envio; comentários e alteração de itens não existem no domínio.
 
+## Painel financeiro
+
+A home do Finance (`/`) exibe dois indicadores agregados por `GET /api/finance/summary`:
+**Crédito em Uso pelos Clientes** (saldo devedor + pedidos em aberto) e **Limite da Carteira
+Comprometido** (percentual do limite total, com a contagem de clientes em atenção). O cálculo é
+do backend, com o mesmo escopo de `GET /api/companies`; o app só formata. O painel é de risco de
+crédito da carteira de clientes, não o financeiro da empresa vendedora: o limite exibido é o
+total concedido às empresas-clientes. O antigo card “Meta de Inadimplência” foi removido porque
+o domínio não modela vencimento/pagamento. Aprovar, reprovar ou faturar notifica `OrderEvents`,
+e o resumo recarrega junto com a fila.
+
 ## Datas
 
 A API expõe `createdAt` e `lastActivityAt` em **UTC**. O cliente converte para o fuso local e

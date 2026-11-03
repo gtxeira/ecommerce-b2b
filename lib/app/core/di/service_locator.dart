@@ -57,6 +57,7 @@ import 'package:ecommerce_b2b/modules/customer_portal/return_request/application
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/application/open_return_request/open_return_request_use_case.dart';
 import 'package:ecommerce_b2b/modules/identity_access/application/login/login_use_case.dart';
 import 'package:ecommerce_b2b/modules/logistics/application/procces_order/process_order_shipment_use_case.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_finance_summary/get_finance_summary_use_case.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_pending_finance_reviews/get_pending_finance_reviews_use_case.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/process_finance_review/process_finance_review_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_commissions/get_representative_commissions_use_case.dart';
@@ -75,6 +76,7 @@ import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/open_orders_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/order_list_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_summary_cubit.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/cubit/representative_dashboard_cubit.dart';
 
 final getIt = GetIt.instance;
@@ -204,6 +206,9 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton(
     () => GetPendingFinanceReviewsUseCase(getIt<FinanceApi>()),
   );
+  getIt.registerLazySingleton(
+    () => GetFinanceSummaryUseCase(getIt<FinanceApi>()),
+  );
 
   // --- Cubits ---
   getIt.registerLazySingleton(
@@ -231,6 +236,13 @@ Future<void> setupServiceLocator() async {
       processReview: getIt<ProcessFinanceReviewUseCase>(),
       orderRepository: getIt<SalesOrderRepository>(),
       orderEvents: getIt<OrderEvents>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => FinanceSummaryCubit(
+      getIt<GetFinanceSummaryUseCase>(),
+      getIt<OrderEvents>(),
     ),
   );
 

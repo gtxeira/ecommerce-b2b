@@ -1,6 +1,7 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/enums/finance_decision.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/finance_summary.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/repositories/api_sales_order_repository.dart';
 
@@ -16,6 +17,14 @@ class FinanceApi {
   final ApiClient _api;
 
   FinanceApi(this._api);
+
+  Future<FinanceSummary> getSummary() async {
+    final data = await _api.get('/api/finance/summary');
+    if (data is! Map) {
+      throw StateError('Resposta inesperada ao carregar o resumo financeiro.');
+    }
+    return FinanceSummary.fromJson(Map<String, dynamic>.from(data));
+  }
 
   Future<List<SalesOrder>> getPendingReviews() async {
     final data = await _api.get('/api/orders/pending-finance-review');

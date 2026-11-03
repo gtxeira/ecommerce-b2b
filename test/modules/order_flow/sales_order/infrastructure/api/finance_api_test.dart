@@ -26,6 +26,18 @@ void main() {
     return FinanceApi(client);
   }
 
+  Map<String, dynamic> summaryJson() => {
+    'companyCount': 2,
+    'totalCreditLimit': 15000.0,
+    'totalOpenBalance': 1500.0,
+    'totalPendingOrdersBalance': 5000.0,
+    'totalExposure': 6500.0,
+    'availableLimit': 8500.0,
+    'utilizationPercentage': 43.33,
+    'companiesAtRisk': 1,
+    'companiesOverLimit': 0,
+  };
+
   Map<String, dynamic> orderJson() => {
     'id': 'o1',
     'companyId': 'c1',
@@ -75,6 +87,21 @@ void main() {
 
       expect(result.commissionGenerated, isTrue);
       expect(result.order.id, const OrderId('o1'));
+    });
+
+    test('should load the finance summary', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(summaryJson())),
+      );
+      final api = buildApi(adapter);
+
+      final summary = await api.getSummary();
+
+      expect(summary.companyCount, 2);
+      expect(summary.totalExposure.amount, 6500);
+      expect(summary.utilizationPercentage, 43.33);
+      expect(summary.companiesAtRisk, 1);
+      expect(adapter.requests.single.path, '/api/finance/summary');
     });
 
     test('should load the pending finance queue', () async {

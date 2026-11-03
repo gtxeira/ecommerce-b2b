@@ -4,6 +4,9 @@ import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_summary_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/finance_summary_copy.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/widgets/finance_metric_card.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_summary_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,8 +20,13 @@ class FinanceHomePage extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return BlocProvider(
-      create: (context) => getIt<FinanceReviewCubit>()..loadPendingOrders(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => getIt<FinanceReviewCubit>()..loadPendingOrders(),
+        ),
+        BlocProvider(create: (context) => getIt<FinanceSummaryCubit>()..load()),
+      ],
       child: Scaffold(
         appBar: const B2BAppBar(title: 'Painel Financeiro'),
         body: BlocBuilder<FinanceReviewCubit, FinanceReviewState>(
@@ -34,7 +42,10 @@ class FinanceHomePage extends StatelessWidget {
 
             return RefreshIndicator(
               onRefresh: () async {
-                context.read<FinanceReviewCubit>().loadPendingOrders();
+                await Future.wait([
+                  context.read<FinanceReviewCubit>().loadPendingOrders(),
+                  context.read<FinanceSummaryCubit>().load(),
+                ]);
               },
               child: CustomScrollView(
                 slivers: [
@@ -54,7 +65,7 @@ class FinanceHomePage extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            'Monitore a saúde financeira, controle limites de crédito e aprove faturamentos.',
+                            'Monitore o risco de crédito da carteira de clientes, controle limites e aprove faturamentos.',
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
@@ -68,27 +79,10 @@ class FinanceHomePage extends StatelessWidget {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Row(
-                        children: [
-                          _buildMetricCard(
-                            context,
-                            'Meta de Inadimplência',
-                            '< 2.0%',
-                            Icons.trending_down_rounded,
-                            colorScheme.errorContainer,
-                            colorScheme.onErrorContainer,
+                      child:
+                          BlocBuilder<FinanceSummaryCubit, FinanceSummaryState>(
+                            builder: _buildSummarySection,
                           ),
-                          const SizedBox(width: 12),
-                          _buildMetricCard(
-                            context,
-                            'Carteira Ativa',
-                            'R\$ 4.8M',
-                            Icons.account_balance_rounded,
-                            colorScheme.secondaryContainer,
-                            colorScheme.onSecondaryContainer,
-                          ),
-                        ],
-                      ),
                     ),
                   ),
 
@@ -180,44 +174,127 @@ class FinanceHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricCard(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color backgroundColor,
-    Color foregroundColor,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: foregroundColor, size: 28),
-            const SizedBox(height: 16),
-            Text(
-              value,
-              style: TextStyle(
-                color: foregroundColor,
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-              ),
+  Widget _buildSummarySection(BuildContext context, FinanceSummaryState state) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    if (state is FinanceSummaryLoaded) {
+      final summary = state.summary;
+      return _buildMetricRow(
+        context,
+        exposureValue: summary.hasCompanies
+            ? summary.totalExposure.formatted
+            : '—',
+        exposureCaption: financeExposureCaption(summary),
+        utilizationValue: summary.hasCompanies ? summary.utilizationLabel : '—',
+        utilizationCaption: financeRiskCaption(summary),
+        risk:
+            summary.hasCompanies &&
+            (summary.companiesOverLimit > 0 ||
+                summary.utilizationPercentage >= 80),
+      );
+    }
+
+    if (state is FinanceSummaryFailure) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: colorScheme.errorContainer,
+              borderRadius: BorderRadius.circular(16),
             ),
-            Text(
-              label,
-              style: TextStyle(
-                color: foregroundColor.withValues(alpha: 0.8),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  color: colorScheme.onErrorContainer,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Não foi possível carregar os indicadores.',
+                    style: TextStyle(
+                      color: colorScheme.onErrorContainer,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => context.read<FinanceSummaryCubit>().load(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: colorScheme.onErrorContainer,
+                  ),
+                  child: const Text('Tentar novamente'),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          _buildMetricRow(
+            context,
+            exposureValue: '—',
+            exposureCaption: 'Indisponível',
+            utilizationValue: '—',
+            utilizationCaption: 'Indisponível',
+            risk: false,
+          ),
+        ],
+      );
+    }
+
+    return _buildMetricRow(
+      context,
+      exposureValue: '—',
+      exposureCaption: 'Carregando indicadores...',
+      utilizationValue: '—',
+      utilizationCaption: 'Carregando indicadores...',
+      risk: false,
+    );
+  }
+
+  Widget _buildMetricRow(
+    BuildContext context, {
+    required String exposureValue,
+    required String exposureCaption,
+    required String utilizationValue,
+    required String utilizationCaption,
+    required bool risk,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: FinanceMetricCard(
+              label: financeExposureLabel,
+              value: exposureValue,
+              caption: exposureCaption,
+              icon: Icons.account_balance_rounded,
+              backgroundColor: colorScheme.secondaryContainer,
+              foregroundColor: colorScheme.onSecondaryContainer,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: FinanceMetricCard(
+              label: financeCommitmentLabel,
+              value: utilizationValue,
+              caption: utilizationCaption,
+              icon: Icons.trending_up_rounded,
+              backgroundColor: risk
+                  ? colorScheme.errorContainer
+                  : colorScheme.primaryContainer,
+              foregroundColor: risk
+                  ? colorScheme.onErrorContainer
+                  : colorScheme.onPrimaryContainer,
+            ),
+          ),
+        ],
       ),
     );
   }
