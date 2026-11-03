@@ -46,7 +46,8 @@ flutter test
 > **Cobertura atual:** o foco está em cubits, repositórios HTTP, formatação e widgets
 > reutilizáveis. Páginas completas (`order_list_page`, `order_detail_page`) ainda não têm widget
 > test: elas dependem do `B2BAppBar`, que lê o `AuthCubit` pelo `UserProfileDropdown`. Os pedaços
-> testáveis já foram extraídos (`OrderSearchField`, `OrderSummaryTile`, `OpenOrdersBadge`).
+> testáveis já foram extraídos (`OrderSearchField`, `OrderSummaryTile`, `OrderTimeline`,
+> `OpenOrdersBadge`).
 
 ### 4. Executar o aplicativo
 
@@ -197,9 +198,30 @@ direto no grupo) e `/orders/:id` (detalhe). Ficam fora de `AppPage`-como-módulo
 cadastro de rotas: a entrada `AppPage.orders` existe para a sidebar e leva o mesmo caminho.
 Comprador é redirecionado para o portal por um `redirect` na própria rota.
 
+## Timeline do pedido
+
+O detalhe (`/orders/:id`) mostra o histórico logo abaixo do resumo e também em um bottom sheet
+pelo ícone `history` da AppBar. Os dois usam o mesmo widget `OrderTimeline`
+(`presentation/widgets/order_timeline.dart`).
+
+- A fonte é `GET /api/orders/{id}/timeline`. Pedido e histórico são carregados em paralelo e
+  falham de forma independente: uma timeline indisponível não derruba o detalhe (e vice-versa).
+  Pull-to-refresh recarrega os dois; o erro da timeline tem "Tentar novamente".
+- A exibição é do mais recente para o mais antigo. Cada item traz o fato (criação, transição
+  `De → Para`, análise financeira), a data/hora **local** e o ator: papel + id curto
+  (`Financeiro · fin-1`) ou `Sistema`.
+- O rótulo é composto no cliente a partir dos enums (`OrderStatus`, `FinanceDecision`); a API não
+  envia texto em português. Um tipo de evento novo cai em "Evento do pedido" sem quebrar a tela.
+- Entram na timeline: criação, mudança de status e análise financeira. Rastreio da transportadora
+  continua no detalhe do envio; comentários e alteração de itens não existem no domínio.
+
 ## Datas
 
-A API expõe `createdAt` em **UTC**. O cliente converte para o fuso local e formata com
-`formatDate`/`formatDateTime` (`app/core/format/`) — helper próprio, no mesmo espírito de
-`Money.formatted`, para não adicionar o pacote `intl` por um único formato. Ordenação de
-"recentes" usa `mostRecentSalesOrders` (`sales_order_sort.dart`).
+A API expõe `createdAt` e `lastActivityAt` em **UTC**. O cliente converte para o fuso local e
+formata com `formatDate`/`formatDateTime` (`app/core/format/`) — helper próprio, no mesmo espírito
+de `Money.formatted`, para não adicionar o pacote `intl` por um único formato.
+
+A ordenação de "recentes" usa `activityAt` (`lastActivityAt ?? createdAt`) por meio de
+`compareSalesOrdersByLastActivityDesc` (`sales_order_sort.dart`), consumido pela home, pelo painel
+financeiro e por `/orders`. A lista mostra "Última atividade": um pedido criado há dias e entregue
+agora aparece antes de um criado ontem.

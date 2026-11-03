@@ -220,6 +220,21 @@ class SalesOrder {
     +Money total
     +CreditStatus creditStatus
     +DateTime? createdAt
+    +DateTime? lastActivityAt
+    +DateTime? activityAt
+}
+
+class OrderTimelineEntry {
+    +String id
+    +DateTime? occurredAt
+    +OrderTimelineEventType type
+    +OrderStatus? fromStatus
+    +OrderStatus? toStatus
+    +CreditStatus? toCreditStatus
+    +FinanceDecision? decision
+    +String? actorId
+    +String? actorRole
+    +String? note
 }
 
 class OrderItem {
@@ -236,6 +251,7 @@ Quote "1" *-- "*" QuoteItem
 
 SalesOrder "1" *-- "*" OrderItem
 SalesOrder "1" --> "0..1" FinanceReview
+SalesOrder "1" o-- "*" OrderTimelineEntry : lê do endpoint
 
 @enduml
 ```
