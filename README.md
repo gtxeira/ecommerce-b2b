@@ -146,6 +146,11 @@ O cliente não replica a precedência de tabela/variante/UF. A API expõe
 O botão “Solicitar orçamento” do catálogo cria um orçamento `Sent` com a quantidade simulada; a
 API recalcula o preço e grava o snapshot no item.
 
+O representante/supervisor converte um orçamento `Sent` em pedido pela tela de Orçamentos. O
+app recarrega a lista, notifica `OrderEvents` (badge de pedidos em aberto) e oferece “Ver pedido”
+para `/orders/:id`. Orçamento `Expired` ou já convertido não mostra a ação; a validade aparece
+como “Válido até …”.
+
 ---
 
 ## Divisão dos módulos
