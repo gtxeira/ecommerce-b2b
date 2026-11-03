@@ -4,6 +4,8 @@ import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order_sort.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/open_orders_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_summary_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -32,7 +34,7 @@ class _HomePageState extends State<HomePage> {
       final orders = await getIt<SalesOrderRepository>().getAll();
       if (!mounted) return;
       setState(() {
-        _recentOrders = orders.take(3).toList();
+        _recentOrders = mostRecentSalesOrders(orders, limit: 3);
         _loadingOrders = false;
       });
     } catch (_) {
@@ -47,6 +49,7 @@ class _HomePageState extends State<HomePage> {
     final textTheme = Theme.of(context).textTheme;
 
     final authState = context.watch<AuthCubit>().state;
+    final openOrdersCount = context.watch<OpenOrdersCubit>().state.count;
     final cardPages = authState is AuthAuthenticated
         ? AppPage.sidebarPagesFor(authState.session.role)
               .where((page) => page != AppPage.home && page != AppPage.login)
@@ -68,7 +71,17 @@ class _HomePageState extends State<HomePage> {
               ),
               delegate: SliverChildBuilderDelegate((context, index) {
                 final page = cardPages[index];
-                return _buildMenuCard(context, page, colorScheme);
+                // O card de Pedidos mostra o que está em aberto; os demais usam
+                // o subtítulo estático do AppPage.
+                final subtitle = page == AppPage.orders && openOrdersCount > 0
+                    ? '$openOrdersCount em aberto'
+                    : null;
+                return _buildMenuCard(
+                  context,
+                  page,
+                  colorScheme,
+                  subtitle: subtitle,
+                );
               }, childCount: cardPages.length),
             ),
           ),
@@ -139,8 +152,9 @@ class _HomePageState extends State<HomePage> {
   Widget _buildMenuCard(
     BuildContext context,
     AppPage page,
-    ColorScheme colorScheme,
-  ) {
+    ColorScheme colorScheme, {
+    String? subtitle,
+  }) {
     // Resolve o par de cores (Fundo e Texto) com base na propriedade do enum
     final (backgroundColor, foregroundColor) = switch (page.colorType) {
       CardColorType.primary => (colorScheme.primary, colorScheme.onPrimary),
@@ -188,7 +202,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Text(
-                    page.subtitle,
+                    subtitle ?? page.subtitle,
                     style: TextStyle(
                       fontSize: 12,
                       color: foregroundColor.withValues(alpha: 0.8),

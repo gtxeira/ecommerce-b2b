@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/app/core/format/date_format.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_status_visuals.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
@@ -50,6 +51,13 @@ class OrderDetailsContent extends StatelessWidget {
             color: colorScheme.onSurfaceVariant,
           ),
         ),
+        if (order.createdAt != null)
+          Text(
+            'Criado em: ${formatDateTime(order.createdAt!)}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
         const Divider(height: 32),
         Text(
           'Itens do Pedido',

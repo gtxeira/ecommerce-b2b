@@ -27,6 +27,7 @@ void main() {
       ),
     ],
     shippingCost: Money.create(5).getOrThrow(),
+    createdAt: DateTime(2026, 9, 21, 10, 0),
   );
 
   Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
@@ -44,6 +45,40 @@ void main() {
       );
       expect(find.textContaining(order.total.formatted), findsOneWidget);
       expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+    });
+
+    testWidgets('mostra o nome da empresa quando recebido', (tester) async {
+      await tester.pumpWidget(
+        wrap(OrderSummaryTile(order: order, companyName: 'ACME', onTap: () {})),
+      );
+
+      expect(find.textContaining('Empresa: ACME'), findsOneWidget);
+    });
+
+    testWidgets('mostra a data de criação', (tester) async {
+      await tester.pumpWidget(
+        wrap(OrderSummaryTile(order: order, onTap: () {})),
+      );
+
+      expect(find.textContaining('21/09/2026'), findsOneWidget);
+    });
+
+    testWidgets('sem data mostra travessão', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          OrderSummaryTile(
+            order: SalesOrder(
+              id: const OrderId('order-103'),
+              status: OrderStatus.inTransit,
+              creditStatus: CreditStatus.approved,
+              items: const [],
+            ),
+            onTap: () {},
+          ),
+        ),
+      );
+
+      expect(find.textContaining('· -'), findsOneWidget);
     });
 
     testWidgets('tocar no tile dispara onTap', (tester) async {

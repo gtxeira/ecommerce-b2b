@@ -31,6 +31,7 @@ void main() {
 
   Map<String, dynamic> quoteJson({String status = 'Converted'}) => {
     'id': 'q1',
+    'createdAt': '2026-09-21T10:00:00.000+00:00',
     'status': status,
     'companyId': 'c1',
     'representativeId': 'rep-456',
@@ -110,6 +111,27 @@ void main() {
 
       expect(captured!.queryParameters['representativeId'], 'rep-456');
       expect(quotes.single.status, QuoteStatus.sent);
+    });
+
+    test('should map createdAt and tolerate its absence', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(quoteJson())),
+      );
+      final repository = buildRepository(adapter);
+
+      final quote = (await repository.getById(const QuoteId('q1')))!;
+      expect(quote.createdAt, DateTime.utc(2026, 9, 21, 10));
+
+      final legacy = quoteJson()..remove('createdAt');
+      final legacyAdapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(legacy)),
+      );
+      final legacyRepository = buildRepository(legacyAdapter);
+
+      final legacyQuote = (await legacyRepository.getById(
+        const QuoteId('q1'),
+      ))!;
+      expect(legacyQuote.createdAt, isNull);
     });
   });
 }

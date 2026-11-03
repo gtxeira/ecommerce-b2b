@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/events/order_events.dart';
 import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
@@ -49,6 +50,7 @@ class _BillingPageState extends State<BillingPage> {
   Future<void> _invoice(SalesOrder order) async {
     try {
       final result = await getIt<FinanceApi>().invoice(order.id.value);
+      getIt<OrderEvents>().notifyChanged();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

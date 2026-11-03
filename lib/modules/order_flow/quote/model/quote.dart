@@ -12,6 +12,10 @@ class Quote extends Entity<QuoteId> {
   final List<QuoteItem> _items;
   final Money _shippingCost;
 
+  /// Momento de criação, em UTC. `null` em payloads antigos (antes do campo
+  /// existir no contrato).
+  final DateTime? createdAt;
+
   Quote({
     required QuoteId id,
     this.companyId,
@@ -19,6 +23,7 @@ class Quote extends Entity<QuoteId> {
     required QuoteStatus status,
     List<QuoteItem>? items,
     Money? shippingCost,
+    this.createdAt,
   }) : _status = status,
        _items = items ?? [],
        _shippingCost = shippingCost ?? Money.create(0).getOrThrow(),

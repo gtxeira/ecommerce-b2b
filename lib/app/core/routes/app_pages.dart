@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:flutter/material.dart';
 
@@ -36,6 +37,13 @@ enum AppPage {
     subtitle: 'Produtos e preços',
     icon: Icons.auto_awesome_mosaic_rounded,
     colorType: CardColorType.tertiaryContainer,
+  ),
+  orders(
+    path: OrderRoutes.list,
+    label: 'Pedidos',
+    subtitle: 'Abertos e encerrados',
+    icon: Icons.assignment_rounded,
+    colorType: CardColorType.primaryContainer,
   ),
   quotes(
     path: '/quotes',
@@ -113,6 +121,7 @@ enum AppPage {
     return switch (role) {
       UserRole.representative => [
         AppPage.home,
+        AppPage.orders,
         AppPage.companies,
         AppPage.catalog,
         AppPage.quotes,
@@ -121,6 +130,7 @@ enum AppPage {
       ],
       UserRole.supervisor => [
         AppPage.home,
+        AppPage.orders,
         AppPage.companies,
         AppPage.catalog,
         AppPage.quotes,
@@ -128,9 +138,15 @@ enum AppPage {
         AppPage.inventory,
         AppPage.billing,
       ],
-      UserRole.finance => [AppPage.home, AppPage.finance, AppPage.billing],
+      UserRole.finance => [
+        AppPage.home,
+        AppPage.orders,
+        AppPage.finance,
+        AppPage.billing,
+      ],
       UserRole.admin => [
         AppPage.home,
+        AppPage.orders,
         AppPage.companies,
         AppPage.catalog,
         AppPage.inventory,

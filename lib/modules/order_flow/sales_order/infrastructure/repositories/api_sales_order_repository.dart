@@ -92,6 +92,7 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
           )
           .toList(),
       financeReview: financeReview,
+      createdAt: readDate(json, 'createdAt'),
       shippingCost: Money.create(readDouble(json, 'shippingCost')).getOrThrow(),
     );
   }

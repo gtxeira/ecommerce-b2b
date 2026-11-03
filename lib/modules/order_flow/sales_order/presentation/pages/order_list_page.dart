@@ -3,13 +3,15 @@ import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/order_list_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_search_field.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_summary_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Listagem de pedidos dividida entre abertos e encerrados. O agrupamento
-/// inicial pode vir de `?group=open|closed`.
+/// Listagem de pedidos dividida entre abertos e encerrados, com busca por id,
+/// empresa ou nome fantasia. O agrupamento inicial pode vir de
+/// `?group=open|closed`.
 class OrderListPage extends StatelessWidget {
   const OrderListPage({super.key, this.initialGroup});
 
@@ -84,11 +86,20 @@ class OrderListPage extends StatelessWidget {
   Widget _buildLoaded(BuildContext context, OrderListLoaded state) {
     final theme = Theme.of(context);
     final orders = state.visibleOrders;
+    final hasQuery = state.query.trim().isNotEmpty;
 
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: OrderSearchField(
+            initialValue: state.query,
+            onChanged: (value) =>
+                context.read<OrderListCubit>().setQuery(value),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: SegmentedButton<OrderStatusGroup>(
@@ -123,7 +134,9 @@ class OrderListPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Nenhum pedido ${state.filter == OrderStatusGroup.open ? 'em aberto' : 'encerrado'}.',
+                        hasQuery
+                            ? 'Nenhum pedido corresponde a "${state.query.trim()}".'
+                            : 'Nenhum pedido ${state.filter == OrderStatusGroup.open ? 'em aberto' : 'encerrado'}.',
                         style: theme.textTheme.titleMedium,
                         textAlign: TextAlign.center,
                       ),
@@ -137,6 +150,7 @@ class OrderListPage extends StatelessWidget {
                       final order = orders[index];
                       return OrderSummaryTile(
                         order: order,
+                        companyName: state.companyNameFor(order),
                         onTap: () => context.push(
                           OrderRoutes.detail(order.id.value),
                           extra: order,

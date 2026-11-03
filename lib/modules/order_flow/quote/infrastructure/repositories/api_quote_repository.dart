@@ -68,6 +68,7 @@ class ApiQuoteRepository implements QuoteRepository {
     companyId: readNullableString(json, 'companyId'),
     representativeId: readNullableString(json, 'representativeId'),
     status: _statusFromApi(readString(json, 'status')),
+    createdAt: readDate(json, 'createdAt'),
     shippingCost: Money.create(readDouble(json, 'shippingCost')).getOrThrow(),
     items: readMapList(json, 'items')
         .map(

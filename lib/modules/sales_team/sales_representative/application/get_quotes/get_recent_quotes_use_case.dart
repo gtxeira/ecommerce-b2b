@@ -17,9 +17,20 @@ class GetRecentQuotesUseCase {
     UserSession currentSession,
   ) async {
     try {
-      return Success(
-        await _quoteRepository.findByRepresentativeId(targetRepId.value),
+      // A API já devolve ordenado por `createdAt`; ordenar aqui também mantém o
+      // painel estável se o payload vier sem data ou com ordem diferente.
+      final quotes = await _quoteRepository.findByRepresentativeId(
+        targetRepId.value,
       );
+      quotes.sort((a, b) {
+        final aDate = a.createdAt;
+        final bDate = b.createdAt;
+        if (aDate == null && bDate == null) return 0;
+        if (aDate == null) return 1;
+        if (bDate == null) return -1;
+        return bDate.compareTo(aDate);
+      });
+      return Success(quotes);
     } on ApiException catch (error) {
       return Failure(error.toAppError());
     } catch (error) {

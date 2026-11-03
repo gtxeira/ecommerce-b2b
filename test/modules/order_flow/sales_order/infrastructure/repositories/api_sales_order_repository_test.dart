@@ -33,6 +33,7 @@ void main() {
     String? decision = 'Approved',
   }) => {
     'id': 'o1',
+    'createdAt': '2026-09-21T10:00:00.000+00:00',
     'companyId': 'c1',
     'status': status,
     'creditStatus': creditStatus,
@@ -98,6 +99,27 @@ void main() {
       expect(captured!.path, '/api/orders');
       expect(captured!.queryParameters['status'], 'PickingPacking');
       expect(orders.single.status, OrderStatus.pickingPacking);
+    });
+
+    test('should map createdAt and tolerate its absence', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(orderJson())),
+      );
+      final repository = buildRepository(adapter);
+
+      final order = (await repository.getById(const OrderId('o1')))!;
+      expect(order.createdAt, DateTime.utc(2026, 9, 21, 10));
+
+      final legacy = orderJson()..remove('createdAt');
+      final legacyAdapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(legacy)),
+      );
+      final legacyRepository = buildRepository(legacyAdapter);
+
+      final legacyOrder = (await legacyRepository.getById(
+        const OrderId('o1'),
+      ))!;
+      expect(legacyOrder.createdAt, isNull);
     });
   });
 }

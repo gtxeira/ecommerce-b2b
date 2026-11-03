@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/app/core/format/date_format.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_status_visuals.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +10,16 @@ class OrderSummaryTile extends StatelessWidget {
     super.key,
     required this.order,
     required this.onTap,
+    this.companyName,
     this.margin = const EdgeInsets.only(bottom: 12),
   });
 
   final SalesOrder order;
   final VoidCallback onTap;
+
+  /// Nome fantasia da empresa. Quando ausente, a linha é omitida.
+  final String? companyName;
+
   final EdgeInsetsGeometry margin;
 
   @override
@@ -41,7 +47,11 @@ class OrderSummaryTile extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-          'Status: ${order.status.label}\nTotal: ${order.total.formatted}',
+          [
+            'Status: ${order.status.label}',
+            if (companyName != null) 'Empresa: $companyName',
+            'Total: ${order.total.formatted} · ${formatDateOrDash(order.createdAt)}',
+          ].join('\n'),
         ),
         isThreeLine: true,
         trailing: const Icon(Icons.chevron_right_rounded),

@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/app/core/events/order_events.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_pending_finance_reviews/get_pending_finance_reviews_use_case.dart';
@@ -18,6 +19,8 @@ class MockProcessFinanceReviewUseCase extends Mock
 
 class MockSalesOrderRepository extends Mock implements SalesOrderRepository {}
 
+class MockOrderEvents extends Mock implements OrderEvents {}
+
 class SalesOrderFake extends Fake implements SalesOrder {}
 
 class FinanceReviewFake extends Fake implements FinanceReview {}
@@ -32,6 +35,7 @@ void main() {
     late MockGetPendingFinanceReviewsUseCase getPendingReviews;
     late MockProcessFinanceReviewUseCase processReview;
     late MockSalesOrderRepository orderRepository;
+    late MockOrderEvents orderEvents;
     late FinanceReviewCubit cubit;
 
     final order = SalesOrder(
@@ -45,11 +49,13 @@ void main() {
       getPendingReviews = MockGetPendingFinanceReviewsUseCase();
       processReview = MockProcessFinanceReviewUseCase();
       orderRepository = MockSalesOrderRepository();
+      orderEvents = MockOrderEvents();
       when(() => orderRepository.getAll()).thenAnswer((_) async => []);
       cubit = FinanceReviewCubit(
         getPendingReviews: getPendingReviews,
         processReview: processReview,
         orderRepository: orderRepository,
+        orderEvents: orderEvents,
       );
     });
 
@@ -129,6 +135,8 @@ void main() {
         ),
       ).called(1);
       verify(() => getPendingReviews.execute()).called(1);
+      // O badge de pedidos em aberto é avisado só depois da mutação confirmada.
+      verify(() => orderEvents.notifyChanged()).called(1);
     });
 
     test('rejectOrder should send the review and reload the queue', () async {
@@ -148,6 +156,7 @@ void main() {
           review: any(named: 'review'),
         ),
       ).called(1);
+      verify(() => orderEvents.notifyChanged()).called(1);
     });
 
     test('invoiceOrder should call the API and reload', () async {
@@ -157,6 +166,22 @@ void main() {
       await cubit.invoiceOrder(order);
 
       verify(() => processReview.invoice(order)).called(1);
+      verify(() => orderEvents.notifyChanged()).called(1);
+    });
+
+    test('não avisa o badge quando a decisão falha', () async {
+      when(
+        () => processReview.execute(
+          order: any(named: 'order'),
+          review: any(named: 'review'),
+        ),
+      ).thenThrow(Exception('409'));
+      when(() => getPendingReviews.execute()).thenAnswer((_) async => []);
+
+      await cubit.approveOrder(order, 'Limite ok');
+
+      expect(cubit.state, isA<FinanceReviewFailure>());
+      verifyNever(() => orderEvents.notifyChanged());
     });
   });
 }

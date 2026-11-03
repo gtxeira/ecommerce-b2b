@@ -1,4 +1,6 @@
+import 'package:ecommerce_b2b/app/presentation/widgets/open_orders_badge.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/open_orders_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -56,6 +58,7 @@ class MainLayout extends StatelessWidget {
 
     final visiblePages = AppPage.sidebarPagesFor(authState.session.role);
     final selectedIndex = _calculateSelectedIndex(context, visiblePages);
+    final openOrdersCount = context.watch<OpenOrdersCubit>().state.count;
 
     return Scaffold(
       body: Row(
@@ -77,9 +80,18 @@ class MainLayout extends StatelessWidget {
               ),
             ),
             destinations: visiblePages.map((page) {
+              // `selectedIcon` recebe o mesmo widget: sem isso o selo some
+              // justamente quando a página está aberta.
+              final icon = page == AppPage.orders
+                  ? OpenOrdersBadge(
+                      count: openOrdersCount,
+                      child: Icon(page.icon),
+                    )
+                  : Icon(page.icon);
+
               return NavigationRailDestination(
-                icon: Icon(page.icon),
-                selectedIcon: Icon(page.icon),
+                icon: icon,
+                selectedIcon: icon,
                 label: Text(page.label),
               );
             }).toList(),

@@ -17,6 +17,10 @@ class SalesOrder extends Entity<OrderId> {
   FinanceReview? _financeReview;
   final Money _shippingCost;
 
+  /// Momento de criação, em UTC. `null` em payloads antigos (antes do campo
+  /// existir no contrato); a UI trata a ausência como "data desconhecida".
+  final DateTime? createdAt;
+
   /// Construtor do Pedido de Venda.
   SalesOrder({
     required OrderId id,
@@ -26,6 +30,7 @@ class SalesOrder extends Entity<OrderId> {
     required List<OrderItem> items,
     FinanceReview? financeReview,
     Money? shippingCost,
+    this.createdAt,
   }) : _status = status,
        _creditStatus = creditStatus,
        _items = items,
