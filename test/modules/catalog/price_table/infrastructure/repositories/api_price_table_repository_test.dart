@@ -40,8 +40,9 @@ void main() {
           successEnvelope([
             {
               'id': 'pt-1',
-              'name': 'Tabela Nacional',
-              'scopeType': 'Regional',
+              'name': 'Tabela Cliente',
+              'scopeType': 'CustomerSpecific',
+              'companyId': 'c1',
               'rules': [
                 {
                   'productId': 'p1',
@@ -61,7 +62,8 @@ void main() {
       final tables = await repository.findAll();
 
       final table = tables.single;
-      expect(table.scopeType, PriceScopeType.regional);
+      expect(table.scopeType, PriceScopeType.customerSpecific);
+      expect(table.companyId, 'c1');
       final rule = table.rules.single;
       expect(rule.minQuantity.value, 10);
       expect(rule.state, State.saoPaulo);
@@ -80,6 +82,7 @@ void main() {
           id: const PriceTableId('pt-1'),
           name: 'Tabela',
           scopeType: PriceScopeType.customerSpecific,
+          companyId: 'c1',
           rules: [
             PriceRule(
               productId: const ProductId('p1'),
@@ -93,6 +96,7 @@ void main() {
       );
 
       expect(body!['scopeType'], 'CustomerSpecific');
+      expect(body!['companyId'], 'c1');
       expect((body!['rules'] as List).single['state'], 'saoPaulo');
     });
   });
