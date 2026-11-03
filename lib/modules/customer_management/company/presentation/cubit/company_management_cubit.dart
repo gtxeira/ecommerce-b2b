@@ -27,11 +27,13 @@ class CompanyManagementCubit extends Cubit<CompanyManagementState> {
   Future<void> loadCompanies(
     UserSession session, {
     String? targetRepresentativeId,
+    bool teamView = false,
   }) async {
     emit(CompanyManagementLoading());
     final result = await _getCompaniesUseCase.execute(
       session,
-      targetRepresentativeId: targetRepresentativeId,
+      targetRepresentativeId: teamView ? null : targetRepresentativeId,
+      teamScope: teamView,
     );
 
     // A API já devolve a equipe do supervisor em /api/me/team; o app só
@@ -54,8 +56,10 @@ class CompanyManagementCubit extends Cubit<CompanyManagementState> {
         CompanyManagementLoaded(
           companies: companies,
           subordinates: subordinates,
-          selectedRepresentativeId:
-              targetRepresentativeId ?? session.userId.value,
+          selectedRepresentativeId: teamView
+              ? null
+              : targetRepresentativeId ?? session.userId.value,
+          isTeamView: teamView,
         ),
       ),
     );
@@ -125,7 +129,14 @@ class CompanyManagementCubit extends Cubit<CompanyManagementState> {
         final lastRepId = originalState is CompanyManagementLoaded
             ? originalState.selectedRepresentativeId
             : null;
-        loadCompanies(currentSession, targetRepresentativeId: lastRepId);
+        final lastTeamView = originalState is CompanyManagementLoaded
+            ? originalState.isTeamView
+            : false;
+        loadCompanies(
+          currentSession,
+          targetRepresentativeId: lastRepId,
+          teamView: lastTeamView,
+        );
       },
     );
   }
@@ -168,7 +179,14 @@ class CompanyManagementCubit extends Cubit<CompanyManagementState> {
         final lastRepId = originalState is CompanyManagementLoaded
             ? originalState.selectedRepresentativeId
             : null;
-        loadCompanies(currentSession, targetRepresentativeId: lastRepId);
+        final lastTeamView = originalState is CompanyManagementLoaded
+            ? originalState.isTeamView
+            : false;
+        loadCompanies(
+          currentSession,
+          targetRepresentativeId: lastRepId,
+          teamView: lastTeamView,
+        );
       },
     );
   }

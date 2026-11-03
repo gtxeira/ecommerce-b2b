@@ -137,8 +137,11 @@ class FakeCompanyRepository implements CompanyRepository {
   }
 
   @override
-  Future<List<Company>> findByRepresentativeId(String representativeId) async {
-    if (representativeId == 'rep-456') {
+  Future<List<Company>> findByRepresentativeId(
+    String representativeId, {
+    bool teamScope = false,
+  }) async {
+    if (teamScope || representativeId == 'rep-456') {
       return List.from(_companies);
     }
     return [];

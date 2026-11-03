@@ -26,10 +26,15 @@ class ApiCompanyRepository implements CompanyRepository {
   }
 
   @override
-  Future<List<Company>> findByRepresentativeId(String representativeId) async {
+  Future<List<Company>> findByRepresentativeId(
+    String representativeId, {
+    bool teamScope = false,
+  }) async {
     final data = await _api.get(
       '/api/companies',
-      query: {'representativeId': representativeId},
+      query: teamScope
+          ? {'scope': 'team'}
+          : {'representativeId': representativeId},
     );
     return _mapList(data);
   }

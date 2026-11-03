@@ -300,6 +300,23 @@ void main() {
       expect(pricing.locationLabel, 'São Paulo (SP)');
     });
 
+    test('should request team scope instead of representativeId', () async {
+      RequestOptions? captured;
+      final adapter = FakeHttpAdapter((options) async {
+        captured = options;
+        return jsonResponse(successEnvelope([quoteJson()]));
+      });
+      final repository = buildRepository(adapter);
+
+      await repository.findByRepresentativeId('rep-456', teamScope: true);
+
+      expect(captured!.queryParameters['scope'], 'team');
+      expect(
+        captured!.queryParameters.containsKey('representativeId'),
+        isFalse,
+      );
+    });
+
     test('should map the product name and sku resolved by the API', () async {
       final adapter = FakeHttpAdapter(
         (options) async => jsonResponse(successEnvelope(quoteJson())),

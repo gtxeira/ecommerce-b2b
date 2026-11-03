@@ -50,10 +50,15 @@ class ApiQuoteRepository implements QuoteRepository {
   }
 
   @override
-  Future<List<Quote>> findByRepresentativeId(String representativeId) async {
+  Future<List<Quote>> findByRepresentativeId(
+    String representativeId, {
+    bool teamScope = false,
+  }) async {
     final data = await _api.get(
       '/api/quotes',
-      query: {'representativeId': representativeId},
+      query: teamScope
+          ? {'scope': 'team'}
+          : {'representativeId': representativeId},
     );
     return _mapList(data);
   }

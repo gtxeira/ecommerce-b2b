@@ -101,6 +101,23 @@ void main() {
       expect(captured!.queryParameters['representativeId'], 'rep-456');
     });
 
+    test('should request team scope instead of representativeId', () async {
+      RequestOptions? captured;
+      final adapter = FakeHttpAdapter((options) async {
+        captured = options;
+        return jsonResponse(successEnvelope([companyJson()]));
+      });
+      final repository = buildRepository(adapter);
+
+      await repository.findByRepresentativeId('rep-456', teamScope: true);
+
+      expect(captured!.queryParameters['scope'], 'team');
+      expect(
+        captured!.queryParameters.containsKey('representativeId'),
+        isFalse,
+      );
+    });
+
     test('should add a buyer and map the API response', () async {
       Map<String, dynamic>? body;
       final adapter = FakeHttpAdapter((options) async {

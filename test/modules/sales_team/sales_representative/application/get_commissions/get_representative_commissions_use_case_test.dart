@@ -51,6 +51,24 @@ void main() {
       },
     );
 
+    test('should forward the team scope to the repository', () async {
+      when(
+        () => repository.getCommissions(
+          representativeId: 'rep-1',
+          teamScope: true,
+        ),
+      ).thenAnswer((_) async => const []);
+
+      await useCase.execute(repId, session, teamScope: true);
+
+      verify(
+        () => repository.getCommissions(
+          representativeId: 'rep-1',
+          teamScope: true,
+        ),
+      ).called(1);
+    });
+
     test(
       'should translate a 403 from the API preserving the API code',
       () async {

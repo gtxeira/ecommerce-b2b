@@ -73,13 +73,20 @@ void main() {
                 'amount': 50,
                 'status': 'Approved',
                 'orderId': 'o1',
+                'createdAt': '2026-11-03T14:30:00Z',
+                'representativeId': 'rep-456',
+                'representativeName': 'Representante Mock',
               },
             ]),
           );
         }
         return jsonResponse(
           successEnvelope([
-            {'companyId': 'c1'},
+            {
+              'companyId': 'c1',
+              'representativeId': 'rep-456',
+              'representativeName': 'Representante Mock',
+            },
           ]),
         );
       });
@@ -94,8 +101,42 @@ void main() {
 
       expect(commissions.single.status, CommissionStatus.approved);
       expect(commissions.single.orderId, 'o1');
+      expect(commissions.single.createdAt, DateTime.utc(2026, 11, 3, 14, 30));
+      expect(commissions.single.representativeId, 'rep-456');
+      expect(commissions.single.representativeName, 'Representante Mock');
       expect(portfolio.single.companyId.value, 'c1');
+      expect(portfolio.single.representativeId, 'rep-456');
+      expect(portfolio.single.representativeName, 'Representante Mock');
     });
+
+    test(
+      'should request the team scope instead of a representative id',
+      () async {
+        Map<String, dynamic>? commissionQuery;
+        Map<String, dynamic>? portfolioQuery;
+        final adapter = FakeHttpAdapter((options) async {
+          if (options.path == '/api/me/commissions') {
+            commissionQuery = options.queryParameters;
+            return jsonResponse(successEnvelope(const []));
+          }
+          portfolioQuery = options.queryParameters;
+          return jsonResponse(successEnvelope(const []));
+        });
+        final repository = buildRepository(adapter);
+
+        await repository.getCommissions(
+          representativeId: 'rep-1',
+          teamScope: true,
+        );
+        await repository.getPortfolio(
+          representativeId: 'rep-1',
+          teamScope: true,
+        );
+
+        expect(commissionQuery, {'scope': 'team'});
+        expect(portfolioQuery, {'scope': 'team'});
+      },
+    );
 
     test('should find a representative by id', () async {
       final adapter = FakeHttpAdapter((options) async {

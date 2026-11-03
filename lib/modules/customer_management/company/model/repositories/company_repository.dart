@@ -8,7 +8,10 @@ abstract class CompanyRepository {
 
   Future<Company?> findById(CompanyId id);
   Future<List<Company>> findAll();
-  Future<List<Company>> findByRepresentativeId(String representativeId);
+  Future<List<Company>> findByRepresentativeId(
+    String representativeId, {
+    bool teamScope = false,
+  });
 
   /// Adiciona um comprador autorizado à empresa (POST /api/companies/{id}/buyers)
   /// e devolve a representação criada pela API. O comprador também é um usuário

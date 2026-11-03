@@ -13,12 +13,23 @@ class Commission {
   /// Pedido que originou a comissão (nulo nas comissões históricas do seed).
   final String? orderId;
 
+  /// Momento em que a comissão foi gerada, em UTC. Nulo em payloads antigos.
+  final DateTime? createdAt;
+
+  /// Representante que recebeu a comissão. Preenchido pela API no modo pessoal e
+  /// no consolidado da equipe.
+  final String? representativeId;
+  final String? representativeName;
+
   const Commission({
     required this.baseAmount,
     required this.rate,
     required this.amount,
     required this.status,
     this.orderId,
+    this.createdAt,
+    this.representativeId,
+    this.representativeName,
   });
 
   @override
@@ -30,7 +41,10 @@ class Commission {
           rate == other.rate &&
           amount == other.amount &&
           status == other.status &&
-          orderId == other.orderId;
+          orderId == other.orderId &&
+          createdAt == other.createdAt &&
+          representativeId == other.representativeId &&
+          representativeName == other.representativeName;
 
   @override
   int get hashCode =>
@@ -38,5 +52,8 @@ class Commission {
       rate.hashCode ^
       amount.hashCode ^
       status.hashCode ^
-      orderId.hashCode;
+      orderId.hashCode ^
+      createdAt.hashCode ^
+      representativeId.hashCode ^
+      representativeName.hashCode;
 }

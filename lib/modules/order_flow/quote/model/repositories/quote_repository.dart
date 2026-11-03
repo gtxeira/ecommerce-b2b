@@ -9,7 +9,10 @@ abstract class QuoteRepository {
 
   Future<List<Quote>> getAll();
 
-  Future<List<Quote>> findByRepresentativeId(String representativeId);
+  Future<List<Quote>> findByRepresentativeId(
+    String representativeId, {
+    bool teamScope = false,
+  });
 
   /// Orçamentos da empresa. O comprador só recebe a própria empresa (a API
   /// restringe); Admin/financeiro usam para filtro.

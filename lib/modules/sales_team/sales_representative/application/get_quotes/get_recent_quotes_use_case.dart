@@ -14,13 +14,15 @@ class GetRecentQuotesUseCase {
 
   Future<Result<List<Quote>, AppError>> execute(
     RepresentativeId targetRepId,
-    UserSession currentSession,
-  ) async {
+    UserSession currentSession, {
+    bool teamScope = false,
+  }) async {
     try {
       // A API já devolve ordenado por `createdAt`; ordenar aqui também mantém o
       // painel estável se o payload vier sem data ou com ordem diferente.
       final quotes = await _quoteRepository.findByRepresentativeId(
         targetRepId.value,
+        teamScope: teamScope,
       );
       quotes.sort((a, b) {
         final aDate = a.createdAt;

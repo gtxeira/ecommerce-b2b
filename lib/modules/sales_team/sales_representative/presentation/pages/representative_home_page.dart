@@ -1,14 +1,20 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/format/date_format.dart';
 import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
+import 'package:ecommerce_b2b/app/core/routes/commission_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/cubit/representative_dashboard_cubit.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/widgets/commission_details_sheet.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/widgets/commission_tile.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+const _teamScopeValue = '__team__';
 
 class RepresentativeHomePage extends StatelessWidget {
   const RepresentativeHomePage({super.key});
@@ -27,7 +33,8 @@ class RepresentativeHomePage extends StatelessWidget {
 
     return BlocProvider(
       create: (context) =>
-          getIt<RepresentativeDashboardCubit>()..loadDashboard(session),
+          getIt<RepresentativeDashboardCubit>()
+            ..loadDashboard(session, teamView: session.isSupervisor),
       child: Scaffold(
         appBar: const B2BAppBar(title: 'Painel do Representante'),
         body: BlocBuilder<RepresentativeDashboardCubit, RepresentativeDashboardState>(
@@ -47,9 +54,12 @@ class RepresentativeHomePage extends StatelessWidget {
 
             if (state is RepresentativeDashboardLoaded) {
               return RefreshIndicator(
-                onRefresh: () => context
-                    .read<RepresentativeDashboardCubit>()
-                    .loadDashboard(session, targetRepId: state.selectedRepId),
+                onRefresh: () =>
+                    context.read<RepresentativeDashboardCubit>().loadDashboard(
+                      session,
+                      targetRepId: state.selectedRepId,
+                      teamView: state.isTeamView,
+                    ),
                 child: CustomScrollView(
                   slivers: [
                     // Supervisor Team Selector
@@ -92,37 +102,56 @@ class RepresentativeHomePage extends StatelessWidget {
                                         ),
                                         const SizedBox(height: 4),
                                         DropdownButtonHideUnderline(
-                                          child: DropdownButton<RepresentativeId>(
+                                          child: DropdownButton<String>(
                                             isExpanded: true,
-                                            value: state.selectedRepId,
+                                            value: state.isTeamView
+                                                ? _teamScopeValue
+                                                : state.selectedRepId.value,
                                             items: [
                                               DropdownMenuItem(
-                                                value: RepresentativeId(
-                                                  session.userId.value,
-                                                ),
+                                                value: _teamScopeValue,
                                                 child: const Text(
-                                                  'Meu Painel (Pessoal)',
+                                                  'Toda a Equipe (Consolidado)',
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
                                               ),
+                                              DropdownMenuItem(
+                                                value: session.userId.value,
+                                                child: const Text(
+                                                  'Meu Painel (Pessoal)',
+                                                ),
+                                              ),
                                               ...state.subordinates.map(
                                                 (sub) => DropdownMenuItem(
-                                                  value: sub.id,
+                                                  value: sub.id.value,
                                                   child: Text(sub.fullName),
                                                 ),
                                               ),
                                             ],
-                                            onChanged: (newRepId) {
-                                              if (newRepId != null) {
+                                            onChanged: (newValue) {
+                                              if (newValue == null) return;
+                                              if (newValue == _teamScopeValue) {
                                                 context
                                                     .read<
                                                       RepresentativeDashboardCubit
                                                     >()
                                                     .loadDashboard(
                                                       session,
-                                                      targetRepId: newRepId,
+                                                      teamView: true,
+                                                    );
+                                              } else {
+                                                context
+                                                    .read<
+                                                      RepresentativeDashboardCubit
+                                                    >()
+                                                    .loadDashboard(
+                                                      session,
+                                                      targetRepId:
+                                                          RepresentativeId(
+                                                            newValue,
+                                                          ),
                                                     );
                                               }
                                             },
@@ -146,7 +175,10 @@ class RepresentativeHomePage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              state.selectedRepId.value == session.userId.value
+                              state.isTeamView && state.subordinates.isNotEmpty
+                                  ? 'Desempenho da Equipe'
+                                  : state.selectedRepId.value ==
+                                        session.userId.value
                                   ? 'Seu Desempenho'
                                   : 'Desempenho: ${state.selectedRepName}',
                               style: theme.textTheme.headlineSmall?.copyWith(
@@ -159,18 +191,29 @@ class RepresentativeHomePage extends StatelessWidget {
                               children: [
                                 _buildMetricCard(
                                   context,
-                                  'Comissões',
-                                  _calculateTotalCommissions(state.commissions),
-                                  Icons.payments_outlined,
-                                  colorScheme.primaryContainer,
+                                  label: 'Comissões',
+                                  value: _calculateTotalCommissions(
+                                    state.commissions,
+                                  ),
+                                  icon: Icons.payments_outlined,
+                                  color: colorScheme.primaryContainer,
+                                  onTap: () => context.push(
+                                    CommissionRoutes.withScope(
+                                      isTeamView: state.isTeamView,
+                                      representativeId:
+                                          state.selectedRepId.value,
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 _buildMetricCard(
                                   context,
-                                  'Carteira',
-                                  '${state.assignments.length} Clientes',
-                                  Icons.supervised_user_circle_outlined,
-                                  colorScheme.secondaryContainer,
+                                  label: 'Carteira',
+                                  value: '${state.clientCount} Clientes',
+                                  icon: Icons.supervised_user_circle_outlined,
+                                  color: colorScheme.secondaryContainer,
+                                  onTap: () =>
+                                      context.push(_companiesPath(state)),
                                 ),
                               ],
                             ),
@@ -179,15 +222,94 @@ class RepresentativeHomePage extends StatelessWidget {
                       ),
                     ),
 
+                    if (state.isTeamView &&
+                        state.subordinates.isNotEmpty &&
+                        state.performances.isNotEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Resumo por Representante',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              ...state.performances.map(
+                                (performance) => Card(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  elevation: 0,
+                                  color: colorScheme.surfaceContainerLow,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor:
+                                          colorScheme.primaryContainer,
+                                      child: Icon(
+                                        Icons.person_rounded,
+                                        color: colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      performance.isSelf
+                                          ? '${performance.name} (Você)'
+                                          : performance.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      'Comissões: ${performance.commissionTotal.formatted} · '
+                                      'Clientes: ${performance.clientsCount} · '
+                                      'Orçamentos: ${performance.quotesCount}',
+                                    ),
+                                    trailing: const Icon(
+                                      Icons.chevron_right_rounded,
+                                    ),
+                                    onTap: () => context
+                                        .read<RepresentativeDashboardCubit>()
+                                        .loadDashboard(
+                                          session,
+                                          targetRepId:
+                                              performance.representativeId,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
                     // Lista de Comissões Recentes
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                        child: Text(
-                          'Comissões Recentes',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Comissões Recentes',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => context.push(
+                                CommissionRoutes.withScope(
+                                  isTeamView: state.isTeamView,
+                                  representativeId: state.selectedRepId.value,
+                                ),
+                              ),
+                              child: const Text('Ver todas'),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -209,20 +331,17 @@ class RepresentativeHomePage extends StatelessWidget {
                             index,
                           ) {
                             final commission = state.commissions[index];
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor:
-                                      colorScheme.surfaceContainerHighest,
-                                  child: const Icon(Icons.attach_money_rounded),
-                                ),
-                                title: Text(
-                                  'Comissão: ${commission.amount.formatted}',
-                                ),
-                                subtitle: Text(
-                                  'Base: ${commission.baseAmount.formatted} (${commission.rate.formatted})',
-                                ),
+                            return CommissionTile(
+                              commission: commission,
+                              representativeName: state.isTeamView
+                                  ? commission.representativeName
+                                  : null,
+                              onTap: () => showCommissionDetailsSheet(
+                                context,
+                                commission,
+                                representativeName: state.isTeamView
+                                    ? commission.representativeName
+                                    : null,
                               ),
                             );
                           }, childCount: state.commissions.length),
@@ -277,8 +396,17 @@ class RepresentativeHomePage extends StatelessWidget {
                                     'Total: ${quote.total.formatted} - ${quote.status.label}',
                                     if (quote.companyId != null)
                                       'Empresa: ${companyLabel(tradeName: quote.companyName, legalName: quote.companyLegalName, id: quote.companyId!)}',
+                                    [
+                                      'Criado em ${formatDateTimeOrDash(quote.createdAt)}',
+                                      if (state.isTeamView &&
+                                          (quote.representativeName ?? '')
+                                              .trim()
+                                              .isNotEmpty)
+                                        'Rep: ${quote.representativeName}',
+                                    ].join(' · '),
                                   ].join('\n'),
                                 ),
+                                isThreeLine: true,
                                 trailing: const Icon(
                                   Icons.chevron_right_rounded,
                                 ),
@@ -303,6 +431,13 @@ class RepresentativeHomePage extends StatelessWidget {
     );
   }
 
+  String _companiesPath(RepresentativeDashboardLoaded state) {
+    if (state.isTeamView) {
+      return '${AppPage.companies.path}?scope=team';
+    }
+    return '${AppPage.companies.path}?representativeId=${Uri.encodeQueryComponent(state.selectedRepId.value)}';
+  }
+
   String _calculateTotalCommissions(List<Commission> commissions) {
     if (commissions.isEmpty) return 'R\$ 0,00';
 
@@ -314,38 +449,54 @@ class RepresentativeHomePage extends StatelessWidget {
   }
 
   Widget _buildMetricCard(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+    BuildContext context, {
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final foreground = Theme.of(context).colorScheme.onSurface;
     return Expanded(
-      child: Card(
+      child: Material(
         color: color,
-        margin: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, size: 28),
-              const SizedBox(height: 12),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
+        borderRadius: BorderRadius.circular(28),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(28),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, color: foreground, size: 28),
+                    const Spacer(),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: foreground.withValues(alpha: 0.55),
+                      size: 20,
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 12),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
-            ],
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

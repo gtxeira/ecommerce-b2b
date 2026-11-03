@@ -77,6 +77,7 @@ import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/order_list_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_summary_cubit.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/cubit/commission_list_cubit.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/cubit/representative_dashboard_cubit.dart';
 
 final getIt = GetIt.instance;
@@ -226,6 +227,13 @@ Future<void> setupServiceLocator() async {
       getCommissionsUseCase: getIt<GetRepresentativeCommissionsUseCase>(),
       getCustomerPortfolioUseCase: getIt<GetCustomerPortfolioUseCase>(),
       getRecentQuotesUseCase: getIt<GetRecentQuotesUseCase>(),
+      representativeRepository: getIt<SalesRepresentativeRepository>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => CommissionListCubit(
+      getCommissionsUseCase: getIt<GetRepresentativeCommissionsUseCase>(),
       representativeRepository: getIt<SalesRepresentativeRepository>(),
     ),
   );

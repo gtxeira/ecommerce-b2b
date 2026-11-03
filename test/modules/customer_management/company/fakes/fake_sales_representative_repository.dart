@@ -55,10 +55,16 @@ class FakeSalesRepresentativeRepository
   }
 
   @override
-  Future<List<Commission>> getCommissions({String? representativeId}) async {
+  Future<List<Commission>> getCommissions({
+    String? representativeId,
+    bool teamScope = false,
+  }) async {
     return _reps
         .where(
-          (r) => representativeId == null || r.id.value == representativeId,
+          (r) =>
+              teamScope ||
+              representativeId == null ||
+              r.id.value == representativeId,
         )
         .expand((r) => r.commissions)
         .toList();
@@ -67,10 +73,14 @@ class FakeSalesRepresentativeRepository
   @override
   Future<List<CustomerAssignment>> getPortfolio({
     String? representativeId,
+    bool teamScope = false,
   }) async {
     return _reps
         .where(
-          (r) => representativeId == null || r.id.value == representativeId,
+          (r) =>
+              teamScope ||
+              representativeId == null ||
+              r.id.value == representativeId,
         )
         .expand((r) => r.assignments)
         .toList();

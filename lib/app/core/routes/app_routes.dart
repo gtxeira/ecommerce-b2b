@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
+import 'package:ecommerce_b2b/app/core/routes/commission_routes.dart';
 import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/core/routes/quote_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/layouts/main_layout.dart';
@@ -12,6 +13,7 @@ import 'package:ecommerce_b2b/modules/identity_access/presentation/pages/users_p
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_catalog_page.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_home_page.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_quotes_page.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/pages/commission_list_page.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/pages/representative_home_page.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
@@ -135,7 +137,20 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: AppPage.companies.path,
-          builder: (context, state) => const CompanyListPage(),
+          builder: (context, state) => CompanyListPage(
+            initialRepresentativeId:
+                state.uri.queryParameters['representativeId'],
+            initialTeamView: state.uri.queryParameters['scope'] == 'team',
+          ),
+        ),
+        GoRoute(
+          path: CommissionRoutes.list,
+          redirect: _buyerGuard,
+          builder: (context, state) => CommissionListPage(
+            initialRepresentativeId:
+                state.uri.queryParameters['representativeId'],
+            initialTeamView: state.uri.queryParameters['scope'] == 'team',
+          ),
         ),
         GoRoute(
           path: AppPage.catalog.path,

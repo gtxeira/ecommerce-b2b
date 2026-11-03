@@ -5,15 +5,29 @@ import 'package:flutter/foundation.dart';
 class CustomerAssignment {
   final CompanyId companyId;
 
-  const CustomerAssignment(this.companyId);
+  /// Representante dono desta carteira. A API devolve no modo pessoal e no
+  /// consolidado da equipe.
+  final String? representativeId;
+  final String? representativeName;
+
+  const CustomerAssignment(
+    this.companyId, {
+    this.representativeId,
+    this.representativeName,
+  });
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is CustomerAssignment &&
           runtimeType == other.runtimeType &&
-          companyId == other.companyId;
+          companyId == other.companyId &&
+          representativeId == other.representativeId &&
+          representativeName == other.representativeName;
 
   @override
-  int get hashCode => companyId.hashCode;
+  int get hashCode =>
+      companyId.hashCode ^
+      representativeId.hashCode ^
+      representativeName.hashCode;
 }

@@ -8,8 +8,17 @@ abstract class SalesRepresentativeRepository {
   Future<List<SalesRepresentative>> findAll();
 
   /// Comissões do representante (GET /api/me/commissions).
-  Future<List<Commission>> getCommissions({String? representativeId});
+  ///
+  /// Com [teamScope], a API devolve o consolidado do supervisor e de todos os
+  /// subordinados (inclui o próprio usuário).
+  Future<List<Commission>> getCommissions({
+    String? representativeId,
+    bool teamScope = false,
+  });
 
   /// Carteira do representante (GET /api/me/portfolio).
-  Future<List<CustomerAssignment>> getPortfolio({String? representativeId});
+  Future<List<CustomerAssignment>> getPortfolio({
+    String? representativeId,
+    bool teamScope = false,
+  });
 }

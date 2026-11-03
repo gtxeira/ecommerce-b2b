@@ -14,9 +14,15 @@ class GetCompaniesUseCase {
   Future<Result<List<Company>, AppError>> execute(
     UserSession currentSession, {
     String? targetRepresentativeId,
+    bool teamScope = false,
   }) async {
     try {
-      final companies = targetRepresentativeId != null
+      final companies = teamScope
+          ? await _companyRepository.findByRepresentativeId(
+              currentSession.userId.value,
+              teamScope: true,
+            )
+          : targetRepresentativeId != null
           ? await _companyRepository.findByRepresentativeId(
               targetRepresentativeId,
             )

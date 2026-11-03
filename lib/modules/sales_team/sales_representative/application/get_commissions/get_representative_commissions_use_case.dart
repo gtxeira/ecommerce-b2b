@@ -14,12 +14,14 @@ class GetRepresentativeCommissionsUseCase {
 
   Future<Result<List<Commission>, AppError>> execute(
     RepresentativeId targetRepId,
-    UserSession currentSession,
-  ) async {
+    UserSession currentSession, {
+    bool teamScope = false,
+  }) async {
     try {
       return Success(
         await _representativeRepository.getCommissions(
           representativeId: targetRepId.value,
+          teamScope: teamScope,
         ),
       );
     } on ApiException catch (error) {

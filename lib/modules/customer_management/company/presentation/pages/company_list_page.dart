@@ -5,6 +5,8 @@ import 'package:ecommerce_b2b/modules/customer_management/company/model/company.
 import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/cnpj.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/inscricao_estadual.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/presentation/cubit/company_management_cubit.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_representative.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart'
     as address_state;
@@ -18,8 +20,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
+const _teamScopeValue = '__team__';
+
 class CompanyListPage extends StatelessWidget {
-  const CompanyListPage({super.key});
+  const CompanyListPage({
+    super.key,
+    this.initialRepresentativeId,
+    this.initialTeamView = false,
+  });
+
+  final String? initialRepresentativeId;
+  final bool initialTeamView;
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +43,12 @@ class CompanyListPage extends StatelessWidget {
     final session = authState.session;
 
     return BlocProvider(
-      create: (context) =>
-          getIt<CompanyManagementCubit>()..loadCompanies(session),
+      create: (context) => getIt<CompanyManagementCubit>()
+        ..loadCompanies(
+          session,
+          targetRepresentativeId: initialRepresentativeId,
+          teamView: initialTeamView,
+        ),
       child: BlocConsumer<CompanyManagementCubit, CompanyManagementState>(
         listener: (context, state) {
           if (state is CompanyManagementSuccess) {
@@ -71,9 +86,13 @@ class CompanyListPage extends StatelessWidget {
                 final targetRepId = state is CompanyManagementLoaded
                     ? state.selectedRepresentativeId
                     : null;
+                final teamView = state is CompanyManagementLoaded
+                    ? state.isTeamView
+                    : false;
                 return context.read<CompanyManagementCubit>().loadCompanies(
                   session,
                   targetRepresentativeId: targetRepId,
+                  teamView: teamView,
                 );
               },
               child: state is CompanyManagementLoading
@@ -97,20 +116,25 @@ class CompanyListPage extends StatelessWidget {
   Widget _buildContent(
     BuildContext context,
     CompanyManagementState state,
-    dynamic session,
+    UserSession session,
     ThemeData theme,
     ColorScheme colorScheme,
   ) {
     List<Company> companies = [];
-    List<dynamic> subordinates = [];
+    List<SalesRepresentative> subordinates = [];
     String? selectedRepId;
+    var isTeamView = false;
     if (state is CompanyManagementLoaded) {
       companies = state.companies;
       subordinates = state.subordinates;
       selectedRepId = state.selectedRepresentativeId;
+      isTeamView = state.isTeamView;
     }
 
     final hasSubordinates = session.isSupervisor && subordinates.isNotEmpty;
+    final currentFilterValue = isTeamView
+        ? _teamScopeValue
+        : selectedRepId ?? session.userId.value;
 
     Widget mainContent;
     if (companies.isEmpty) {
@@ -314,16 +338,20 @@ class CompanyListPage extends StatelessWidget {
                           DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               isExpanded: true,
-                              value: selectedRepId,
+                              value: currentFilterValue,
                               items: [
                                 DropdownMenuItem(
-                                  value: session.userId.value,
+                                  value: _teamScopeValue,
                                   child: const Text(
-                                    'Minha Carteira (Pessoal)',
+                                    'Toda a Equipe (Consolidado)',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                                ),
+                                DropdownMenuItem(
+                                  value: session.userId.value,
+                                  child: const Text('Minha Carteira (Pessoal)'),
                                 ),
                                 ...subordinates.map(
                                   (sub) => DropdownMenuItem(
@@ -333,7 +361,12 @@ class CompanyListPage extends StatelessWidget {
                                 ),
                               ],
                               onChanged: (newRepId) {
-                                if (newRepId != null) {
+                                if (newRepId == null) return;
+                                if (newRepId == _teamScopeValue) {
+                                  context
+                                      .read<CompanyManagementCubit>()
+                                      .loadCompanies(session, teamView: true);
+                                } else {
                                   context
                                       .read<CompanyManagementCubit>()
                                       .loadCompanies(
@@ -394,7 +427,7 @@ class CompanyListPage extends StatelessWidget {
     );
   }
 
-  void _showRegisterCompanyDialog(BuildContext context, dynamic session) {
+  void _showRegisterCompanyDialog(BuildContext context, UserSession session) {
     final formKey = GlobalKey<FormState>();
     final legalNameCtrl = TextEditingController();
     final tradeNameCtrl = TextEditingController();
@@ -711,7 +744,7 @@ class CompanyListPage extends StatelessWidget {
   void _showAddBuyerDialog(
     BuildContext context,
     Company company,
-    dynamic session,
+    UserSession session,
   ) {
     final formKey = GlobalKey<FormState>();
     final fullNameCtrl = TextEditingController();

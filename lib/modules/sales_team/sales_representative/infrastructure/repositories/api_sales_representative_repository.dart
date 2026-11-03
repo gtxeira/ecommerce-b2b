@@ -104,11 +104,16 @@ class ApiSalesRepresentativeRepository
   }
 
   @override
-  Future<List<Commission>> getCommissions({String? representativeId}) async {
+  Future<List<Commission>> getCommissions({
+    String? representativeId,
+    bool teamScope = false,
+  }) async {
     final data = await _api.get(
       '/api/me/commissions',
       query: {
-        if (representativeId != null && representativeId.isNotEmpty)
+        if (teamScope)
+          'scope': 'team'
+        else if (representativeId != null && representativeId.isNotEmpty)
           'representativeId': representativeId,
       },
     );
@@ -122,6 +127,9 @@ class ApiSalesRepresentativeRepository
         amount: Money.create(readDouble(json, 'amount')).getOrThrow(),
         status: _commissionStatusFromApi(readString(json, 'status')),
         orderId: readNullableString(json, 'orderId'),
+        createdAt: readDate(json, 'createdAt'),
+        representativeId: readNullableString(json, 'representativeId'),
+        representativeName: readNullableString(json, 'representativeName'),
       );
     }).toList();
   }
@@ -129,18 +137,25 @@ class ApiSalesRepresentativeRepository
   @override
   Future<List<CustomerAssignment>> getPortfolio({
     String? representativeId,
+    bool teamScope = false,
   }) async {
     final data = await _api.get(
       '/api/me/portfolio',
       query: {
-        if (representativeId != null && representativeId.isNotEmpty)
+        if (teamScope)
+          'scope': 'team'
+        else if (representativeId != null && representativeId.isNotEmpty)
           'representativeId': representativeId,
       },
     );
     if (data is! List) return const [];
     return data.whereType<Map>().map((raw) {
       final json = Map<String, dynamic>.from(raw);
-      return CustomerAssignment(CompanyId(readString(json, 'companyId')));
+      return CustomerAssignment(
+        CompanyId(readString(json, 'companyId')),
+        representativeId: readNullableString(json, 'representativeId'),
+        representativeName: readNullableString(json, 'representativeName'),
+      );
     }).toList();
   }
 
