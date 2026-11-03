@@ -73,21 +73,6 @@ abstract class AppTheme {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         ),
       ),
-      navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: colorScheme.surface,
-        selectedIconTheme: IconThemeData(
-          color: colorScheme.onSecondaryContainer,
-        ),
-        unselectedIconTheme: IconThemeData(color: colorScheme.onSurfaceVariant),
-        selectedLabelTextStyle: TextStyle(
-          color: colorScheme.onSecondaryContainer,
-          fontWeight: FontWeight.bold,
-        ),
-        unselectedLabelTextStyle: TextStyle(
-          color: colorScheme.onSurfaceVariant,
-        ),
-        indicatorColor: colorScheme.secondaryContainer,
-      ),
     );
   }
 
@@ -151,21 +136,6 @@ abstract class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         ),
-      ),
-      navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: colorScheme.surface,
-        selectedIconTheme: IconThemeData(
-          color: colorScheme.onSecondaryContainer,
-        ),
-        unselectedIconTheme: IconThemeData(color: colorScheme.onSurfaceVariant),
-        selectedLabelTextStyle: TextStyle(
-          color: colorScheme.onSecondaryContainer,
-          fontWeight: FontWeight.bold,
-        ),
-        unselectedLabelTextStyle: TextStyle(
-          color: colorScheme.onSurfaceVariant,
-        ),
-        indicatorColor: colorScheme.secondaryContainer,
       ),
     );
   }
