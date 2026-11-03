@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
 import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
+import 'package:ecommerce_b2b/app/core/routes/quote_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/layouts/main_layout.dart';
 import 'package:ecommerce_b2b/app/presentation/pages/home_page.dart';
 import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
@@ -10,6 +11,7 @@ import 'package:ecommerce_b2b/modules/identity_access/presentation/pages/login_p
 import 'package:ecommerce_b2b/modules/identity_access/presentation/pages/users_page.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_catalog_page.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_home_page.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_quotes_page.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/pages/representative_home_page.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
@@ -151,6 +153,11 @@ final appRouter = GoRouter(
           path: '/buyer-catalog',
           builder: (context, state) => const BuyerCatalogPage(),
         ),
+        GoRoute(
+          path: QuoteRoutes.buyerList,
+          redirect: _nonBuyerGuard,
+          builder: (context, state) => const BuyerQuotesPage(),
+        ),
       ],
     ),
   ],
@@ -162,6 +169,16 @@ String? _buyerGuard(BuildContext context, GoRouterState state) {
   final authState = context.read<AuthCubit>().state;
   if (authState is AuthAuthenticated &&
       authState.session.role == UserRole.buyer) {
+    return AppPage.home.path;
+  }
+  return null;
+}
+
+/// "Meus orçamentos" é a visão do comprador; os demais papéis usam /quotes.
+String? _nonBuyerGuard(BuildContext context, GoRouterState state) {
+  final authState = context.read<AuthCubit>().state;
+  if (authState is AuthAuthenticated &&
+      authState.session.role != UserRole.buyer) {
     return AppPage.home.path;
   }
   return null;

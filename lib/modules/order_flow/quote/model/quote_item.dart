@@ -15,6 +15,15 @@ class QuoteItem {
   /// SKU do produto, resolvido pela API na leitura.
   final String? productSku;
 
+  /// Variante escolhida. Nula em itens de nível de produto ou antigos.
+  final String? variantId;
+
+  /// SKU da variante, resolvido pela API na leitura.
+  final String? variantSku;
+
+  /// Cor/tamanho/voltagem da variante, resolvida pela API.
+  final String? variantLabel;
+
   final Quantity quantity;
   final Money unitPrice;
 
@@ -29,6 +38,9 @@ class QuoteItem {
     required this.productId,
     this.productName,
     this.productSku,
+    this.variantId,
+    this.variantSku,
+    this.variantLabel,
     required this.quantity,
     required this.unitPrice,
     this.priceTableId,
@@ -48,6 +60,9 @@ class QuoteItem {
           productId == other.productId &&
           productName == other.productName &&
           productSku == other.productSku &&
+          variantId == other.variantId &&
+          variantSku == other.variantSku &&
+          variantLabel == other.variantLabel &&
           quantity == other.quantity &&
           unitPrice == other.unitPrice &&
           priceTableId == other.priceTableId &&
@@ -58,6 +73,9 @@ class QuoteItem {
       productId.hashCode ^
       productName.hashCode ^
       productSku.hashCode ^
+      variantId.hashCode ^
+      variantSku.hashCode ^
+      variantLabel.hashCode ^
       quantity.hashCode ^
       unitPrice.hashCode ^
       priceTableId.hashCode ^

@@ -107,6 +107,9 @@ class NextPriceTier {
 @immutable
 class PricingPreview {
   final String productId;
+
+  /// Variante simulada. Nula quando o preço é de nível de produto.
+  final String? variantId;
   final int quantity;
   final Money unitPrice;
   final Money referenceUnitPrice;
@@ -117,6 +120,7 @@ class PricingPreview {
 
   const PricingPreview({
     required this.productId,
+    this.variantId,
     required this.quantity,
     required this.unitPrice,
     required this.referenceUnitPrice,
@@ -128,6 +132,7 @@ class PricingPreview {
 
   factory PricingPreview.fromJson(Map<String, dynamic> json) => PricingPreview(
     productId: readString(json, 'productId'),
+    variantId: readNullableString(json, 'variantId'),
     quantity: readInt(json, 'quantity'),
     unitPrice: Money.create(readDouble(json, 'unitPrice')).getOrThrow(),
     referenceUnitPrice: Money.create(

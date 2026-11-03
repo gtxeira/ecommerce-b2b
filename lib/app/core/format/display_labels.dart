@@ -23,16 +23,29 @@ String companyLabel({
   return '$name · ${formatId(id)}';
 }
 
-/// `Nome (SKU) · #id`.
-String productLabel({String? name, String? sku, required String id}) {
+/// `Nome (SKU) · Variante · #id`.
+///
+/// Quando o item cita uma variante, o SKU exibido é o dela e o rótulo
+/// (cor/tamanho/voltagem) entra antes do ID.
+String productLabel({
+  String? name,
+  String? sku,
+  String? variantLabel,
+  String? variantSku,
+  required String id,
+}) {
   final productName = (name ?? '').trim();
-  final productSku = (sku ?? '').trim();
+  final selectedSku = (variantSku ?? '').trim().isNotEmpty
+      ? variantSku!.trim()
+      : (sku ?? '').trim();
   final label = productName.isEmpty
       ? 'Produto não encontrado'
-      : productSku.isEmpty
+      : selectedSku.isEmpty
       ? productName
-      : '$productName ($productSku)';
-  return '$label · ${formatId(id)}';
+      : '$productName ($selectedSku)';
+  final variant = (variantLabel ?? '').trim();
+  final withVariant = variant.isEmpty ? label : '$label · $variant';
+  return '$withVariant · ${formatId(id)}';
 }
 
 /// `Nome (Papel) · #id`.

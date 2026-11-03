@@ -13,6 +13,11 @@ class OrderItem {
   final String? productName;
   final String? productSku;
 
+  /// Variante pedida. Nula em itens de nível de produto ou antigos.
+  final String? variantId;
+  final String? variantSku;
+  final String? variantLabel;
+
   final Quantity quantity;
   final Money unitPriceSnapshot;
 
@@ -24,6 +29,9 @@ class OrderItem {
     required this.productId,
     this.productName,
     this.productSku,
+    this.variantId,
+    this.variantSku,
+    this.variantLabel,
     required this.quantity,
     required this.unitPriceSnapshot,
     this.pricing,
@@ -42,6 +50,9 @@ class OrderItem {
           productId == other.productId &&
           productName == other.productName &&
           productSku == other.productSku &&
+          variantId == other.variantId &&
+          variantSku == other.variantSku &&
+          variantLabel == other.variantLabel &&
           quantity == other.quantity &&
           unitPriceSnapshot == other.unitPriceSnapshot &&
           pricing == other.pricing;
@@ -51,6 +62,9 @@ class OrderItem {
       productId.hashCode ^
       productName.hashCode ^
       productSku.hashCode ^
+      variantId.hashCode ^
+      variantSku.hashCode ^
+      variantLabel.hashCode ^
       quantity.hashCode ^
       unitPriceSnapshot.hashCode ^
       pricing.hashCode;

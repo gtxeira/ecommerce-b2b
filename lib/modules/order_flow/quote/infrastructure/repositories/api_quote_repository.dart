@@ -58,6 +58,12 @@ class ApiQuoteRepository implements QuoteRepository {
     return _mapList(data);
   }
 
+  @override
+  Future<List<Quote>> findByCompanyId(String companyId) async {
+    final data = await _api.get('/api/quotes', query: {'companyId': companyId});
+    return _mapList(data);
+  }
+
   List<Quote> _mapList(dynamic data) {
     if (data is! List) return const [];
     return data
@@ -73,8 +79,11 @@ class ApiQuoteRepository implements QuoteRepository {
         .map(
           (item) => {
             'productId': item.productId.value,
+            if (item.variantId != null && item.variantId!.isNotEmpty)
+              'variantId': item.variantId,
             'quantity': item.quantity.value,
-            'priceTableId': item.priceTableId,
+            if (item.priceTableId != null && item.priceTableId!.isNotEmpty)
+              'priceTableId': item.priceTableId,
           },
         )
         .toList(),
@@ -97,6 +106,9 @@ class ApiQuoteRepository implements QuoteRepository {
             productId: ProductId(readString(item, 'productId')),
             productName: readNullableString(item, 'productName'),
             productSku: readNullableString(item, 'productSku'),
+            variantId: readNullableString(item, 'variantId'),
+            variantSku: readNullableString(item, 'variantSku'),
+            variantLabel: readNullableString(item, 'variantLabel'),
             quantity: Quantity.create(readInt(item, 'quantity')).getOrThrow(),
             unitPrice: Money.create(readDouble(item, 'unitPrice')).getOrThrow(),
             pricing: item['pricing'] is Map

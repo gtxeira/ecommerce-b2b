@@ -7,7 +7,8 @@ abstract class PricingRepository {
     required String companyId,
     required String productId,
     required int quantity,
-    required String priceTableId,
+    String? priceTableId,
+    String? variantId,
   });
 
   /// Faixas de desconto elegíveis para a empresa (UF) da sessão/consulta.

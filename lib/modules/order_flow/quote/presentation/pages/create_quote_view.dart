@@ -7,6 +7,7 @@ import 'package:ecommerce_b2b/modules/catalog/price_table/model/pricing_preview.
 import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/price_table_repository.dart';
 import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/pricing_repository.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product_variant.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
@@ -69,11 +70,19 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
     });
   }
 
-  void _addItem(Product product, int quantity, PricingPreview preview) {
+  void _addItem(
+    Product product,
+    ProductVariant? variant,
+    int quantity,
+    PricingPreview preview,
+  ) {
     setState(() {
       _items.add(
         QuoteItem(
           productId: product.id,
+          variantId: variant?.id.value,
+          variantSku: variant?.variantSku,
+          variantLabel: variant?.label,
           quantity: Quantity.create(quantity).getOrThrow(),
           unitPrice: preview.unitPrice,
           priceTableId: _selectedPriceTable?.id.value,
@@ -99,11 +108,15 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
           productId: item.productId.value,
           quantity: item.quantity.value,
           priceTableId: table.id.value,
+          variantId: item.variantId,
         );
 
         repriced.add(
           QuoteItem(
             productId: item.productId,
+            variantId: item.variantId,
+            variantSku: item.variantSku,
+            variantLabel: item.variantLabel,
             quantity: item.quantity,
             unitPrice: preview.unitPrice,
             priceTableId: table.id.value,
@@ -357,6 +370,12 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  if (item.variantLabel != null &&
+                                      item.variantLabel!.isNotEmpty)
+                                    Text(
+                                      'Variação: ${item.variantLabel}'
+                                      '${item.variantSku == null ? '' : ' • ${item.variantSku}'}',
+                                    ),
                                   Text(
                                     'Qtd: ${item.quantity.value} • Unitário: ${item.unitPrice.formatted} • Total: ${item.subtotal.formatted}',
                                   ),
@@ -409,7 +428,7 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
       ),
     ).then((draft) {
       if (draft != null) {
-        _addItem(draft.product, draft.quantity, draft.preview);
+        _addItem(draft.product, draft.variant, draft.quantity, draft.preview);
       }
     });
   }
@@ -417,11 +436,13 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
 
 class _QuoteItemDraft {
   final Product product;
+  final ProductVariant? variant;
   final int quantity;
   final PricingPreview preview;
 
   const _QuoteItemDraft({
     required this.product,
+    required this.variant,
     required this.quantity,
     required this.preview,
   });
@@ -447,11 +468,13 @@ class _AddQuoteItemDialog extends StatefulWidget {
 class _AddQuoteItemDialogState extends State<_AddQuoteItemDialog> {
   final _quantityController = TextEditingController(text: '1');
   Product? _product;
+  ProductVariant? _variant;
   int _quantity = 1;
   PricingPreview? _preview;
   bool _loading = false;
   String? _error;
   Timer? _debounce;
+  int _previewRequest = 0;
 
   @override
   void dispose() {
@@ -472,10 +495,13 @@ class _AddQuoteItemDialogState extends State<_AddQuoteItemDialog> {
       return;
     }
 
-    _debounce = Timer(const Duration(milliseconds: 300), _loadPreview);
+    _debounce = Timer(
+      const Duration(milliseconds: 300),
+      () => _loadPreview(++_previewRequest),
+    );
   }
 
-  Future<void> _loadPreview() async {
+  Future<void> _loadPreview(int request) async {
     final product = _product;
     if (product == null || _quantity < 1) return;
 
@@ -490,15 +516,16 @@ class _AddQuoteItemDialogState extends State<_AddQuoteItemDialog> {
         productId: product.id.value,
         quantity: _quantity,
         priceTableId: widget.priceTable.id.value,
+        variantId: _variant?.id.value,
       );
 
-      if (!mounted) return;
+      if (!mounted || request != _previewRequest) return;
       setState(() {
         _preview = preview;
         _loading = false;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || request != _previewRequest) return;
       setState(() {
         _preview = null;
         _error = 'Não foi possível simular o preço: $error';
@@ -541,7 +568,12 @@ class _AddQuoteItemDialogState extends State<_AddQuoteItemDialog> {
                 ),
                 hint: const Text('Selecione um produto'),
                 onChanged: (product) {
-                  setState(() => _product = product);
+                  setState(() {
+                    _product = product;
+                    _variant = product != null && product.variants.isNotEmpty
+                        ? product.variants.first
+                        : null;
+                  });
                   _schedulePreview();
                 },
                 items: widget.products
@@ -553,6 +585,31 @@ class _AddQuoteItemDialogState extends State<_AddQuoteItemDialog> {
                     )
                     .toList(),
               ),
+              if (_product != null && _product!.variants.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                DropdownButtonFormField<ProductVariant>(
+                  initialValue: _variant,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Variação *',
+                    prefixIcon: Icon(Icons.tune_rounded),
+                  ),
+                  items: _product!.variants
+                      .map(
+                        (variant) => DropdownMenuItem(
+                          value: variant,
+                          child: Text(
+                            '${variant.label} • ${variant.variantSku}',
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (variant) {
+                    setState(() => _variant = variant);
+                    _schedulePreview();
+                  },
+                ),
+              ],
               const SizedBox(height: 16),
               TextField(
                 controller: _quantityController,
@@ -604,6 +661,7 @@ class _AddQuoteItemDialogState extends State<_AddQuoteItemDialog> {
                   context,
                   _QuoteItemDraft(
                     product: _product!,
+                    variant: _variant,
                     quantity: _quantity,
                     preview: preview,
                   ),

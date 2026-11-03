@@ -105,6 +105,9 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
               productId: ProductId(readString(item, 'productId')),
               productName: readNullableString(item, 'productName'),
               productSku: readNullableString(item, 'productSku'),
+              variantId: readNullableString(item, 'variantId'),
+              variantSku: readNullableString(item, 'variantSku'),
+              variantLabel: readNullableString(item, 'variantLabel'),
               quantity: Quantity.create(readInt(item, 'quantity')).getOrThrow(),
               unitPriceSnapshot: Money.create(
                 readDouble(item, 'unitPrice'),

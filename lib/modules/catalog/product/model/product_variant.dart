@@ -24,4 +24,11 @@ class ProductVariant extends Entity<ProductVariantId> {
     this.sameAsParent = true,
     this.weight,
   }) : super(id);
+
+  /// `Cinza · 15pol · Bivolt`, ignorando campos vazios.
+  String get label => [
+    if (color.isNotEmpty) color,
+    if (size.isNotEmpty) size,
+    if (voltage.isNotEmpty) voltage,
+  ].join(' · ');
 }

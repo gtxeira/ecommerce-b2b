@@ -101,7 +101,7 @@ class OrderDetailsContent extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      '${item.quantity.value}x ${productLabel(name: item.productName, sku: item.productSku, id: item.productId.value)}',
+                      '${item.quantity.value}x ${productLabel(name: item.productName, sku: item.productSku, variantLabel: item.variantLabel, variantSku: item.variantSku, id: item.productId.value)}',
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),

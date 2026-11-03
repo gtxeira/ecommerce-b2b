@@ -1,8 +1,10 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
+import 'package:ecommerce_b2b/app/core/routes/quote_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/user_profile_dropdown.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/boleto/model/value_objects/boleto_copy.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/cubit/customer_portal_cubit.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/presentation/widgets/buyer_summary_card.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/enums/rma_status.dart';
 import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
@@ -213,22 +215,29 @@ class BuyerHomePage extends StatelessWidget {
                         padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
                         child: Row(
                           children: [
-                            _buildSummaryCard(
-                              context,
-                              'Pedidos Ativos',
-                              '${activeOrders.length} ativos',
-                              Icons.shopping_cart_outlined,
-                              colorScheme.primaryContainer,
-                              colorScheme.onPrimaryContainer,
+                            BuyerSummaryCard(
+                              title: 'Pedidos Ativos',
+                              value: '${activeOrders.length} ativos',
+                              icon: Icons.shopping_cart_outlined,
+                              backgroundColor: colorScheme.primaryContainer,
+                              foregroundColor: colorScheme.onPrimaryContainer,
+                              onTap: () => _showAllOrdersPage(
+                                context,
+                                activeOrders,
+                                title: 'Pedidos Ativos',
+                              ),
                             ),
                             const SizedBox(width: 12),
-                            _buildSummaryCard(
-                              context,
-                              'Financeiro',
-                              '${pendingBoletos.length} boletos',
-                              Icons.account_balance_wallet_outlined,
-                              colorScheme.secondaryContainer,
-                              colorScheme.onSecondaryContainer,
+                            BuyerSummaryCard(
+                              title: 'Financeiro',
+                              value: '${pendingBoletos.length} boletos',
+                              icon: Icons.account_balance_wallet_outlined,
+                              backgroundColor: colorScheme.secondaryContainer,
+                              foregroundColor: colorScheme.onSecondaryContainer,
+                              onTap: () => _showAllBoletosBottomSheet(
+                                context,
+                                pendingBoletos,
+                              ),
                             ),
                           ],
                         ),
@@ -298,6 +307,14 @@ class BuyerHomePage extends StatelessWidget {
                               colorScheme.surfaceContainerHigh,
                               colorScheme.onSurface,
                               () => context.push('/buyer-catalog'),
+                            ),
+                            _buildActionButton(
+                              context,
+                              'Meus Orçamentos',
+                              Icons.receipt_long_rounded,
+                              colorScheme.surfaceContainerHigh,
+                              colorScheme.onSurface,
+                              () => context.push(QuoteRoutes.buyerList),
                             ),
                           ],
                         ),
@@ -520,48 +537,6 @@ class BuyerHomePage extends StatelessWidget {
   }
 
   // --- Widgets Auxiliares ---
-
-  Widget _buildSummaryCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-    Color backgroundColor,
-    Color foregroundColor,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: foregroundColor, size: 28),
-            const SizedBox(height: 16),
-            Text(
-              value,
-              style: TextStyle(
-                color: foregroundColor,
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            Text(
-              title,
-              style: TextStyle(
-                color: foregroundColor.withValues(alpha: 0.7),
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildActionButton(
     BuildContext context,
@@ -988,7 +963,11 @@ class BuyerHomePage extends StatelessWidget {
     );
   }
 
-  void _showAllOrdersPage(BuildContext context, List<SalesOrder> orders) {
+  void _showAllOrdersPage(
+    BuildContext context,
+    List<SalesOrder> orders, {
+    String title = 'Histórico Completo de Pedidos',
+  }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -1016,7 +995,7 @@ class BuyerHomePage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Histórico Completo de Pedidos',
+              title,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -1024,52 +1003,58 @@ class BuyerHomePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.builder(
-                itemCount: orders.length,
-                itemBuilder: (listContext, index) {
-                  final order = orders[index];
-                  final orderStatusLabel = order.status.label;
-                  final statusColor = orderStatusColor(
-                    order.status,
-                    colorScheme,
-                  );
+              child: orders.isEmpty
+                  ? const Center(child: Text('Nenhum pedido encontrado.'))
+                  : ListView.builder(
+                      itemCount: orders.length,
+                      itemBuilder: (listContext, index) {
+                        final order = orders[index];
+                        final orderStatusLabel = order.status.label;
+                        final statusColor = orderStatusColor(
+                          order.status,
+                          colorScheme,
+                        );
 
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    color: colorScheme.surfaceContainerLow,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      leading: CircleAvatar(
-                        backgroundColor: statusColor.withValues(alpha: 0.15),
-                        child: Icon(
-                          orderStatusIcon(order.status),
-                          color: statusColor,
-                        ),
-                      ),
-                      title: Text(
-                        'Pedido #${order.id.displayCode}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        [
-                          'Status: $orderStatusLabel',
-                          'Total: ${order.total.toString()}',
-                          if (order.companyId != null)
-                            'Empresa: ${companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',
-                        ].join('\n'),
-                      ),
-                      isThreeLine: true,
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () {
-                        showOrderDetailsSheet(context, order);
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          color: colorScheme.surfaceContainerLow,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: CircleAvatar(
+                              backgroundColor: statusColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              child: Icon(
+                                orderStatusIcon(order.status),
+                                color: statusColor,
+                              ),
+                            ),
+                            title: Text(
+                              'Pedido #${order.id.displayCode}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              [
+                                'Status: $orderStatusLabel',
+                                'Total: ${order.total.toString()}',
+                                if (order.companyId != null)
+                                  'Empresa: ${companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',
+                              ].join('\n'),
+                            ),
+                            isThreeLine: true,
+                            trailing: const Icon(Icons.chevron_right_rounded),
+                            onTap: () {
+                              showOrderDetailsSheet(context, order);
+                            },
+                          ),
+                        );
                       },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),

@@ -17,8 +17,11 @@ class QuoteCubit extends Cubit<QuoteState> {
     try {
       // O Admin não é representante: filtrar pelo próprio id devolveria lista vazia.
       // GET /api/quotes sem filtro devolve todos, que é o que o Admin precisa ver.
+      // O comprador vê os orçamentos da própria empresa (a API restringe esse filtro).
       final quotes = session.isAdmin
           ? await _quoteRepository.getAll()
+          : session.isBuyer
+          ? await _quoteRepository.findByCompanyId(session.companyId!.value)
           : await _quoteRepository.findByRepresentativeId(session.userId.value);
       emit(QuoteLoaded(quotes));
     } catch (e) {

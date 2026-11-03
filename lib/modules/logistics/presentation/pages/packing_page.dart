@@ -203,6 +203,8 @@ class _PackingPageState extends State<PackingPage> {
                                   final name = productLabel(
                                     name: item.productName,
                                     sku: item.productSku,
+                                    variantLabel: item.variantLabel,
+                                    variantSku: item.variantSku,
                                     id: item.productId.value,
                                   );
                                   final sources = _getSourceWarehouses(

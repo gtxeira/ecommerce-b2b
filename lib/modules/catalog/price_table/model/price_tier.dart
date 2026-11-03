@@ -9,6 +9,12 @@ class PriceTier {
   final String productId;
   final String? productName;
   final String? productSku;
+
+  /// Variante da regra. Nula quando a faixa vale para o produto inteiro.
+  final String? variantId;
+  final String? variantSku;
+  final String? variantLabel;
+
   final String priceTableId;
   final String priceTableName;
   final String scopeType;
@@ -24,6 +30,9 @@ class PriceTier {
     required this.productId,
     this.productName,
     this.productSku,
+    this.variantId,
+    this.variantSku,
+    this.variantLabel,
     required this.priceTableId,
     required this.priceTableName,
     required this.scopeType,
@@ -40,6 +49,9 @@ class PriceTier {
     productId: readString(json, 'productId'),
     productName: readNullableString(json, 'productName'),
     productSku: readNullableString(json, 'productSku'),
+    variantId: readNullableString(json, 'variantId'),
+    variantSku: readNullableString(json, 'variantSku'),
+    variantLabel: readNullableString(json, 'variantLabel'),
     priceTableId: readString(json, 'priceTableId'),
     priceTableName: readString(json, 'priceTableName'),
     scopeType: readString(json, 'scopeType'),
@@ -67,4 +79,19 @@ class PriceTier {
   String get rangeLabel => maxQuantity >= 9999
       ? 'A partir de $minQuantity un.'
       : 'De $minQuantity a $maxQuantity un.';
+}
+
+/// Faixas que valem para uma variante: as específicas dela quando existem; senão
+/// as de produto (que também se aplicam à variante, pela precedência da API).
+List<PriceTier> applicableTiers(
+  Iterable<PriceTier> tiers, {
+  String? variantId,
+}) {
+  final productTiers = tiers.where((tier) => tier.variantId == null).toList();
+  if (variantId == null) return productTiers;
+
+  final variantTiers = tiers
+      .where((tier) => tier.variantId == variantId)
+      .toList();
+  return variantTiers.isNotEmpty ? variantTiers : productTiers;
 }

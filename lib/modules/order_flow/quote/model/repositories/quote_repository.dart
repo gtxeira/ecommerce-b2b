@@ -11,6 +11,10 @@ abstract class QuoteRepository {
 
   Future<List<Quote>> findByRepresentativeId(String representativeId);
 
+  /// Orçamentos da empresa. O comprador só recebe a própria empresa (a API
+  /// restringe); Admin/financeiro usam para filtro.
+  Future<List<Quote>> findByCompanyId(String companyId);
+
   /// Converte o orçamento em pedido e devolve o pedido criado.
   Future<SalesOrder> convert(QuoteId id, {String? companyId});
 }

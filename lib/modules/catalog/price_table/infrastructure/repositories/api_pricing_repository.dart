@@ -13,7 +13,8 @@ class ApiPricingRepository implements PricingRepository {
     required String companyId,
     required String productId,
     required int quantity,
-    required String priceTableId,
+    String? priceTableId,
+    String? variantId,
   }) async {
     final data = await _api.post(
       '/api/pricing/preview',
@@ -21,7 +22,9 @@ class ApiPricingRepository implements PricingRepository {
         'companyId': companyId,
         'productId': productId,
         'quantity': quantity,
-        'priceTableId': priceTableId,
+        if (priceTableId != null && priceTableId.isNotEmpty)
+          'priceTableId': priceTableId,
+        if (variantId != null && variantId.isNotEmpty) 'variantId': variantId,
       },
     );
 
