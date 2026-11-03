@@ -1,6 +1,7 @@
 import 'package:ecommerce_b2b/app/core/format/date_format.dart';
 import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_block_explanation.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_status_visuals.dart';
 import 'package:flutter/material.dart';
 
@@ -63,7 +64,13 @@ class OrderSummaryTile extends StatelessWidget {
           ].join('\n'),
         ),
         isThreeLine: true,
-        trailing: const Icon(Icons.chevron_right_rounded),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            OrderBlockInfoIcon(order: order),
+            const Icon(Icons.chevron_right_rounded),
+          ],
+        ),
         onTap: onTap,
       ),
     );

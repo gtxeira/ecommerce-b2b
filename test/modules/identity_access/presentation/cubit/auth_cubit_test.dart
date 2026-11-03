@@ -156,5 +156,47 @@ void main() {
       expect(authRepository.logoutCalls, 1);
       await cubit.close();
     });
+
+    test('switchAccount troca a sessão sem emitir Loading', () async {
+      when(
+        () => loginUseCase.execute(any(), any()),
+      ).thenAnswer((_) async => Success(buyerSession));
+      final cubit = buildCubit();
+      await Future<void>.delayed(Duration.zero);
+      final states = <AuthState>[];
+      final subscription = cubit.stream.listen(states.add);
+
+      final error = await cubit.switchAccount('buyer@test.com', 'password123');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(error, isNull);
+      expect(cubit.state, isA<AuthAuthenticated>());
+      expect((cubit.state as AuthAuthenticated).session, buyerSession);
+      expect(states.whereType<AuthLoading>(), isEmpty);
+      await subscription.cancel();
+      await cubit.close();
+    });
+
+    test('switchAccount mantém a sessão atual quando a troca falha', () async {
+      authRepository.session = buyerSession;
+      when(() => loginUseCase.execute(any(), any())).thenAnswer(
+        (_) async => Failure(
+          const AppError(
+            AppErrorCodes.invalidCredentials,
+            'E-mail ou senha inválidos.',
+          ),
+        ),
+      );
+      final cubit = buildCubit();
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state, isA<AuthAuthenticated>());
+
+      final error = await cubit.switchAccount('admin@test.com', 'errada');
+
+      expect(error, 'E-mail ou senha inválidos.');
+      expect(cubit.state, isA<AuthAuthenticated>());
+      expect((cubit.state as AuthAuthenticated).session, buyerSession);
+      await cubit.close();
+    });
   });
 }

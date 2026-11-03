@@ -68,6 +68,8 @@ class MainLayout extends StatelessWidget {
             onDestinationSelected: (index) =>
                 _onDestinationSelected(context, index, visiblePages),
             labelType: NavigationRailLabelType.all,
+            scrollable: true,
+            trailingAtBottom: true,
             leading: Padding(
               padding: const EdgeInsets.symmetric(
                 vertical: 24.0,
@@ -95,33 +97,28 @@ class MainLayout extends StatelessWidget {
                 label: Text(page.label),
               );
             }).toList(),
-            trailing: Expanded(
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 24.0),
-                  child: ValueListenableBuilder<ThemeMode>(
-                    valueListenable: themeNotifier,
-                    builder: (context, currentMode, _) {
-                      final isDark =
-                          currentMode == ThemeMode.dark ||
-                          (currentMode == ThemeMode.system &&
-                              MediaQuery.of(context).platformBrightness ==
-                                  Brightness.dark);
-                      return IconButton(
-                        icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-                        onPressed: () {
-                          themeNotifier.value = isDark
-                              ? ThemeMode.light
-                              : ThemeMode.dark;
-                        },
-                        tooltip: isDark
-                            ? 'Mudar para Tema Claro'
-                            : 'Mudar para Tema Escuro',
-                      );
+            trailing: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: ValueListenableBuilder<ThemeMode>(
+                valueListenable: themeNotifier,
+                builder: (context, currentMode, _) {
+                  final isDark =
+                      currentMode == ThemeMode.dark ||
+                      (currentMode == ThemeMode.system &&
+                          MediaQuery.of(context).platformBrightness ==
+                              Brightness.dark);
+                  return IconButton(
+                    icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                    onPressed: () {
+                      themeNotifier.value = isDark
+                          ? ThemeMode.light
+                          : ThemeMode.dark;
                     },
-                  ),
-                ),
+                    tooltip: isDark
+                        ? 'Mudar para Tema Claro'
+                        : 'Mudar para Tema Escuro',
+                  );
+                },
               ),
             ),
           ),

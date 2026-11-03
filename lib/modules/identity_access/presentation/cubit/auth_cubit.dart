@@ -57,6 +57,24 @@ class AuthCubit extends Cubit<AuthState> {
     if (!isClosed) emit(AuthUnauthenticated());
   }
 
+  /// Troca a conta sem derrubar a sessão atual enquanto o login acontece.
+  ///
+  /// Devolve `null` em caso de sucesso ou a mensagem de erro. Uma falha mantém
+  /// o usuário autenticado na conta anterior.
+  Future<String?> switchAccount(String email, String password) async {
+    try {
+      final result = await _loginUseCase.execute(email, password);
+      if (result.isFailure) {
+        return result.getFailureOrThrow().message;
+      }
+
+      if (!isClosed) emit(AuthAuthenticated(result.getOrThrow()));
+      return null;
+    } catch (error) {
+      return 'Não foi possível trocar de conta: $error';
+    }
+  }
+
   @override
   Future<void> close() async {
     await _expiredSubscription?.cancel();

@@ -70,6 +70,7 @@ import 'package:ecommerce_b2b/modules/customer_management/company/presentation/c
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/cubit/customer_portal_cubit.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/user_management_cubit.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/presentation/cubit/inventory_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/open_orders_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/order_list_cubit.dart';
@@ -260,6 +261,13 @@ Future<void> setupServiceLocator() async {
     () => PriceTableCubit(
       getIt<GetPriceTablesUseCase>(),
       getIt<SavePriceTableUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => InventoryCubit(
+      getIt<InventoryRepository>(),
+      getIt<ProductRepository>(),
     ),
   );
 

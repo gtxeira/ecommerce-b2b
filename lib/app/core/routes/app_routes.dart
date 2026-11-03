@@ -78,18 +78,28 @@ final appRouter = GoRouter(
               return const _SplashPage();
             }
             if (authState is AuthAuthenticated) {
-              if (authState.session.role == UserRole.buyer) {
-                return const BuyerHomePage();
+              final session = authState.session;
+              final homeKey = ValueKey(
+                'home-${session.role.name}-${session.userId.value}-${session.companyId?.value}',
+              );
+              if (session.role == UserRole.buyer) {
+                return KeyedSubtree(key: homeKey, child: const BuyerHomePage());
               }
-              if (authState.session.role == UserRole.representative ||
-                  authState.session.role == UserRole.supervisor) {
-                return const RepresentativeHomePage();
+              if (session.role == UserRole.representative ||
+                  session.role == UserRole.supervisor) {
+                return KeyedSubtree(
+                  key: homeKey,
+                  child: const RepresentativeHomePage(),
+                );
               }
-              if (authState.session.role == UserRole.finance) {
-                return const FinanceHomePage();
+              if (session.role == UserRole.finance) {
+                return KeyedSubtree(
+                  key: homeKey,
+                  child: const FinanceHomePage(),
+                );
               }
-              if (authState.session.role == UserRole.admin) {
-                return const HomePage();
+              if (session.role == UserRole.admin) {
+                return KeyedSubtree(key: homeKey, child: const HomePage());
               }
             }
             return const HomePage();

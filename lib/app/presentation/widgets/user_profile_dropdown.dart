@@ -1,11 +1,14 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
 import 'package:ecommerce_b2b/main.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
 import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
+import 'package:ecommerce_b2b/modules/identity_access/presentation/widgets/account_switcher_dialog.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class UserProfileDropdown extends StatefulWidget {
   final Color? borderColor;
@@ -122,6 +125,32 @@ class _UserProfileDropdownState extends State<UserProfileDropdown> {
               const SizedBox(height: 8),
               const Divider(),
             ],
+          ),
+        ),
+        PopupMenuItem<void>(
+          onTap: () {
+            Future.delayed(Duration.zero, () async {
+              if (!context.mounted) return;
+              // O GoRouter é global: capturamos antes do dialog para conseguir
+              // navegar mesmo se a tela atual for descartada pela troca de papel.
+              final router = GoRouter.of(context);
+              final switched = await showDialog<bool>(
+                context: context,
+                builder: (_) => const AccountSwitcherDialog(),
+              );
+              if (switched == true) {
+                router.go(AppPage.home.path);
+              }
+            });
+          },
+          child: const ListTile(
+            leading: Icon(Icons.swap_horiz_rounded),
+            title: Text(
+              'Trocar de conta',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            contentPadding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
           ),
         ),
         PopupMenuItem<void>(

@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/modules/identity_access/model/demo_account.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -180,6 +181,54 @@ class _LoginPageState extends State<LoginPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Contas de demonstração',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Um clique para entrar com uma conta do seed da API.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  BlocBuilder<AuthCubit, AuthState>(
+                    builder: (context, state) {
+                      final isLoading = state is AuthLoading;
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: DemoAccounts.builtIn.map((account) {
+                          return ActionChip(
+                            avatar: Icon(account.icon, size: 18),
+                            label: Text(
+                              '${account.fullName} · ${account.role.label}',
+                            ),
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    _emailController.text = account.email;
+                                    _passwordController.text =
+                                        DemoAccounts.password;
+                                    context.read<AuthCubit>().login(
+                                      account.email,
+                                      DemoAccounts.password,
+                                    );
+                                  },
+                          );
+                        }).toList(),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -1,7 +1,9 @@
 import 'package:ecommerce_b2b/app/core/format/date_format.dart';
 import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/discount_badge.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_block_explanation.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_status_visuals.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
 import 'package:flutter/material.dart';
@@ -48,7 +50,16 @@ class OrderDetailsContent extends StatelessWidget {
           runSpacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            OrderStatusChip(status: order.status),
+            OrderBlockExplanationTrigger(
+              order: order,
+              showInfoIcon: false,
+              child: OrderStatusChip(
+                status: order.status,
+                showInfoIcon:
+                    order.status == OrderStatus.blockedByFinance ||
+                    order.status == OrderStatus.awaitingInfo,
+              ),
+            ),
             Text(
               'Crédito: ${order.creditStatus.label}',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -57,6 +68,10 @@ class OrderDetailsContent extends StatelessWidget {
             ),
           ],
         ),
+        if (OrderBlockExplanation.fromOrder(order) != null) ...[
+          const SizedBox(height: 12),
+          OrderBlockExplanationCard(order: order),
+        ],
         const SizedBox(height: 8),
         Text(
           'Empresa: ${order.companyId == null ? '-' : companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',

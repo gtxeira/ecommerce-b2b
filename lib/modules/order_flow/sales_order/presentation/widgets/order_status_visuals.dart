@@ -34,9 +34,18 @@ IconData orderStatusIcon(OrderStatus status) {
 
 /// Selo compacto com o status do pedido.
 class OrderStatusChip extends StatelessWidget {
-  const OrderStatusChip({super.key, required this.status});
+  const OrderStatusChip({
+    super.key,
+    required this.status,
+    this.showInfoIcon = false,
+  });
 
   final OrderStatus status;
+
+  /// Mostra o ícone de informação quando o status tem uma explicação associada
+  /// (bloqueio/aguardando informações). Quem envolve o chip no trigger define o
+  /// comportamento de clique.
+  final bool showInfoIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -48,13 +57,22 @@ class OrderStatusChip extends StatelessWidget {
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(
-        status.label,
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            status.label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (showInfoIcon) ...[
+            const SizedBox(width: 4),
+            Icon(Icons.info_outline_rounded, size: 13, color: color),
+          ],
+        ],
       ),
     );
   }

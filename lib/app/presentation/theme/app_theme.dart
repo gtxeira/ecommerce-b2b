@@ -34,6 +34,7 @@ abstract class AppTheme {
         color: colorScheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         margin: const EdgeInsets.all(8),
+        clipBehavior: Clip.antiAlias,
       ),
       dialogTheme: const DialogThemeData(
         constraints: BoxConstraints(
@@ -56,23 +57,35 @@ abstract class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         ),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: colorScheme.surface,
-        selectedIconTheme: IconThemeData(color: colorScheme.onSecondaryContainer),
+        selectedIconTheme: IconThemeData(
+          color: colorScheme.onSecondaryContainer,
+        ),
         unselectedIconTheme: IconThemeData(color: colorScheme.onSurfaceVariant),
-        selectedLabelTextStyle: TextStyle(color: colorScheme.onSecondaryContainer, fontWeight: FontWeight.bold),
-        unselectedLabelTextStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+        selectedLabelTextStyle: TextStyle(
+          color: colorScheme.onSecondaryContainer,
+          fontWeight: FontWeight.bold,
+        ),
+        unselectedLabelTextStyle: TextStyle(
+          color: colorScheme.onSurfaceVariant,
+        ),
         indicatorColor: colorScheme.secondaryContainer,
       ),
     );
@@ -100,6 +113,7 @@ abstract class AppTheme {
         color: colorScheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         margin: const EdgeInsets.all(8),
+        clipBehavior: Clip.antiAlias,
       ),
       dialogTheme: const DialogThemeData(
         constraints: BoxConstraints(
@@ -122,23 +136,35 @@ abstract class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         ),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: colorScheme.surface,
-        selectedIconTheme: IconThemeData(color: colorScheme.onSecondaryContainer),
+        selectedIconTheme: IconThemeData(
+          color: colorScheme.onSecondaryContainer,
+        ),
         unselectedIconTheme: IconThemeData(color: colorScheme.onSurfaceVariant),
-        selectedLabelTextStyle: TextStyle(color: colorScheme.onSecondaryContainer, fontWeight: FontWeight.bold),
-        unselectedLabelTextStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+        selectedLabelTextStyle: TextStyle(
+          color: colorScheme.onSecondaryContainer,
+          fontWeight: FontWeight.bold,
+        ),
+        unselectedLabelTextStyle: TextStyle(
+          color: colorScheme.onSurfaceVariant,
+        ),
         indicatorColor: colorScheme.secondaryContainer,
       ),
     );

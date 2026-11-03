@@ -10,6 +10,7 @@ import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_block_explanation.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_details_content.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_status_visuals.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
@@ -405,8 +406,12 @@ class BuyerHomePage extends StatelessWidget {
                                   ].join('\n'),
                                 ),
                                 isThreeLine: true,
-                                trailing: const Icon(
-                                  Icons.chevron_right_rounded,
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    OrderBlockInfoIcon(order: order),
+                                    const Icon(Icons.chevron_right_rounded),
+                                  ],
                                 ),
                                 onTap: () =>
                                     showOrderDetailsSheet(context, order),
@@ -766,20 +771,34 @@ class BuyerHomePage extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 4),
                                     Text('Total: ${order.total.toString()}'),
-                                    Text(
-                                      order.status ==
-                                              OrderStatus.blockedByFinance
-                                          ? 'Bloqueado no Financeiro'
-                                          : 'Aguardando Aprovação',
-                                      style: TextStyle(
-                                        color:
-                                            order.status ==
-                                                OrderStatus.blockedByFinance
-                                            ? colorScheme.error
-                                            : colorScheme.secondary,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          order.status ==
+                                                  OrderStatus.blockedByFinance
+                                              ? 'Bloqueado no Financeiro'
+                                              : 'Aguardando Aprovação',
+                                          style: TextStyle(
+                                            color:
+                                                order.status ==
+                                                    OrderStatus.blockedByFinance
+                                                ? colorScheme.error
+                                                : colorScheme.secondary,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        OrderBlockInfoIcon(
+                                          order: order,
+                                          size: 16,
+                                          color:
+                                              order.status ==
+                                                  OrderStatus.blockedByFinance
+                                              ? colorScheme.error
+                                              : colorScheme.secondary,
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -1047,7 +1066,13 @@ class BuyerHomePage extends StatelessWidget {
                               ].join('\n'),
                             ),
                             isThreeLine: true,
-                            trailing: const Icon(Icons.chevron_right_rounded),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                OrderBlockInfoIcon(order: order),
+                                const Icon(Icons.chevron_right_rounded),
+                              ],
+                            ),
                             onTap: () {
                               showOrderDetailsSheet(context, order);
                             },

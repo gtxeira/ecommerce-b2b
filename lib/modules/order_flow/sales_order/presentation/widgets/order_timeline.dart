@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/format/date_format.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/enums/finance_decision.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/order_timeline_entry.dart';
 import 'package:flutter/material.dart';
@@ -114,6 +115,15 @@ class _TimelineRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final color = _color(colorScheme);
+    final derivedBlockNote =
+        entry.toStatus == OrderStatus.blockedByFinance &&
+            (entry.note == null || entry.note!.trim().isEmpty)
+        ? 'Bloqueio automático por análise de crédito; aguardando revisão do Financeiro.'
+        : null;
+    final details = [
+      entry.details,
+      ?derivedBlockNote,
+    ].where((value) => value.isNotEmpty).join(' · ');
 
     return IntrinsicHeight(
       child: Row(
@@ -155,13 +165,10 @@ class _TimelineRow extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (entry.details.isNotEmpty)
+                  if (details.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        entry.details,
-                        style: theme.textTheme.bodySmall,
-                      ),
+                      child: Text(details, style: theme.textTheme.bodySmall),
                     ),
                   const SizedBox(height: 2),
                   Text(
