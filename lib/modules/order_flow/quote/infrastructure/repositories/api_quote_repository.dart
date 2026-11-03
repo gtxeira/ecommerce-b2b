@@ -1,5 +1,6 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/pricing_explanation.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/enums/quote_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote_item.dart';
@@ -79,6 +80,11 @@ class ApiQuoteRepository implements QuoteRepository {
             productId: ProductId(readString(item, 'productId')),
             quantity: Quantity.create(readInt(item, 'quantity')).getOrThrow(),
             unitPrice: Money.create(readDouble(item, 'unitPrice')).getOrThrow(),
+            pricing: item['pricing'] is Map
+                ? PricingExplanation.fromJson(
+                    Map<String, dynamic>.from(item['pricing'] as Map),
+                  )
+                : null,
           ),
         )
         .toList(),

@@ -132,6 +132,20 @@ Os VOs do cliente (`Cnpj`, `EmailAddress`, `Money`, ...) continuam validando par
 imediato no formulário, mas **não são a fonte da verdade**: os códigos de erro são os mesmos da
 API e qualquer regra que divirja é considerada bug do cliente.
 
+### Preços e descontos
+
+O cliente não replica a precedência de tabela/variante/UF. A API expõe
+`POST /api/pricing/preview` (preço aplicado, desconto, regra e próxima faixa) e
+`GET /api/catalog/price-tiers` (faixas elegíveis para a empresa). O Flutter usa esses dados para:
+
+- simular a quantidade no catálogo do comprador e mostrar “faltam X un. para R$ Y/un.”;
+- exibir o selo de desconto (`DiscountBadge`) com tooltip/bottom sheet explicando tabela, faixa,
+  UF, preço de catálogo e economia;
+- mostrar o mesmo motivo no detalhe do pedido/orçamento, a partir do snapshot congelado no item.
+
+O botão “Solicitar orçamento” do catálogo cria um orçamento `Sent` com a quantidade simulada; a
+API recalcula o preço e grava o snapshot no item.
+
 ---
 
 ## Divisão dos módulos

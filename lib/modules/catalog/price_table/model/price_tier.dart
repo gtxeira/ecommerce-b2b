@@ -1,0 +1,70 @@
+import 'package:ecommerce_b2b/app/core/network/json_read.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:flutter/foundation.dart';
+
+/// Faixa de desconto elegível para a UF da empresa.
+@immutable
+class PriceTier {
+  final String productId;
+  final String? productName;
+  final String? productSku;
+  final String priceTableId;
+  final String priceTableName;
+  final String scopeType;
+  final int minQuantity;
+  final int maxQuantity;
+  final String? state;
+  final Money unitPrice;
+  final Money referenceUnitPrice;
+  final Money discountPerUnit;
+  final double discountPercentage;
+
+  const PriceTier({
+    required this.productId,
+    this.productName,
+    this.productSku,
+    required this.priceTableId,
+    required this.priceTableName,
+    required this.scopeType,
+    required this.minQuantity,
+    required this.maxQuantity,
+    this.state,
+    required this.unitPrice,
+    required this.referenceUnitPrice,
+    required this.discountPerUnit,
+    required this.discountPercentage,
+  });
+
+  factory PriceTier.fromJson(Map<String, dynamic> json) => PriceTier(
+    productId: readString(json, 'productId'),
+    productName: readNullableString(json, 'productName'),
+    productSku: readNullableString(json, 'productSku'),
+    priceTableId: readString(json, 'priceTableId'),
+    priceTableName: readString(json, 'priceTableName'),
+    scopeType: readString(json, 'scopeType'),
+    minQuantity: readInt(json, 'minQuantity'),
+    maxQuantity: readInt(json, 'maxQuantity'),
+    state: readNullableString(json, 'state'),
+    unitPrice: Money.create(readDouble(json, 'unitPrice')).getOrThrow(),
+    referenceUnitPrice: Money.create(
+      readDouble(json, 'referenceUnitPrice'),
+    ).getOrThrow(),
+    discountPerUnit: Money.create(
+      readDouble(json, 'discountPerUnit'),
+    ).getOrThrow(),
+    discountPercentage: readDouble(json, 'discountPercentage'),
+  );
+
+  String get locationLabel {
+    final currentState = state;
+    if (currentState == null || currentState.isEmpty) return 'Nacional';
+    return State.fromApiName(
+      currentState,
+    ).fold((_) => currentState, (value) => '${value.name} (${value.code})');
+  }
+
+  String get rangeLabel => maxQuantity >= 9999
+      ? 'A partir de $minQuantity un.'
+      : 'De $minQuantity a $maxQuantity un.';
+}

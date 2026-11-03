@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/pricing_explanation.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
@@ -15,12 +16,17 @@ class OrderItem {
   final Quantity quantity;
   final Money unitPriceSnapshot;
 
+  /// Snapshot da regra que explicou o desconto. Nulo quando o preço de
+  /// catálogo prevaleceu ou em pedidos antigos.
+  final PricingExplanation? pricing;
+
   const OrderItem({
     required this.productId,
     this.productName,
     this.productSku,
     required this.quantity,
     required this.unitPriceSnapshot,
+    this.pricing,
   });
 
   Money get subtotal => Money.create(
@@ -37,7 +43,8 @@ class OrderItem {
           productName == other.productName &&
           productSku == other.productSku &&
           quantity == other.quantity &&
-          unitPriceSnapshot == other.unitPriceSnapshot;
+          unitPriceSnapshot == other.unitPriceSnapshot &&
+          pricing == other.pricing;
 
   @override
   int get hashCode =>
@@ -45,5 +52,6 @@ class OrderItem {
       productName.hashCode ^
       productSku.hashCode ^
       quantity.hashCode ^
-      unitPriceSnapshot.hashCode;
+      unitPriceSnapshot.hashCode ^
+      pricing.hashCode;
 }

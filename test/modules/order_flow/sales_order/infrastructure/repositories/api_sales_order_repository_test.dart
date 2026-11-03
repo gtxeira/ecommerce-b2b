@@ -199,5 +199,42 @@ void main() {
 
       expect(entries, isEmpty);
     });
+
+    test('should map the pricing explanation on an order item', () async {
+      final json = orderJson();
+      (json['items'] as List)[0] = {
+        'productId': 'p1',
+        'productName': 'Notebook',
+        'productSku': 'SKU-1',
+        'quantity': 10,
+        'unitPrice': 5000,
+        'pricing': {
+          'referenceUnitPrice': 5500,
+          'discountPerUnit': 500,
+          'discountTotal': 5000,
+          'discountPercentage': 9.09,
+          'priceTableId': 'pt-1',
+          'priceTableName': 'Tabela Atacado SP',
+          'scopeType': 'Regional',
+          'minQuantity': 10,
+          'maxQuantity': 999,
+          'state': 'SaoPaulo',
+        },
+      };
+
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(json)),
+      );
+
+      final order = (await buildRepository(
+        adapter,
+      ).getById(const OrderId('o1')))!;
+
+      final pricing = order.items.single.pricing;
+      expect(pricing, isNotNull);
+      expect(pricing!.priceTableName, 'Tabela Atacado SP');
+      expect(pricing.referenceUnitPrice.amount, 5500);
+      expect(pricing.discountPerUnit.amount, 500);
+    });
   });
 }

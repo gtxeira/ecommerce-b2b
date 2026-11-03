@@ -7,6 +7,7 @@ import 'package:ecommerce_b2b/app/core/network/token_store.dart';
 
 // Repositórios (interfaces)
 import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/price_table_repository.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/pricing_repository.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/boleto/model/repositories/boleto_repository.dart';
@@ -22,6 +23,7 @@ import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/repo
 
 // Implementações HTTP
 import 'package:ecommerce_b2b/modules/catalog/price_table/infrastructure/repositories/api_price_table_repository.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/infrastructure/repositories/api_pricing_repository.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/infrastructure/repositories/api_product_repository.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/infrastructure/repositories/api_company_repository.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/boleto/infrastructure/repositories/api_boleto_repository.dart';
@@ -104,6 +106,9 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerLazySingleton<PriceTableRepository>(
     () => ApiPriceTableRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PricingRepository>(
+    () => ApiPricingRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<CompanyRepository>(
     () => ApiCompanyRepository(getIt<ApiClient>()),

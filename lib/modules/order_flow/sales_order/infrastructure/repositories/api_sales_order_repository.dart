@@ -1,5 +1,6 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/pricing_explanation.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/enums/finance_decision.dart';
@@ -108,6 +109,11 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
               unitPriceSnapshot: Money.create(
                 readDouble(item, 'unitPrice'),
               ).getOrThrow(),
+              pricing: item['pricing'] is Map
+                  ? PricingExplanation.fromJson(
+                      Map<String, dynamic>.from(item['pricing'] as Map),
+                    )
+                  : null,
             ),
           )
           .toList(),

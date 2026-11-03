@@ -139,5 +139,39 @@ void main() {
       ))!;
       expect(legacyQuote.createdAt, isNull);
     });
+    test('should map the pricing explanation on an item', () async {
+      final json = quoteJson();
+      (json['items'] as List)[0] = {
+        'productId': 'p1',
+        'quantity': 10,
+        'unitPrice': 5000,
+        'pricing': {
+          'referenceUnitPrice': 5500,
+          'discountPerUnit': 500,
+          'discountTotal': 5000,
+          'discountPercentage': 9.09,
+          'priceTableId': 'pt-1',
+          'priceTableName': 'Tabela Atacado SP',
+          'scopeType': 'Regional',
+          'minQuantity': 10,
+          'maxQuantity': 999,
+          'state': 'SaoPaulo',
+        },
+      };
+
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(json)),
+      );
+      final repository = buildRepository(adapter);
+
+      final quote = (await repository.getById(const QuoteId('q1')))!;
+      final pricing = quote.items.single.pricing;
+
+      expect(pricing, isNotNull);
+      expect(pricing!.referenceUnitPrice.amount, 5500);
+      expect(pricing.discountTotal.amount, 5000);
+      expect(pricing.priceTableName, 'Tabela Atacado SP');
+      expect(pricing.locationLabel, 'São Paulo (SP)');
+    });
   });
 }

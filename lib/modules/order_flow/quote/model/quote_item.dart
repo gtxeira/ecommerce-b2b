@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/pricing_explanation.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
@@ -12,11 +13,16 @@ class QuoteItem {
   /// Tabela usada na precificação. Necessária para criar o orçamento na API.
   final String? priceTableId;
 
+  /// Explicação do desconto no momento da cotação. Nula quando o preço de
+  /// catálogo prevaleceu ou em orçamentos antigos.
+  final PricingExplanation? pricing;
+
   const QuoteItem({
     required this.productId,
     required this.quantity,
     required this.unitPrice,
     this.priceTableId,
+    this.pricing,
   });
 
   Money get subtotal => Money.create(
@@ -31,9 +37,15 @@ class QuoteItem {
           runtimeType == other.runtimeType &&
           productId == other.productId &&
           quantity == other.quantity &&
-          unitPrice == other.unitPrice;
+          unitPrice == other.unitPrice &&
+          priceTableId == other.priceTableId &&
+          pricing == other.pricing;
 
   @override
   int get hashCode =>
-      productId.hashCode ^ quantity.hashCode ^ unitPrice.hashCode;
+      productId.hashCode ^
+      quantity.hashCode ^
+      unitPrice.hashCode ^
+      priceTableId.hashCode ^
+      pricing.hashCode;
 }

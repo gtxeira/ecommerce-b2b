@@ -1,5 +1,6 @@
 import 'package:ecommerce_b2b/app/core/format/date_format.dart';
 import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
+import 'package:ecommerce_b2b/app/presentation/widgets/discount_badge.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_status_visuals.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
@@ -21,11 +22,22 @@ class OrderDetailsContent extends StatelessWidget {
     return total;
   }
 
+  /// Economia congelada nos itens. `null` quando nenhum item teve desconto.
+  Money? get _savings {
+    var cents = 0;
+    for (final item in order.items) {
+      cents += item.pricing?.discountTotal.amountInCents ?? 0;
+    }
+    if (cents == 0) return null;
+    return Money.create(cents / 100).getOrThrow();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final itemsTotal = _itemsTotal;
+    final savings = _savings;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -108,6 +120,14 @@ class OrderDetailsContent extends StatelessWidget {
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
+                      if (item.pricing != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: DiscountBadge(
+                            pricing: item.pricing!,
+                            compact: true,
+                          ),
+                        ),
                     ],
                   ),
                 ],
@@ -118,6 +138,10 @@ class OrderDetailsContent extends StatelessWidget {
         _amountRow(context, 'Itens', itemsTotal?.formatted ?? '-'),
         const SizedBox(height: 4),
         _amountRow(context, 'Frete', order.shippingCost.formatted),
+        if (savings != null) ...[
+          const SizedBox(height: 4),
+          _amountRow(context, 'Economia', savings.formatted, highlight: true),
+        ],
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -175,13 +199,24 @@ class OrderDetailsContent extends StatelessWidget {
     );
   }
 
-  Widget _amountRow(BuildContext context, String label, String value) {
+  Widget _amountRow(
+    BuildContext context,
+    String label,
+    String value, {
+    bool highlight = false,
+  }) {
     final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: theme.textTheme.bodyMedium),
-        Text(value, style: theme.textTheme.bodyMedium),
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: highlight ? FontWeight.bold : null,
+            color: highlight ? Colors.green.shade800 : null,
+          ),
+        ),
       ],
     );
   }

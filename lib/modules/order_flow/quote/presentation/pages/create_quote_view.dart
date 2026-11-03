@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/presentation/widgets/discount_badge.dart';
 import 'package:ecommerce_b2b/modules/catalog/price_table/model/price_table.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/pricing_preview.dart';
 import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/price_table_repository.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/pricing_repository.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
@@ -64,17 +69,63 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
     });
   }
 
-  void _addItem(Product product, int quantity) {
+  void _addItem(Product product, int quantity, PricingPreview preview) {
     setState(() {
       _items.add(
         QuoteItem(
           productId: product.id,
           quantity: Quantity.create(quantity).getOrThrow(),
-          unitPrice: product.basePrice,
+          unitPrice: preview.unitPrice,
           priceTableId: _selectedPriceTable?.id.value,
+          pricing: preview.toExplanation(),
         ),
       );
     });
+  }
+
+  // Empresa e tabela definem a UF e a regra; trocar qualquer uma delas invalida
+  // o preço já mostrado nos itens.
+  Future<void> _repriceItems() async {
+    final company = _selectedCompany;
+    final table = _selectedPriceTable;
+    if (company == null || table == null || _items.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final repriced = <QuoteItem>[];
+      for (final item in _items) {
+        final preview = await getIt<PricingRepository>().preview(
+          companyId: company.id.value,
+          productId: item.productId.value,
+          quantity: item.quantity.value,
+          priceTableId: table.id.value,
+        );
+
+        repriced.add(
+          QuoteItem(
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: preview.unitPrice,
+            priceTableId: table.id.value,
+            pricing: preview.toExplanation(),
+          ),
+        );
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _items
+          ..clear()
+          ..addAll(repriced);
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Não foi possível repreficar os itens: $error')),
+      );
+    }
   }
 
   Future<void> _saveQuote() async {
@@ -143,7 +194,10 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
                   ),
                 )
                 .toList(),
-            onChanged: (company) => setState(() => _selectedCompany = company),
+            onChanged: (company) {
+              setState(() => _selectedCompany = company);
+              unawaited(_repriceItems());
+            },
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<PriceTable>(
@@ -158,7 +212,10 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
                       DropdownMenuItem(value: table, child: Text(table.name)),
                 )
                 .toList(),
-            onChanged: (table) => setState(() => _selectedPriceTable = table),
+            onChanged: (table) {
+              setState(() => _selectedPriceTable = table);
+              unawaited(_repriceItems());
+            },
           ),
         ],
       ),
@@ -293,8 +350,21 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
                             ),
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 4.0),
-                              child: Text(
-                                'Qtd: ${item.quantity.value} • Unitário: ${item.unitPrice.formatted} • Total: ${item.subtotal.formatted}',
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Qtd: ${item.quantity.value} • Unitário: ${item.unitPrice.formatted} • Total: ${item.subtotal.formatted}',
+                                  ),
+                                  if (item.pricing != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 6),
+                                      child: DiscountBadge(
+                                        pricing: item.pricing!,
+                                        compact: true,
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                             trailing: IconButton(
@@ -315,69 +385,337 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
   }
 
   void _showAddProductDialog() {
-    showDialog(
+    final company = _selectedCompany;
+    final table = _selectedPriceTable;
+    if (company == null || table == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecione a empresa e a tabela de preços primeiro.'),
+        ),
+      );
+      return;
+    }
+
+    showDialog<_QuoteItemDraft>(
       context: context,
-      builder: (context) {
-        Product? selectedProduct;
-        int quantity = 1;
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Adicionar Item'),
-              content: SizedBox(
-                width: 500,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DropdownButtonFormField<Product>(
-                        initialValue: selectedProduct,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Produto *',
-                          prefixIcon: Icon(Icons.inventory_2_rounded),
-                        ),
-                        hint: const Text('Selecione um produto'),
-                        onChanged: (p) => setState(() => selectedProduct = p),
-                        items: _availableProducts.map((p) {
-                          return DropdownMenuItem(
-                            value: p,
-                            child: Text(p.name),
-                          );
-                        }).toList(),
+      builder: (_) => _AddQuoteItemDialog(
+        products: _availableProducts,
+        company: company,
+        priceTable: table,
+      ),
+    ).then((draft) {
+      if (draft != null) {
+        _addItem(draft.product, draft.quantity, draft.preview);
+      }
+    });
+  }
+}
+
+class _QuoteItemDraft {
+  final Product product;
+  final int quantity;
+  final PricingPreview preview;
+
+  const _QuoteItemDraft({
+    required this.product,
+    required this.quantity,
+    required this.preview,
+  });
+}
+
+/// Diálogo de inclusão com prévia de preço. A simulção é feita pela API:
+/// o cliente não replica a precedência de tabela/variante/UF.
+class _AddQuoteItemDialog extends StatefulWidget {
+  final List<Product> products;
+  final Company company;
+  final PriceTable priceTable;
+
+  const _AddQuoteItemDialog({
+    required this.products,
+    required this.company,
+    required this.priceTable,
+  });
+
+  @override
+  State<_AddQuoteItemDialog> createState() => _AddQuoteItemDialogState();
+}
+
+class _AddQuoteItemDialogState extends State<_AddQuoteItemDialog> {
+  final _quantityController = TextEditingController(text: '1');
+  Product? _product;
+  int _quantity = 1;
+  PricingPreview? _preview;
+  bool _loading = false;
+  String? _error;
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _quantityController.dispose();
+    super.dispose();
+  }
+
+  void _schedulePreview() {
+    _debounce?.cancel();
+    final product = _product;
+    if (product == null || _quantity < 1) {
+      setState(() {
+        _preview = null;
+        _error = null;
+        _loading = false;
+      });
+      return;
+    }
+
+    _debounce = Timer(const Duration(milliseconds: 300), _loadPreview);
+  }
+
+  Future<void> _loadPreview() async {
+    final product = _product;
+    if (product == null || _quantity < 1) return;
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final preview = await getIt<PricingRepository>().preview(
+        companyId: widget.company.id.value,
+        productId: product.id.value,
+        quantity: _quantity,
+        priceTableId: widget.priceTable.id.value,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _preview = preview;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _preview = null;
+        _error = 'Não foi possível simular o preço: $error';
+        _loading = false;
+      });
+    }
+  }
+
+  void _setQuantity(int value) {
+    final normalized = value < 1 ? 1 : value;
+    _quantityController.text = normalized.toString();
+    _quantityController.selection = TextSelection.collapsed(
+      offset: _quantityController.text.length,
+    );
+    setState(() => _quantity = normalized);
+    _schedulePreview();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final preview = _preview;
+    final canAdd = _product != null && preview != null && !_loading;
+
+    return AlertDialog(
+      title: const Text('Adicionar Item'),
+      content: SizedBox(
+        width: 520,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DropdownButtonFormField<Product>(
+                initialValue: _product,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Produto *',
+                  prefixIcon: Icon(Icons.inventory_2_rounded),
+                ),
+                hint: const Text('Selecione um produto'),
+                onChanged: (product) {
+                  setState(() => _product = product);
+                  _schedulePreview();
+                },
+                items: widget.products
+                    .map(
+                      (product) => DropdownMenuItem(
+                        value: product,
+                        child: Text(product.name),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        decoration: const InputDecoration(
-                          labelText: 'Quantidade *',
-                          prefixIcon: Icon(Icons.onetwothree_rounded),
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (v) => quantity = int.tryParse(v) ?? 1,
-                      ),
-                    ],
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _quantityController,
+                decoration: const InputDecoration(
+                  labelText: 'Quantidade *',
+                  prefixIcon: Icon(Icons.onetwothree_rounded),
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  final parsed = int.tryParse(value) ?? 1;
+                  setState(() => _quantity = parsed < 1 ? 1 : parsed);
+                  _schedulePreview();
+                },
+              ),
+              const SizedBox(height: 20),
+              if (_loading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: LinearProgressIndicator(),
+                )
+              else if (_error != null)
+                Text(_error!, style: TextStyle(color: theme.colorScheme.error))
+              else if (preview != null)
+                _PreviewCard(
+                  preview: preview,
+                  onApplyMinQuantity: preview.nextTier == null
+                      ? null
+                      : () => _setQuantity(preview.nextTier!.minQuantity),
+                )
+              else
+                Text(
+                  'Selecione um produto e informe a quantidade.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: canAdd
+              ? () => Navigator.pop(
+                  context,
+                  _QuoteItemDraft(
+                    product: _product!,
+                    quantity: _quantity,
+                    preview: preview,
+                  ),
+                )
+              : null,
+          child: const Text('Adicionar'),
+        ),
+      ],
+    );
+  }
+}
+
+class _PreviewCard extends StatelessWidget {
+  final PricingPreview preview;
+  final VoidCallback? onApplyMinQuantity;
+
+  const _PreviewCard({required this.preview, this.onApplyMinQuantity});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final explanation = preview.toExplanation();
+    final nextTier = preview.nextTier;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Preço unitário', style: theme.textTheme.bodyMedium),
+              Text(
+                preview.unitPrice.formatted,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: colorScheme.primary,
                 ),
-                TextButton(
-                  onPressed: () {
-                    if (selectedProduct != null) {
-                      _addItem(selectedProduct!, quantity);
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: const Text('Adicionar'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Subtotal', style: theme.textTheme.bodyMedium),
+              Text(
+                preview.subtotal.formatted,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          if (explanation != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                DiscountBadge(pricing: explanation),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'de ${explanation.referenceUnitPrice.formatted}/un.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      decoration: TextDecoration.lineThrough,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ],
-            );
-          },
-        );
-      },
+            ),
+          ],
+          if (nextTier != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.trending_down_rounded,
+                    color: Colors.amber.shade900,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Faltam ${nextTier.unitsMissing} un. para '
+                      '${nextTier.unitPrice.formatted}/un. '
+                      '(economia de ${nextTier.savingsPerUnit.formatted}/un.)',
+                      style: TextStyle(
+                        color: Colors.amber.shade900,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  if (onApplyMinQuantity != null)
+                    TextButton(
+                      onPressed: onApplyMinQuantity,
+                      child: const Text('Aplicar'),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
