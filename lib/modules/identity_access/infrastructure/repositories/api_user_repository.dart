@@ -93,6 +93,8 @@ class ApiUserRepository implements UserRepository {
     email: readString(json, 'email'),
     role: UserRole.fromApiName(readString(json, 'role')) ?? UserRole.buyer,
     companyId: readNullableString(json, 'companyId'),
+    companyName: readNullableString(json, 'companyName'),
+    companyLegalName: readNullableString(json, 'companyLegalName'),
     phone: readNullableString(json, 'phone'),
     positionTitle: readNullableString(json, 'positionTitle'),
     active: readBool(json, 'active', true),

@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
@@ -272,7 +273,11 @@ class RepresentativeHomePage extends StatelessWidget {
                                   'Orçamento #${quote.id.displayCode}',
                                 ),
                                 subtitle: Text(
-                                  'Total: ${quote.total.formatted} - ${quote.status.label}',
+                                  [
+                                    'Total: ${quote.total.formatted} - ${quote.status.label}',
+                                    if (quote.companyId != null)
+                                      'Empresa: ${companyLabel(tradeName: quote.companyName, legalName: quote.companyLegalName, id: quote.companyId!)}',
+                                  ].join('\n'),
                                 ),
                                 trailing: const Icon(
                                   Icons.chevron_right_rounded,

@@ -85,6 +85,8 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
         : FinanceReview(
             decision: FinanceDecision.fromApi(decision),
             reviewerId: reviewer ?? '',
+            reviewerName: readNullableString(json, 'financeReviewerName'),
+            reviewerRole: readNullableString(json, 'financeReviewerRole'),
             reviewedAt: DateTime.now(),
             justification: justification ?? '',
           );
@@ -92,12 +94,16 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
     return SalesOrder(
       id: OrderId(readString(json, 'id')),
       companyId: readNullableString(json, 'companyId'),
+      companyName: readNullableString(json, 'companyName'),
+      companyLegalName: readNullableString(json, 'companyLegalName'),
       status: OrderStatus.fromApi(readString(json, 'status')),
       creditStatus: CreditStatus.fromApi(readString(json, 'creditStatus')),
       items: readMapList(json, 'items')
           .map(
             (item) => OrderItem(
               productId: ProductId(readString(item, 'productId')),
+              productName: readNullableString(item, 'productName'),
+              productSku: readNullableString(item, 'productSku'),
               quantity: Quantity.create(readInt(item, 'quantity')).getOrThrow(),
               unitPriceSnapshot: Money.create(
                 readDouble(item, 'unitPrice'),

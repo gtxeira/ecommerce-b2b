@@ -6,11 +6,19 @@ import 'package:flutter/foundation.dart';
 @immutable
 class OrderItem {
   final ProductId productId;
+
+  /// Nome/SKU resolvidos pela API na leitura. `null` em payload antigo ou
+  /// quando o produto não existe mais; a UI cai no fallback por ID.
+  final String? productName;
+  final String? productSku;
+
   final Quantity quantity;
   final Money unitPriceSnapshot;
 
   const OrderItem({
     required this.productId,
+    this.productName,
+    this.productSku,
     required this.quantity,
     required this.unitPriceSnapshot,
   });
@@ -26,10 +34,16 @@ class OrderItem {
       other is OrderItem &&
           runtimeType == other.runtimeType &&
           productId == other.productId &&
+          productName == other.productName &&
+          productSku == other.productSku &&
           quantity == other.quantity &&
           unitPriceSnapshot == other.unitPriceSnapshot;
 
   @override
   int get hashCode =>
-      productId.hashCode ^ quantity.hashCode ^ unitPriceSnapshot.hashCode;
+      productId.hashCode ^
+      productName.hashCode ^
+      productSku.hashCode ^
+      quantity.hashCode ^
+      unitPriceSnapshot.hashCode;
 }

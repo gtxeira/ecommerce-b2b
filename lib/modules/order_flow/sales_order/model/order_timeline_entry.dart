@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
@@ -43,6 +44,11 @@ class OrderTimelineEntry {
   final FinanceDecision? decision;
   final String? actorId;
   final String? actorRole;
+
+  /// Nome do ator congelado no momento do evento. Nulo em eventos do sistema ou
+  /// anteriores ao snapshot.
+  final String? actorName;
+
   final String? note;
 
   const OrderTimelineEntry({
@@ -55,6 +61,7 @@ class OrderTimelineEntry {
     this.decision,
     this.actorId,
     this.actorRole,
+    this.actorName,
     this.note,
   });
 
@@ -69,6 +76,7 @@ class OrderTimelineEntry {
         decision: _decision(json['decision']),
         actorId: readNullableString(json, 'actorId'),
         actorRole: readNullableString(json, 'actorRole'),
+        actorName: readNullableString(json, 'actorName'),
         note: readNullableString(json, 'note'),
       );
 
@@ -82,14 +90,15 @@ class OrderTimelineEntry {
     OrderTimelineEventType.unknown => 'Evento do pedido',
   };
 
-  /// Quem realizou o evento: papel + id curto. Eventos do sistema aparecem como
-  /// "Sistema" (sem id).
+  /// Quem realizou o evento: `Nome (Papel) · #id`, com fallback para papel + ID
+  /// quando o nome não foi congelado. Eventos do sistema aparecem como "Sistema".
   String? get actorLabel {
-    final role = _roleLabel;
     final id = actorId;
-    if (id == null || id.isEmpty) return role;
-    final shortId = id.contains('@') ? id.split('@').first : _shortId(id);
-    return role == null ? shortId : '$role · $shortId';
+    final hasName = actorName != null && actorName!.isNotEmpty;
+    if (id == null || id.isEmpty) {
+      return hasName ? actorName : displayRole(actorRole);
+    }
+    return personLabel(name: actorName, role: actorRole, id: id);
   }
 
   /// Linha secundária do cartão: data, crédito (na criação) e observação.
@@ -100,19 +109,6 @@ class OrderTimelineEntry {
     ];
     return parts.join(' · ');
   }
-
-  String? get _roleLabel => switch (actorRole?.toLowerCase()) {
-    'system' => 'Sistema',
-    'finance' => 'Financeiro',
-    'admin' => 'Administrador',
-    'buyer' => 'Comprador',
-    'representative' => 'Representante',
-    'supervisor' => 'Supervisor',
-    _ => actorRole,
-  };
-
-  static String _shortId(String value) =>
-      value.length <= 12 ? value : value.substring(0, 8);
 
   static OrderStatus? _status(dynamic value) =>
       value is String && value.isNotEmpty ? OrderStatus.fromApi(value) : null;

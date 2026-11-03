@@ -41,7 +41,10 @@ class OrderListLoaded extends OrderListState {
   /// Abertos: prioridade de atenção e, no empate, o mais recente primeiro.
   /// Encerrados: mais recente primeiro.
   List<SalesOrder> get visibleOrders {
-    final term = query.trim().toLowerCase();
+    var term = query.trim().toLowerCase();
+    // O ID é exibido com `#`; aceitar o prefixo na busca evita que copiar/colar o
+    // rótulo da tela ("#order-101") não encontre nada.
+    if (term.startsWith('#')) term = term.substring(1);
 
     final orders = allOrders
         .where((order) => order.status.group == filter)
@@ -64,6 +67,10 @@ class OrderListLoaded extends OrderListState {
   bool _matches(SalesOrder order, String term) {
     if (order.id.value.toLowerCase().contains(term)) return true;
     if ((order.companyId ?? '').toLowerCase().contains(term)) return true;
+    if ((order.companyName ?? '').toLowerCase().contains(term)) return true;
+    if ((order.companyLegalName ?? '').toLowerCase().contains(term)) {
+      return true;
+    }
     final name = companyNameFor(order);
     return name != null && name.toLowerCase().contains(term);
   }

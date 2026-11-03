@@ -5,12 +5,19 @@ import 'package:flutter/foundation.dart';
 class FinanceReview {
   final FinanceDecision decision;
   final String reviewerId;
+
+  /// Nome e papel do analista congelados no momento da decisão.
+  final String? reviewerName;
+  final String? reviewerRole;
+
   final DateTime reviewedAt;
   final String justification;
 
   const FinanceReview({
     required this.decision,
     required this.reviewerId,
+    this.reviewerName,
+    this.reviewerRole,
     required this.reviewedAt,
     required this.justification,
   });
@@ -22,6 +29,8 @@ class FinanceReview {
           runtimeType == other.runtimeType &&
           decision == other.decision &&
           reviewerId == other.reviewerId &&
+          reviewerName == other.reviewerName &&
+          reviewerRole == other.reviewerRole &&
           reviewedAt == other.reviewedAt &&
           justification == other.justification;
 
@@ -29,6 +38,8 @@ class FinanceReview {
   int get hashCode =>
       decision.hashCode ^
       reviewerId.hashCode ^
+      reviewerName.hashCode ^
+      reviewerRole.hashCode ^
       reviewedAt.hashCode ^
       justification.hashCode;
 }

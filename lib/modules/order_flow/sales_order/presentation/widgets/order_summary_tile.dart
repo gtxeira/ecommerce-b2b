@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/format/date_format.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_status_visuals.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,13 @@ class OrderSummaryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final statusColor = orderStatusColor(order.status, colorScheme);
+    final company = order.companyId == null
+        ? null
+        : companyLabel(
+            tradeName: order.companyName ?? companyName,
+            legalName: order.companyLegalName,
+            id: order.companyId!,
+          );
 
     return Card(
       margin: margin,
@@ -49,7 +57,7 @@ class OrderSummaryTile extends StatelessWidget {
         subtitle: Text(
           [
             'Status: ${order.status.label}',
-            if (companyName != null) 'Empresa: $companyName',
+            if (company != null) 'Empresa: $company',
             'Total: ${order.total.formatted}',
             'Última atividade: ${formatDateTimeOrDash(order.activityAt)}',
           ].join('\n'),

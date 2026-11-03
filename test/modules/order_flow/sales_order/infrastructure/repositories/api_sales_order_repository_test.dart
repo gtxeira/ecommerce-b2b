@@ -37,16 +37,26 @@ void main() {
     'createdAt': '2026-09-21T10:00:00.000+00:00',
     'lastActivityAt': '2026-09-23T15:40:00.000+00:00',
     'companyId': 'c1',
+    'companyName': 'ACME',
+    'companyLegalName': 'ACME Ltda',
     'status': status,
     'creditStatus': creditStatus,
     'itemsTotal': 100,
     'shippingCost': 22,
     'total': 122,
     'items': [
-      {'productId': 'p1', 'quantity': 2, 'unitPrice': 50},
+      {
+        'productId': 'p1',
+        'productName': 'Notebook',
+        'productSku': 'SKU-1',
+        'quantity': 2,
+        'unitPrice': 50,
+      },
     ],
     'financeDecision': decision,
     'financeReviewerId': 'fin-1',
+    'financeReviewerName': 'Maria Financeiro',
+    'financeReviewerRole': 'Finance',
     'financeJustification': 'Limite ok',
   };
 
@@ -66,8 +76,14 @@ void main() {
       expect(order.creditStatus, CreditStatus.approved);
       expect(order.shippingCost.amount, 22);
       expect(order.total.amount, 122);
+      expect(order.companyName, 'ACME');
+      expect(order.companyLegalName, 'ACME Ltda');
       expect(order.items.single.quantity.value, 2);
+      expect(order.items.single.productName, 'Notebook');
+      expect(order.items.single.productSku, 'SKU-1');
       expect(order.financeReview!.decision, FinanceDecision.approved);
+      expect(order.financeReview!.reviewerName, 'Maria Financeiro');
+      expect(order.financeReview!.reviewerRole, 'Finance');
       expect(order.financeReview!.justification, 'Limite ok');
     });
 
@@ -144,6 +160,7 @@ void main() {
               'toStatus': 'PickingPacking',
               'actorId': 'fin-1',
               'actorRole': 'Finance',
+              'actorName': 'Maria Financeiro',
             },
             {
               'id': 'e1',
@@ -163,6 +180,11 @@ void main() {
       expect(captured!.path, '/api/orders/o1/timeline');
       expect(entries, hasLength(2));
       expect(entries.first.type, OrderTimelineEventType.statusChanged);
+      expect(entries.first.actorName, 'Maria Financeiro');
+      expect(
+        entries.first.actorLabel,
+        'Maria Financeiro (Financeiro) · #fin-1',
+      );
       expect(entries.last.type, OrderTimelineEventType.created);
     });
 

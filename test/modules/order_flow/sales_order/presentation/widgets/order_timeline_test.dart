@@ -58,7 +58,7 @@ void main() {
 
     expect(find.text('Análise financeira: Reprovado'), findsOneWidget);
     expect(find.text('Limite insuficiente'), findsOneWidget);
-    expect(find.textContaining('Financeiro · fin-1'), findsOneWidget);
+    expect(find.textContaining('Financeiro · #fin-1'), findsOneWidget);
     expect(find.text('Crédito: Aprovado'), findsOneWidget);
     expect(find.textContaining('Sistema'), findsOneWidget);
   });

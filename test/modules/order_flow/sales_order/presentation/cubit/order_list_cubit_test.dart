@@ -324,6 +324,40 @@ void main() {
         );
       });
 
+      test('aceita o id com #, como aparece na tela', () async {
+        await cubit.load();
+        cubit.setQuery('#order-202');
+
+        expect(
+          (cubit.state as OrderListLoaded).visibleOrders.map((o) => o.id.value),
+          ['order-202'],
+        );
+      });
+
+      test('filtra por nome fantasia vindo do pedido', () async {
+        when(() => repository.getAll()).thenAnswer(
+          (_) async => [
+            SalesOrder(
+              id: const OrderId('order-named'),
+              companyId: 'c9',
+              companyName: 'ACME',
+              companyLegalName: 'ACME Ltda',
+              status: OrderStatus.inTransit,
+              creditStatus: CreditStatus.approved,
+              items: const [],
+            ),
+          ],
+        );
+
+        await cubit.load();
+        cubit.setQuery('acme ltda');
+
+        expect(
+          (cubit.state as OrderListLoaded).visibleOrders.map((o) => o.id.value),
+          ['order-named'],
+        );
+      });
+
       test('filtra por companyId', () async {
         await cubit.load();
         cubit.setQuery('company-1');

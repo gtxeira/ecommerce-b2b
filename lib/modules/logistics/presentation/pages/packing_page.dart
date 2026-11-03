@@ -1,9 +1,9 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
 import 'package:ecommerce_b2b/modules/inventory/warehouse/model/repositories/inventory_repository.dart';
 import 'package:ecommerce_b2b/modules/inventory/warehouse/model/warehouse.dart';
 import 'package:ecommerce_b2b/modules/logistics/application/procces_order/process_order_shipment_use_case.dart';
@@ -22,7 +22,6 @@ class PackingPage extends StatefulWidget {
 
 class _PackingPageState extends State<PackingPage> {
   List<SalesOrder> _orders = [];
-  Map<String, String> _productNames = {};
   List<Warehouse> _warehouses = [];
   final Map<String, WarehouseId> _selectedWarehouse = {};
   bool _isLoading = true;
@@ -35,23 +34,16 @@ class _PackingPageState extends State<PackingPage> {
 
   Future<void> _loadData() async {
     final orderRepo = getIt<SalesOrderRepository>();
-    final productRepo = getIt<ProductRepository>();
     final inventoryRepo = getIt<InventoryRepository>();
 
     try {
       final allOrders = await orderRepo.getAll();
-      final allProducts = await productRepo.getAll();
       final allWarehouses = await inventoryRepo.getAll();
-
-      final Map<String, String> names = {
-        for (var p in allProducts) p.id.value: p.name,
-      };
 
       setState(() {
         _orders = allOrders
             .where((o) => o.status == OrderStatus.pickingPacking)
             .toList();
-        _productNames = names;
         _warehouses = allWarehouses;
         for (final order in _orders) {
           _selectedWarehouse.putIfAbsent(
@@ -208,9 +200,11 @@ class _PackingPageState extends State<PackingPage> {
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 ...order.items.map((item) {
-                                  final name =
-                                      _productNames[item.productId.value] ??
-                                      'Produto #${item.productId.value}';
+                                  final name = productLabel(
+                                    name: item.productName,
+                                    sku: item.productSku,
+                                    id: item.productId.value,
+                                  );
                                   final sources = _getSourceWarehouses(
                                     item.productId,
                                   );

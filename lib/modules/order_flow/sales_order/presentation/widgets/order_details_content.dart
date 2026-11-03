@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/format/date_format.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_status_visuals.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
@@ -46,7 +47,7 @@ class OrderDetailsContent extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Empresa: ${order.companyId ?? '-'}',
+          'Empresa: ${order.companyId == null ? '-' : companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',
           style: theme.textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
@@ -88,7 +89,7 @@ class OrderDetailsContent extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      '${item.quantity.value}x Produto #${item.productId.displayCode}',
+                      '${item.quantity.value}x ${productLabel(name: item.productName, sku: item.productSku, id: item.productId.value)}',
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
@@ -149,6 +150,16 @@ class OrderDetailsContent extends StatelessWidget {
             'Decisão: ${order.financeReview!.decision.label}',
             style: theme.textTheme.bodyMedium,
           ),
+          if (order.financeReview!.reviewerId.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                'Analista: ${personLabel(name: order.financeReview!.reviewerName, role: order.financeReview!.reviewerRole, id: order.financeReview!.reviewerId)}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
           if (order.financeReview!.justification.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),

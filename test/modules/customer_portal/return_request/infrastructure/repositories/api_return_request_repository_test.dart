@@ -32,7 +32,13 @@ void main() {
     'status': status,
     'reason': 'Defeito',
     'items': [
-      {'productId': 'p1', 'quantity': 1, 'problemDescription': 'Não liga'},
+      {
+        'productId': 'p1',
+        'productName': 'Notebook',
+        'productSku': 'SKU-1',
+        'quantity': 1,
+        'problemDescription': 'Não liga',
+      },
     ],
   };
 
@@ -53,6 +59,8 @@ void main() {
 
         expect(list.single.status, RmaStatus.authorized);
         expect(list.single.items.single.problemDescription, 'Não liga');
+        expect(list.single.items.single.productName, 'Notebook');
+        expect(list.single.items.single.productSku, 'SKU-1');
       },
     );
 

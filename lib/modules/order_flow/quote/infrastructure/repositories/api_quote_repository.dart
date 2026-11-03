@@ -66,7 +66,10 @@ class ApiQuoteRepository implements QuoteRepository {
   static Quote fromJson(Map<String, dynamic> json) => Quote(
     id: QuoteId(readString(json, 'id')),
     companyId: readNullableString(json, 'companyId'),
+    companyName: readNullableString(json, 'companyName'),
+    companyLegalName: readNullableString(json, 'companyLegalName'),
     representativeId: readNullableString(json, 'representativeId'),
+    representativeName: readNullableString(json, 'representativeName'),
     status: _statusFromApi(readString(json, 'status')),
     createdAt: readDate(json, 'createdAt'),
     shippingCost: Money.create(readDouble(json, 'shippingCost')).getOrThrow(),

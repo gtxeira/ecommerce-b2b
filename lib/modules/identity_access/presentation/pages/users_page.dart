@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/buyer_person_fields.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
@@ -163,7 +164,13 @@ class _UsersViewState extends State<_UsersView> {
                       final user = users[index];
                       final companyName = user.companyId == null
                           ? null
-                          : _companyNames[user.companyId!] ?? user.companyId;
+                          : companyLabel(
+                              tradeName:
+                                  user.companyName ??
+                                  _companyNames[user.companyId!],
+                              legalName: user.companyLegalName,
+                              id: user.companyId!,
+                            );
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(

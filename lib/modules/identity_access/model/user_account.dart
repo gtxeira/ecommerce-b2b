@@ -6,6 +6,8 @@ class UserAccount {
   final String email;
   final UserRole role;
   final String? companyId;
+  final String? companyName;
+  final String? companyLegalName;
   final String? phone;
   final String? positionTitle;
   final bool active;
@@ -16,6 +18,8 @@ class UserAccount {
     required this.email,
     required this.role,
     required this.companyId,
+    this.companyName,
+    this.companyLegalName,
     this.phone,
     this.positionTitle,
     required this.active,

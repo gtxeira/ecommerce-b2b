@@ -17,11 +17,15 @@ void main() {
   final order = SalesOrder(
     id: const OrderId('order-101'),
     companyId: 'company-1',
+    companyName: 'ACME',
+    companyLegalName: 'ACME Ltda',
     status: OrderStatus.delivered,
     creditStatus: CreditStatus.approved,
     items: [
       OrderItem(
         productId: const ProductId('product-1'),
+        productName: 'Furadeira',
+        productSku: 'SKU-1',
         quantity: Quantity.create(2).getOrThrow(),
         unitPriceSnapshot: Money.create(10).getOrThrow(),
       ),
@@ -53,7 +57,10 @@ void main() {
         wrap(OrderSummaryTile(order: order, companyName: 'ACME', onTap: () {})),
       );
 
-      expect(find.textContaining('Empresa: ACME'), findsOneWidget);
+      expect(
+        find.textContaining('Empresa: ACME (ACME Ltda) · #company-1'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('mostra a última atividade, não a criação', (tester) async {
@@ -103,7 +110,10 @@ void main() {
     testWidgets('mostra itens, frete e total', (tester) async {
       await tester.pumpWidget(wrap(OrderDetailsContent(order: order)));
 
-      expect(find.textContaining('2x Produto #product-1'), findsOneWidget);
+      expect(
+        find.textContaining('2x Furadeira (SKU-1) · #product-1'),
+        findsOneWidget,
+      );
       expect(find.text('Frete'), findsOneWidget);
       expect(find.text('Total'), findsOneWidget);
       expect(find.text(order.total.formatted), findsOneWidget);
@@ -125,6 +135,8 @@ void main() {
               financeReview: FinanceReview(
                 decision: FinanceDecision.approved,
                 reviewerId: 'u1',
+                reviewerName: 'Maria Financeiro',
+                reviewerRole: 'Finance',
                 reviewedAt: DateTime(2026, 1, 1),
                 justification: 'Crédito ok',
               ),
@@ -135,6 +147,10 @@ void main() {
 
       expect(find.text('Análise Financeira'), findsOneWidget);
       expect(find.textContaining('Aprovado'), findsOneWidget);
+      expect(
+        find.textContaining('Maria Financeiro (Financeiro) · #u1'),
+        findsOneWidget,
+      );
     });
   });
 }

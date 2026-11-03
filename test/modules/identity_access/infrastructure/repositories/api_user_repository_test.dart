@@ -34,6 +34,8 @@ void main() {
     'email': 'user@test.com',
     'role': role,
     'companyId': companyId,
+    'companyName': companyId == null ? null : 'ACME',
+    'companyLegalName': companyId == null ? null : 'ACME Ltda',
     'active': active,
   };
 
@@ -64,8 +66,11 @@ void main() {
       expect(captured!.queryParameters['active'], 'true');
       expect(captured!.queryParameters['search'], 'silva');
       expect(users, hasLength(2));
+      expect(users[0].companyName, 'ACME');
+      expect(users[0].companyLegalName, 'ACME Ltda');
       expect(users[1].role, UserRole.admin);
       expect(users[1].companyId, isNull);
+      expect(users[1].companyName, isNull);
     });
 
     test('should create a user with roleAssignment-ready payload', () async {

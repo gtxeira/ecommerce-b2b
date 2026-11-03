@@ -11,6 +11,10 @@ import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/finance_revie
 /// Raiz do Agregado que representa um Pedido de Venda.
 class SalesOrder extends Entity<OrderId> {
   final String? companyId;
+
+  /// Nome fantasia e razão social resolvidos pela API na leitura.
+  final String? companyName;
+  final String? companyLegalName;
   OrderStatus _status;
   CreditStatus _creditStatus;
   final List<OrderItem> _items;
@@ -29,6 +33,8 @@ class SalesOrder extends Entity<OrderId> {
   SalesOrder({
     required OrderId id,
     this.companyId,
+    this.companyName,
+    this.companyLegalName,
     required OrderStatus status,
     required CreditStatus creditStatus,
     required List<OrderItem> items,

@@ -74,6 +74,8 @@ class ApiReturnRequestRepository implements ReturnRequestRepository {
         .map(
           (item) => ReturnRequestItem(
             productId: ProductId(readString(item, 'productId')),
+            productName: readNullableString(item, 'productName'),
+            productSku: readNullableString(item, 'productSku'),
             quantity: Quantity.create(readInt(item, 'quantity')).getOrThrow(),
             problemDescription: readString(item, 'problemDescription'),
           ),

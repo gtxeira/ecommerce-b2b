@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/user_profile_dropdown.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/boleto/model/value_objects/boleto_copy.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/cubit/customer_portal_cubit.dart';
@@ -379,7 +380,12 @@ class BuyerHomePage extends StatelessWidget {
                                   ),
                                 ),
                                 subtitle: Text(
-                                  'Status: $orderStatusLabel\nTotal: ${order.total.toString()}',
+                                  [
+                                    'Status: $orderStatusLabel',
+                                    'Total: ${order.total.toString()}',
+                                    if (order.companyId != null)
+                                      'Empresa: ${companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',
+                                  ].join('\n'),
                                 ),
                                 isThreeLine: true,
                                 trailing: const Icon(
@@ -1048,7 +1054,12 @@ class BuyerHomePage extends StatelessWidget {
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text(
-                        'Status: $orderStatusLabel\nTotal: ${order.total.toString()}',
+                        [
+                          'Status: $orderStatusLabel',
+                          'Total: ${order.total.toString()}',
+                          if (order.companyId != null)
+                            'Empresa: ${companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',
+                        ].join('\n'),
                       ),
                       isThreeLine: true,
                       trailing: const Icon(Icons.chevron_right_rounded),

@@ -34,7 +34,10 @@ void main() {
     'createdAt': '2026-09-21T10:00:00.000+00:00',
     'status': status,
     'companyId': 'c1',
+    'companyName': 'ACME',
+    'companyLegalName': 'ACME Ltda',
     'representativeId': 'rep-456',
+    'representativeName': 'Representante Mock',
     'itemsTotal': 100,
     'shippingCost': 22,
     'total': 122,
@@ -59,7 +62,10 @@ void main() {
 
         expect(quote.status, QuoteStatus.convertedToOrder);
         expect(quote.companyId, 'c1');
+        expect(quote.companyName, 'ACME');
+        expect(quote.companyLegalName, 'ACME Ltda');
         expect(quote.representativeId, 'rep-456');
+        expect(quote.representativeName, 'Representante Mock');
         expect(quote.shippingCost.amount, 22);
         expect(quote.total.amount, 122);
       },

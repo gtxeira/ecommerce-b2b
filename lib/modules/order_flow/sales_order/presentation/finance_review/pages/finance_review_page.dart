@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
@@ -131,7 +132,7 @@ class FinanceReviewPage extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Empresa ID: ${order.companyId}',
+                                    'Empresa: ${order.companyId == null ? '-' : companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: colorScheme.onSurfaceVariant,
                                     ),
@@ -184,7 +185,7 @@ class FinanceReviewPage extends StatelessWidget {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        '${item.quantity.value}x Produto #${item.productId.displayCode}',
+                                        '${item.quantity.value}x ${productLabel(name: item.productName, sku: item.productSku, id: item.productId.value)}',
                                         style: theme.textTheme.bodyMedium,
                                       ),
                                     ),

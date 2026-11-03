@@ -7,7 +7,15 @@ import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote_item.dart';
 
 class Quote extends Entity<QuoteId> {
   final String? companyId;
+
+  /// Nome fantasia e razão social resolvidos pela API na leitura.
+  final String? companyName;
+  final String? companyLegalName;
+
   final String? representativeId;
+
+  /// Nome do representante resolvido pela API na leitura.
+  final String? representativeName;
   QuoteStatus _status;
   final List<QuoteItem> _items;
   final Money _shippingCost;
@@ -19,7 +27,10 @@ class Quote extends Entity<QuoteId> {
   Quote({
     required QuoteId id,
     this.companyId,
+    this.companyName,
+    this.companyLegalName,
     this.representativeId,
+    this.representativeName,
     required QuoteStatus status,
     List<QuoteItem>? items,
     Money? shippingCost,

@@ -73,9 +73,7 @@ class PriceTableListView extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            subtitle: Text(
-                              'Escopo: ${table.scopeType.label}',
-                            ),
+                            subtitle: Text('Escopo: ${table.scopeType.label}'),
                             children: [
                               Padding(
                                 padding: const EdgeInsets.all(16),
@@ -125,7 +123,7 @@ class PriceTableListView extends StatelessWidget {
                                           child: ListTile(
                                             dense: true,
                                             title: Text(
-                                              'Produto ID: ${rule.productId.value}',
+                                              'Produto #${rule.productId.value}',
                                             ),
                                             subtitle: Text(
                                               'Qtd: ${rule.minQuantity.value} - ${rule.maxQuantity.value} | '

@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/app/core/events/order_events.dart';
 import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
@@ -94,7 +95,7 @@ class _BillingPageState extends State<BillingPage> {
                           child: ListTile(
                             title: Text('Pedido #${order.id.displayCode}'),
                             subtitle: Text(
-                              'Total: ${order.total.formatted} • Empresa: ${order.companyId ?? '-'}',
+                              'Total: ${order.total.formatted} • Empresa: ${order.companyId == null ? '-' : companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',
                             ),
                             onTap: () => context.push(
                               OrderRoutes.detail(order.id.value),

@@ -1,3 +1,4 @@
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_state.dart';
@@ -47,7 +48,11 @@ class _QuoteListViewState extends State<QuoteListView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.history_rounded, size: 64, color: colorScheme.outline),
+                  Icon(
+                    Icons.history_rounded,
+                    size: 64,
+                    color: colorScheme.outline,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Nenhum orçamento encontrado.',
@@ -78,8 +83,15 @@ class _QuoteListViewState extends State<QuoteListView> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      'Status: ${quote.status.label} • Itens: ${quote.items.length}',
+                      [
+                        'Status: ${quote.status.label} • Itens: ${quote.items.length}',
+                        if (quote.companyId != null)
+                          'Empresa: ${companyLabel(tradeName: quote.companyName, legalName: quote.companyLegalName, id: quote.companyId!)}',
+                        if (quote.representativeId != null)
+                          'Representante: ${personLabel(name: quote.representativeName, role: 'Representative', id: quote.representativeId!)}',
+                      ].join('\n'),
                     ),
+                    isThreeLine: true,
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () {
                       // TODO: Navegar para detalhes do orçamento

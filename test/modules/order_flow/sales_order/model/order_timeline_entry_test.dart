@@ -48,7 +48,19 @@ void main() {
         entry.title,
         'Aguardando Aprovação Financeira → Em Separação e Embalagem',
       );
-      expect(entry.actorLabel, 'Financeiro · finance');
+      expect(entry.actorLabel, 'Financeiro · #finance@test.com');
+    });
+
+    test('usa o nome congelado do ator quando existe', () {
+      final entry = OrderTimelineEntry.fromJson({
+        'id': 'e2',
+        'type': 'StatusChanged',
+        'actorId': 'fin-1',
+        'actorRole': 'Finance',
+        'actorName': 'Maria Financeiro',
+      });
+
+      expect(entry.actorLabel, 'Maria Financeiro (Financeiro) · #fin-1');
     });
 
     test('mapeia a análise financeira com decisão e justificativa', () {
@@ -66,7 +78,7 @@ void main() {
       expect(entry.decision, FinanceDecision.rejected);
       expect(entry.title, 'Análise financeira: Reprovado');
       expect(entry.details, 'Limite insuficiente');
-      expect(entry.actorLabel, 'Financeiro · fin-1');
+      expect(entry.actorLabel, 'Financeiro · #fin-1');
     });
 
     test('tipo desconhecido cai no fallback sem derrubar o parsing', () {
