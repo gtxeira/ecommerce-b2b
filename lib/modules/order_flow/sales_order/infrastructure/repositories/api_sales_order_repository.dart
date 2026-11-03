@@ -1,17 +1,19 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/credit_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/enums/finance_decision.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/finance_review.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/order_item.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/repositories/sales_order_repository.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/quantity.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/pricing_explanation.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/enums/finance_decision.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/finance_review.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/order_item.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/order_timeline_entry.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
 
 class ApiSalesOrderRepository implements SalesOrderRepository {
   final ApiClient _api;
@@ -53,6 +55,19 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
     return _mapList(data);
   }
 
+  @override
+  Future<List<OrderTimelineEntry>> getTimeline(OrderId id) async {
+    final data = await _api.get('/api/orders/${id.value}/timeline');
+    if (data is! List) return const [];
+    return data
+        .whereType<Map>()
+        .map(
+          (item) =>
+              OrderTimelineEntry.fromJson(Map<String, dynamic>.from(item)),
+        )
+        .toList();
+  }
+
   List<SalesOrder> _mapList(dynamic data) {
     if (data is! List) return const [];
     return data
@@ -69,8 +84,10 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
     final financeReview = decision == null
         ? null
         : FinanceReview(
-            decision: _decisionFromApi(decision),
+            decision: FinanceDecision.fromApi(decision),
             reviewerId: reviewer ?? '',
+            reviewerName: readNullableString(json, 'financeReviewerName'),
+            reviewerRole: readNullableString(json, 'financeReviewerRole'),
             reviewedAt: DateTime.now(),
             justification: justification ?? '',
           );
@@ -78,49 +95,35 @@ class ApiSalesOrderRepository implements SalesOrderRepository {
     return SalesOrder(
       id: OrderId(readString(json, 'id')),
       companyId: readNullableString(json, 'companyId'),
-      status: _statusFromApi(readString(json, 'status')),
-      creditStatus: _creditFromApi(readString(json, 'creditStatus')),
+      companyName: readNullableString(json, 'companyName'),
+      companyLegalName: readNullableString(json, 'companyLegalName'),
+      status: OrderStatus.fromApi(readString(json, 'status')),
+      creditStatus: CreditStatus.fromApi(readString(json, 'creditStatus')),
       items: readMapList(json, 'items')
           .map(
             (item) => OrderItem(
               productId: ProductId(readString(item, 'productId')),
+              productName: readNullableString(item, 'productName'),
+              productSku: readNullableString(item, 'productSku'),
+              variantId: readNullableString(item, 'variantId'),
+              variantSku: readNullableString(item, 'variantSku'),
+              variantLabel: readNullableString(item, 'variantLabel'),
               quantity: Quantity.create(readInt(item, 'quantity')).getOrThrow(),
               unitPriceSnapshot: Money.create(
                 readDouble(item, 'unitPrice'),
               ).getOrThrow(),
+              pricing: item['pricing'] is Map
+                  ? PricingExplanation.fromJson(
+                      Map<String, dynamic>.from(item['pricing'] as Map),
+                    )
+                  : null,
             ),
           )
           .toList(),
       financeReview: financeReview,
+      createdAt: readDate(json, 'createdAt'),
+      lastActivityAt: readDate(json, 'lastActivityAt'),
       shippingCost: Money.create(readDouble(json, 'shippingCost')).getOrThrow(),
     );
   }
-
-  static OrderStatus _statusFromApi(String value) =>
-      switch (value.toLowerCase()) {
-        'pendingfinanceapproval' => OrderStatus.pendingFinanceApproval,
-        'blockedbyfinance' => OrderStatus.blockedByFinance,
-        'pickingpacking' => OrderStatus.pickingPacking,
-        'intransit' => OrderStatus.inTransit,
-        'delivered' => OrderStatus.delivered,
-        'cancelled' => OrderStatus.cancelled,
-        'rma' => OrderStatus.rma,
-        'invoiced' => OrderStatus.invoiced,
-        _ => OrderStatus.pendingFinanceApproval,
-      };
-
-  static CreditStatus _creditFromApi(String value) =>
-      switch (value.toLowerCase()) {
-        'approved' => CreditStatus.approved,
-        'rejected' => CreditStatus.rejected,
-        'blocked' => CreditStatus.blocked,
-        _ => CreditStatus.pending,
-      };
-
-  static FinanceDecision _decisionFromApi(String value) =>
-      switch (value.toLowerCase()) {
-        'approved' => FinanceDecision.approved,
-        'rejected' => FinanceDecision.rejected,
-        _ => FinanceDecision.requestMoreInfo,
-      };
 }

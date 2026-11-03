@@ -6,6 +6,9 @@ import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
 
+/// Envelope de sucesso já desembrulhado: o `data` e o `meta` da resposta.
+typedef ApiEnvelope = ({dynamic data, Map<String, dynamic> meta});
+
 /// Cliente HTTP único da aplicação.
 ///
 /// Responsabilidades:
@@ -47,6 +50,11 @@ class ApiClient {
   Future<dynamic> get(String path, {Map<String, dynamic>? query}) =>
       _request('GET', path, query: query);
 
+  /// GET que preserva o envelope: devolve `data` e o `meta` (ex.: `meta.pagination`).
+  /// Usado pelas listagens paginadas, que precisam do total de páginas além dos itens.
+  Future<ApiEnvelope> getEnvelope(String path, {Map<String, dynamic>? query}) =>
+      _requestEnvelope('GET', path, query: query);
+
   Future<dynamic> post(
     String path, {
     Object? data,
@@ -72,6 +80,23 @@ class ApiClient {
     Map<String, dynamic>? query,
     bool retried = false,
   }) async {
+    final envelope = await _requestEnvelope(
+      method,
+      path,
+      data: data,
+      query: query,
+      retried: retried,
+    );
+    return envelope.data;
+  }
+
+  Future<ApiEnvelope> _requestEnvelope(
+    String method,
+    String path, {
+    Object? data,
+    Map<String, dynamic>? query,
+    bool retried = false,
+  }) async {
     final tokens = await _tokenStore.read();
 
     try {
@@ -87,13 +112,13 @@ class ApiClient {
           },
         ),
       );
-      return _unwrap(response);
+      return _unwrapEnvelope(response);
     } on DioException catch (error) {
       final status = error.response?.statusCode;
       if (status == 401 && !retried && !_isAuthPath(path)) {
         final refreshed = await _refresh();
         if (refreshed) {
-          return _request(
+          return _requestEnvelope(
             method,
             path,
             data: data,
@@ -152,6 +177,25 @@ class ApiClient {
       _sessionEvents.notifyExpired();
       return false;
     }
+  }
+
+  ApiEnvelope _unwrapEnvelope(Response<dynamic> response) {
+    if (response.statusCode == 204) {
+      return (data: null, meta: const <String, dynamic>{});
+    }
+
+    final body = response.data;
+    if (body is Map) {
+      final meta = body['meta'];
+      return (
+        data: body.containsKey('data') ? body['data'] : body,
+        meta: meta is Map
+            ? Map<String, dynamic>.from(meta)
+            : const <String, dynamic>{},
+      );
+    }
+
+    return (data: body, meta: const <String, dynamic>{});
   }
 
   dynamic _unwrap(Response<dynamic> response) {

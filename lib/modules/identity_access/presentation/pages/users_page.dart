@@ -1,8 +1,10 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/repositories/company_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_account.dart';
+import 'package:ecommerce_b2b/app/presentation/widgets/buyer_person_fields.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_account.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/user_management_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,12 +30,38 @@ class _UsersView extends StatefulWidget {
 
 class _UsersViewState extends State<_UsersView> {
   final _searchController = TextEditingController();
+  final Map<String, String> _companyNames = {};
   UserRole? _roleFilter;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCompanyNames();
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Carrega o nome fantasia das empresas para não exibir o id na listagem.
+  Future<void> _loadCompanyNames() async {
+    try {
+      final companies = await getIt<CompanyRepository>().findAll();
+      if (!mounted) return;
+      setState(() {
+        _companyNames
+          ..clear()
+          ..addEntries(
+            companies.map(
+              (company) => MapEntry(company.id.value, company.tradeName),
+            ),
+          );
+      });
+    } catch (_) {
+      // Mantém o fallback para o id caso não seja possível carregar as empresas.
+    }
   }
 
   void _reload() {
@@ -83,7 +111,7 @@ class _UsersViewState extends State<_UsersView> {
                     ...UserRole.values.map(
                       (role) => DropdownMenuItem(
                         value: role,
-                        child: Text(role.apiName),
+                        child: Text(role.label),
                       ),
                     ),
                   ],
@@ -134,6 +162,15 @@ class _UsersViewState extends State<_UsersView> {
                     itemCount: users.length,
                     itemBuilder: (context, index) {
                       final user = users[index];
+                      final companyName = user.companyId == null
+                          ? null
+                          : companyLabel(
+                              tradeName:
+                                  user.companyName ??
+                                  _companyNames[user.companyId!],
+                              legalName: user.companyLegalName,
+                              id: user.companyId!,
+                            );
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
@@ -146,8 +183,8 @@ class _UsersViewState extends State<_UsersView> {
                           ),
                           title: Text(user.fullName),
                           subtitle: Text(
-                            '${user.email} • ${user.role.apiName}'
-                            '${user.companyId == null ? '' : ' • ${user.companyId}'}',
+                            '${user.email} • ${user.role.label}'
+                            '${companyName == null ? '' : ' • $companyName'}',
                           ),
                           trailing: PopupMenuButton<String>(
                             onSelected: (action) {
@@ -186,11 +223,19 @@ class _UsersViewState extends State<_UsersView> {
     if (!context.mounted) return;
 
     final cubit = context.read<UserManagementCubit>();
+    final formKey = GlobalKey<FormState>();
     final fullNameCtrl = TextEditingController(text: user?.fullName ?? '');
     final emailCtrl = TextEditingController(text: user?.email ?? '');
+    final phoneCtrl = TextEditingController(text: user?.phone ?? '');
+    final positionCtrl = TextEditingController(text: user?.positionTitle ?? '');
     final passwordCtrl = TextEditingController();
     var role = user?.role ?? UserRole.buyer;
     var active = user?.active ?? true;
+    final roleOptions = user == null
+        ? UserRole.values
+        : UserRole.values.where(
+            (item) => item != UserRole.buyer || user.role == UserRole.buyer,
+          );
     String? companyId =
         user?.companyId ??
         (companies.isNotEmpty ? companies.first.id.value : null);
@@ -201,77 +246,95 @@ class _UsersViewState extends State<_UsersView> {
         builder: (context, setDialogState) => AlertDialog(
           title: Text(user == null ? 'Novo usuário' : 'Editar usuário'),
           content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: fullNameCtrl,
-                  decoration: const InputDecoration(labelText: 'Nome completo'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: emailCtrl,
-                  enabled: user == null,
-                  decoration: const InputDecoration(labelText: 'E-mail'),
-                ),
-                if (user == null) ...[
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: passwordCtrl,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Senha inicial',
-                      helperText: 'Mínimo 8 caracteres, com letra e dígito',
-                    ),
+            child: Form(
+              key: formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  BuyerPersonFields(
+                    fullNameController: fullNameCtrl,
+                    emailController: emailCtrl,
+                    phoneController: phoneCtrl,
+                    positionController: positionCtrl,
+                    showBuyerFields: user == null && role == UserRole.buyer,
+                    emailEnabled: user == null,
+                    spacing: 12,
                   ),
-                ],
-                const SizedBox(height: 12),
-                DropdownButtonFormField<UserRole>(
-                  initialValue: role,
-                  decoration: const InputDecoration(labelText: 'Papel'),
-                  items: UserRole.values
-                      .map(
-                        (item) => DropdownMenuItem(
-                          value: item,
-                          child: Text(item.apiName),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setDialogState(() {
-                      role = value;
-                      if (role != UserRole.buyer) companyId = null;
-                    });
-                  },
-                ),
-                if (role == UserRole.buyer) ...[
+                  if (user == null) ...[
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: passwordCtrl,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Senha inicial *',
+                        helperText:
+                            'Mínimo 8 caracteres, com pelo menos uma letra e um número',
+                      ),
+                      validator: (v) {
+                        final value = v ?? '';
+                        if (value.length < 8) {
+                          return 'A senha deve ter ao menos 8 caracteres';
+                        }
+                        if (!RegExp(r'[A-Za-z]').hasMatch(value) ||
+                            !RegExp(r'\d').hasMatch(value)) {
+                          return 'A senha deve conter letra e número';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: companyId,
-                    decoration: const InputDecoration(labelText: 'Empresa'),
-                    items: companies
+                  DropdownButtonFormField<UserRole>(
+                    initialValue: role,
+                    decoration: const InputDecoration(labelText: 'Papel'),
+                    items: roleOptions
                         .map(
-                          (company) => DropdownMenuItem(
-                            value: company.id.value,
-                            child: Text(company.tradeName),
+                          (item) => DropdownMenuItem(
+                            value: item,
+                            child: Text(item.label),
                           ),
                         )
                         .toList(),
-                    onChanged: (value) =>
-                        setDialogState(() => companyId = value),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setDialogState(() {
+                        role = value;
+                        if (role != UserRole.buyer) companyId = null;
+                      });
+                    },
                   ),
+                  if (role == UserRole.buyer) ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: companyId,
+                      decoration: const InputDecoration(labelText: 'Empresa *'),
+                      items: companies
+                          .map(
+                            (company) => DropdownMenuItem(
+                              value: company.id.value,
+                              child: Text(company.tradeName),
+                            ),
+                          )
+                          .toList(),
+                      validator: (value) =>
+                          value == null ? 'Selecione a empresa' : null,
+                      onChanged: (value) =>
+                          setDialogState(() => companyId = value),
+                    ),
+                  ],
+                  if (user != null) ...[
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Ativo'),
+                      value: active,
+                      onChanged: (value) =>
+                          setDialogState(() => active = value),
+                    ),
+                  ],
                 ],
-                if (user != null) ...[
-                  const SizedBox(height: 8),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Ativo'),
-                    value: active,
-                    onChanged: (value) => setDialogState(() => active = value),
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
           actions: [
@@ -281,6 +344,7 @@ class _UsersViewState extends State<_UsersView> {
             ),
             ElevatedButton(
               onPressed: () {
+                if (!(formKey.currentState?.validate() ?? false)) return;
                 if (user == null) {
                   cubit.createUser(
                     fullName: fullNameCtrl.text.trim(),
@@ -288,6 +352,10 @@ class _UsersViewState extends State<_UsersView> {
                     password: passwordCtrl.text,
                     role: role,
                     companyId: role == UserRole.buyer ? companyId : null,
+                    phone: role == UserRole.buyer ? phoneCtrl.text : null,
+                    positionTitle: role == UserRole.buyer
+                        ? positionCtrl.text
+                        : null,
                   );
                 } else {
                   cubit.updateUser(

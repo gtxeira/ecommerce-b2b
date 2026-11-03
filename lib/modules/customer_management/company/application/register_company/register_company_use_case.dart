@@ -1,26 +1,25 @@
-import 'package:ecommerce_b2b/app/core/network/api_domain_error.dart';
 import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/customer_credit_account.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/repositories/company_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/cnpj.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/inscricao_estadual.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_domain_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/phone_number.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/customer_credit_account.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/cnpj.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/inscricao_estadual.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/value_objects/address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/email_address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/phone_number.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 class RegisterCompanyUseCase {
   final CompanyRepository _companyRepository;
 
   RegisterCompanyUseCase(this._companyRepository);
 
-  Future<Result<Company, DomainError>> execute({
+  Future<Result<Company, AppError>> execute({
     required UserSession currentSession,
     required String legalName,
     required String tradeName,
@@ -117,9 +116,9 @@ class RegisterCompanyUseCase {
       await _companyRepository.save(company);
       return Success(company);
     } on ApiException catch (error) {
-      return Failure(ApiDomainError.fromException(error));
+      return Failure(error.toAppError());
     } catch (error) {
-      return Failure(ApiDomainError(error.toString()));
+      return Failure(AppError(AppErrorCodes.networkError, error.toString()));
     }
   }
 }

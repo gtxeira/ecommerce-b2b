@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/infrastructure/repositories/api_auth_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/email_address.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../support/fake_http_adapter.dart';
@@ -51,6 +52,7 @@ void main() {
               'userId': 'rep-456',
               'role': 'Representative',
               'companyId': null,
+              'fullName': 'Representante Mock',
             },
           }),
         );
@@ -64,6 +66,7 @@ void main() {
       expect(session.userId.value, 'rep-456');
       expect(session.role, UserRole.representative);
       expect(session.companyId, isNull);
+      expect(session.fullName, 'Representante Mock');
       expect((await tokenStore.read())!.refreshToken, 'refresh');
     });
 
@@ -88,7 +91,7 @@ void main() {
       expect(result.getOrThrow().role, UserRole.admin);
     });
 
-    test('should return InvalidCredentialsError on 401', () async {
+    test('should return INVALID_CREDENTIALS on 401', () async {
       final adapter = FakeHttpAdapter(
         (options) async => jsonResponse(
           errorEnvelope(
@@ -103,6 +106,7 @@ void main() {
       final result = await repository.login(email, 'errada');
 
       expect(result.isFailure, isTrue);
+      expect(result.getFailureOrThrow().code, AppErrorCodes.invalidCredentials);
       expect(result.getFailureOrThrow().message, 'E-mail ou senha inválidos.');
       expect(await tokenStore.read(), isNull);
     });
@@ -118,6 +122,8 @@ void main() {
             'userId': 'buyer-1',
             'role': 'Buyer',
             'companyId': 'c1',
+            'fullName': 'Carlos Comprador',
+            'positionTitle': 'Diretor de Compras',
           }),
         );
       });
@@ -128,6 +134,8 @@ void main() {
       expect(session, isNotNull);
       expect(session!.role, UserRole.buyer);
       expect(session.companyId!.value, 'c1');
+      expect(session.fullName, 'Carlos Comprador');
+      expect(session.positionTitle, 'Diretor de Compras');
     });
 
     test('should return null without persisted tokens', () async {

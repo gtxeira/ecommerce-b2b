@@ -1,0 +1,77 @@
+// ignore_for_file: prefer_initializing_formals
+import 'package:ecommerce_b2b/modules/shared_kernel/model/entity.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/quote_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/enums/quote_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote_item.dart';
+
+class Quote extends Entity<QuoteId> {
+  final String? companyId;
+
+  /// Nome fantasia e razão social resolvidos pela API na leitura.
+  final String? companyName;
+  final String? companyLegalName;
+
+  final String? representativeId;
+
+  /// Nome do representante resolvido pela API na leitura.
+  final String? representativeName;
+  QuoteStatus _status;
+  final List<QuoteItem> _items;
+  final Money _shippingCost;
+
+  /// Momento de criação, em UTC. `null` em payloads antigos (antes do campo
+  /// existir no contrato).
+  final DateTime? createdAt;
+
+  /// Validade do orçamento, em UTC. `null` em orçamentos antigos, anteriores ao
+  /// campo; nesse caso não há expiração automática.
+  final DateTime? expiresAt;
+
+  Quote({
+    required QuoteId id,
+    this.companyId,
+    this.companyName,
+    this.companyLegalName,
+    this.representativeId,
+    this.representativeName,
+    required QuoteStatus status,
+    List<QuoteItem>? items,
+    Money? shippingCost,
+    this.createdAt,
+    this.expiresAt,
+  }) : _status = status,
+       _items = items ?? [],
+       _shippingCost = shippingCost ?? Money.create(0).getOrThrow(),
+       super(id);
+
+  QuoteStatus get status => _status;
+  List<QuoteItem> get items => List.unmodifiable(_items);
+  Money get shippingCost => _shippingCost;
+
+  Money get total {
+    if (_items.isEmpty) {
+      return _shippingCost;
+    }
+
+    Money sum = Money.create(
+      0,
+      currency: _items.first.unitPrice.currency,
+    ).getOrThrow();
+    for (var item in _items) {
+      sum = sum + item.subtotal;
+    }
+    return sum + _shippingCost;
+  }
+
+  void addItem(QuoteItem item) {
+    if (_status != QuoteStatus.draft) {
+      throw StateError('Cannot add items to a non-draft quote');
+    }
+    _items.add(item);
+  }
+
+  void updateStatus(QuoteStatus newStatus) {
+    _status = newStatus;
+  }
+}

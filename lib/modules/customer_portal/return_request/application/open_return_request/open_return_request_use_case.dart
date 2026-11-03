@@ -1,9 +1,9 @@
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/enums/rma_status.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/repositories/return_request_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/return_request.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/return_request_item.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/rma_id.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/enums/rma_status.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/repositories/return_request_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/return_request.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/return_request_item.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/rma_id.dart';
 
 /// Abertura de RMA (RF20). A API valida o status do pedido (Delivered/Invoiced)
 /// e transiciona o pedido; o cliente apenas envia o comando.

@@ -1,14 +1,13 @@
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/application/add_authorized_buyer/add_authorized_buyer_use_case.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/application/get_companies/get_companies_use_case.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/application/register_company/register_company_use_case.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/errors/cnpj_errors.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/user_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/base/base_domain_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/user_id.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../fakes/fake_company_repository.dart';
@@ -51,7 +50,8 @@ void main() {
   });
 
   group('RegisterCompanyUseCase', () {
-    Future<Result<Company, DomainError>> register(String cnpj) => registerCompanyUseCase.execute(
+    Future<Result<Company, AppError>> register(String cnpj) =>
+        registerCompanyUseCase.execute(
           currentSession: representativeSession,
           legalName: 'Test Legal Name S.A.',
           tradeName: 'Test Trade Name',
@@ -85,7 +85,7 @@ void main() {
       final result = await register('11111111111111');
 
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<CnpjError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.cnpjInvalid);
     });
   });
 
@@ -98,6 +98,7 @@ void main() {
         email: 'buyer@acme.com',
         phone: '11988888888',
         positionTitle: 'Buyer Manager',
+        password: 'senha1234',
       );
 
       expect(result.isSuccess, isTrue);

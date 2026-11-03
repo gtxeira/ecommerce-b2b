@@ -1,8 +1,9 @@
 import 'package:ecommerce_b2b/modules/catalog/product/application/get_products/get_products_use_case.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product_page.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -29,47 +30,49 @@ void main() {
   }
 
   group('GetProductsUseCase', () {
-    test('should return all products when no query is provided', () async {
-      final products = [
-        createProduct('1', 'Notebook', 'SKU-001'),
-        createProduct('2', 'Monitor', 'SKU-002'),
-      ];
-      when(() => productRepository.getAll()).thenAnswer((_) async => products);
+    test('should delegate executePage with page and pageSize', () async {
+      final page = ProductPage(
+        items: [createProduct('1', 'Notebook', 'SKU-001')],
+        page: 2,
+        pageSize: 10,
+        totalItems: 11,
+        totalPages: 2,
+      );
+      when(
+        () => productRepository.getPage(query: 'Note', page: 2, pageSize: 10),
+      ).thenAnswer((_) async => page);
 
-      final result = await useCase.execute();
+      final result = await useCase.executePage(
+        query: 'Note',
+        page: 2,
+        pageSize: 10,
+      );
 
       expect(result.isSuccess, isTrue);
-      expect(result.getOrThrow(), hasLength(2));
+      expect(result.getOrThrow(), same(page));
+      verify(
+        () => productRepository.getPage(query: 'Note', page: 2, pageSize: 10),
+      ).called(1);
     });
 
-    test('should filter products by name', () async {
-      final products = [
-        createProduct('1', 'Notebook', 'SKU-001'),
-        createProduct('2', 'Monitor', 'SKU-002'),
-      ];
-      when(() => productRepository.getAll()).thenAnswer((_) async => products);
+    test('should use the defaults when executePage has no arguments', () async {
+      final page = ProductPage(
+        items: const [],
+        page: 1,
+        pageSize: 20,
+        totalItems: 0,
+        totalPages: 0,
+      );
+      when(
+        () => productRepository.getPage(query: null, page: 1, pageSize: 20),
+      ).thenAnswer((_) async => page);
 
-      final result = await useCase.execute(query: 'Note');
-
-      expect(result.isSuccess, isTrue);
-      final filtered = result.getOrThrow();
-      expect(filtered, hasLength(1));
-      expect(filtered.first.name, contains('Notebook'));
-    });
-
-    test('should filter products by SKU', () async {
-      final products = [
-        createProduct('1', 'Notebook', 'SKU-001'),
-        createProduct('2', 'Monitor', 'SKU-002'),
-      ];
-      when(() => productRepository.getAll()).thenAnswer((_) async => products);
-
-      final result = await useCase.execute(query: '002');
+      final result = await useCase.executePage();
 
       expect(result.isSuccess, isTrue);
-      final filtered = result.getOrThrow();
-      expect(filtered, hasLength(1));
-      expect(filtered.first.sku, contains('002'));
+      verify(
+        () => productRepository.getPage(query: null, page: 1, pageSize: 20),
+      ).called(1);
     });
   });
 }

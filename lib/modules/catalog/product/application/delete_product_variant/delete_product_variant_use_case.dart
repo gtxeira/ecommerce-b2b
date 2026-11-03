@@ -1,7 +1,7 @@
-import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_variant_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_variant_id.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 /// Exclusão de variante. A API valida o vínculo e devolve o erro.
 class DeleteProductVariantUseCase {

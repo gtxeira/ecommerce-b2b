@@ -1,6 +1,6 @@
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/user_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_account.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/repositories/user_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_account.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/user_management_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -61,6 +61,8 @@ void main() {
           password: any(named: 'password'),
           role: any(named: 'role'),
           companyId: any(named: 'companyId'),
+          phone: any(named: 'phone'),
+          positionTitle: any(named: 'positionTitle'),
         ),
       ).thenAnswer((_) async => user);
       when(() => repository.findAll()).thenAnswer((_) async => [user]);

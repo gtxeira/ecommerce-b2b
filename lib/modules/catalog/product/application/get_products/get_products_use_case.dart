@@ -1,26 +1,27 @@
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product_page.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
 
 class GetProductsUseCase {
   final ProductRepository _productRepository;
 
   GetProductsUseCase(this._productRepository);
 
-  Future<Result<List<Product>, Exception>> execute({String? query}) async {
+  /// Busca uma página. O filtro e a paginação são da API: o cliente só repassa o termo,
+  /// a página e o tamanho em `?query`, `?page` e `?pageSize`.
+  Future<Result<ProductPage, Exception>> executePage({
+    String? query,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
     try {
-      final products = await _productRepository.getAll();
-      
-      if (query != null && query.isNotEmpty) {
-        final filtered = products.where((p) {
-          final q = query.toLowerCase();
-          return p.name.toLowerCase().contains(q) || 
-                 p.sku.toLowerCase().contains(q);
-        }).toList();
-        return Success(filtered);
-      }
-      
-      return Success(products);
+      return Success(
+        await _productRepository.getPage(
+          query: query,
+          page: page,
+          pageSize: pageSize,
+        ),
+      );
     } catch (e) {
       return Failure(Exception(e.toString()));
     }

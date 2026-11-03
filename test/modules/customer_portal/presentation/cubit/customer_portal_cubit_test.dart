@@ -1,32 +1,40 @@
 import 'package:ecommerce_b2b/modules/customer_portal/boleto/application/download_boleto/download_boleto_use_case.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/boleto/domain/value_objects/boleto_copy.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/boleto/model/value_objects/boleto_copy.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/cubit/customer_portal_cubit.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/purchase_history/application/get_purchase_history/get_purchase_history_use_case.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/application/get_return_requests/get_return_requests_use_case.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/application/open_return_request/open_return_request_use_case.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/return_request.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/return_request_item.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/enums/rma_status.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/credit_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/rma_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/user_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/return_request.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/return_request_item.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/enums/rma_status.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/rma_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/user_id.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockGetPurchaseHistoryUseCase extends Mock implements GetPurchaseHistoryUseCase {}
-class MockGetReturnRequestsUseCase extends Mock implements GetReturnRequestsUseCase {}
+class MockGetPurchaseHistoryUseCase extends Mock
+    implements GetPurchaseHistoryUseCase {}
+
+class MockGetReturnRequestsUseCase extends Mock
+    implements GetReturnRequestsUseCase {}
+
 class MockDownloadBoletoUseCase extends Mock implements DownloadBoletoUseCase {}
-class MockOpenReturnRequestUseCase extends Mock implements OpenReturnRequestUseCase {}
+
+class MockOpenReturnRequestUseCase extends Mock
+    implements OpenReturnRequestUseCase {}
 
 class SalesOrderFake extends Fake implements SalesOrder {}
+
 class RmaIdFake extends Fake implements RmaId {}
+
 class ReturnRequestItemFake extends Fake implements ReturnRequestItem {}
 
 void main() {
@@ -72,40 +80,47 @@ void main() {
       expect(cubit.state, isA<CustomerPortalInitial>());
     });
 
-    test('loadPortalData should emit Loading and then Loaded on success', () async {
-      final order = SalesOrder(
-        id: const OrderId('o1'),
-        companyId: 'c1',
-        status: OrderStatus.delivered,
-        creditStatus: CreditStatus.approved,
-        items: [],
-      );
+    test(
+      'loadPortalData should emit Loading and then Loaded on success',
+      () async {
+        final order = SalesOrder(
+          id: const OrderId('o1'),
+          companyId: 'c1',
+          status: OrderStatus.delivered,
+          creditStatus: CreditStatus.approved,
+          items: [],
+        );
 
-      final rma = ReturnRequest(
-        id: const RmaId('r1'),
-        orderId: 'o1',
-        status: RmaStatus.pending,
-        reason: 'Defeito',
-      );
+        final rma = ReturnRequest(
+          id: const RmaId('r1'),
+          orderId: 'o1',
+          status: RmaStatus.pending,
+          reason: 'Defeito',
+        );
 
-      when(() => getPurchaseHistory.execute(companyId, session)).thenAnswer((_) async => Success([order]));
-      when(() => getReturnRequests.execute(companyId, session)).thenAnswer((_) async => Success([rma]));
+        when(
+          () => getPurchaseHistory.execute(companyId, session),
+        ).thenAnswer((_) async => Success([order]));
+        when(
+          () => getReturnRequests.execute(companyId, session),
+        ).thenAnswer((_) async => Success([rma]));
 
-      final states = <CustomerPortalState>[];
-      cubit.stream.listen(states.add);
+        final states = <CustomerPortalState>[];
+        cubit.stream.listen(states.add);
 
-      await cubit.loadPortalData(companyId: companyId, session: session);
-      await Future.delayed(Duration.zero);
+        await cubit.loadPortalData(companyId: companyId, session: session);
+        await Future.delayed(Duration.zero);
 
-      expect(states, [
-        isA<CustomerPortalLoading>(),
-        isA<CustomerPortalLoaded>(),
-      ]);
+        expect(states, [
+          isA<CustomerPortalLoading>(),
+          isA<CustomerPortalLoaded>(),
+        ]);
 
-      final loaded = states[1] as CustomerPortalLoaded;
-      expect(loaded.orders, [order]);
-      expect(loaded.returnRequests, [rma]);
-    });
+        final loaded = states[1] as CustomerPortalLoaded;
+        expect(loaded.orders, [order]);
+        expect(loaded.returnRequests, [rma]);
+      },
+    );
 
     test('downloadBoleto should get boleto copy and update state', () async {
       final order = SalesOrder(
@@ -120,7 +135,9 @@ void main() {
 
       cubit.emit(CustomerPortalLoaded(orders: [order], returnRequests: []));
 
-      when(() => downloadBoleto.execute(const OrderId('o1'))).thenAnswer((_) async => boleto);
+      when(
+        () => downloadBoleto.execute(const OrderId('o1')),
+      ).thenAnswer((_) async => boleto);
 
       final states = <CustomerPortalState>[];
       cubit.stream.listen(states.add);
@@ -133,43 +150,60 @@ void main() {
       expect(loaded.activeBoleto, boleto);
     });
 
-    test('openRma should open return request, reload data and set success message', () async {
-      final order = SalesOrder(
-        id: const OrderId('o1'),
-        companyId: 'c1',
-        status: OrderStatus.delivered,
-        creditStatus: CreditStatus.approved,
-        items: [],
-      );
+    test(
+      'openRma should open return request, reload data and set success message',
+      () async {
+        final order = SalesOrder(
+          id: const OrderId('o1'),
+          companyId: 'c1',
+          status: OrderStatus.delivered,
+          creditStatus: CreditStatus.approved,
+          items: [],
+        );
 
-      final mockRma = ReturnRequest(
-        id: const RmaId('r1'),
-        orderId: 'o1',
-        status: RmaStatus.pending,
-        reason: 'Broken',
-      );
+        final mockRma = ReturnRequest(
+          id: const RmaId('r1'),
+          orderId: 'o1',
+          status: RmaStatus.pending,
+          reason: 'Broken',
+        );
 
-      cubit.emit(CustomerPortalLoaded(orders: [order], returnRequests: []));
+        cubit.emit(CustomerPortalLoaded(orders: [order], returnRequests: []));
 
-      when(() => openReturnRequest.execute(
+        when(
+          () => openReturnRequest.execute(
             rmaId: any(named: 'rmaId'),
             order: any(named: 'order'),
             reason: any(named: 'reason'),
             items: any(named: 'items'),
-          )).thenAnswer((_) async => mockRma);
+          ),
+        ).thenAnswer((_) async => mockRma);
 
-      when(() => getPurchaseHistory.execute(companyId, session)).thenAnswer((_) async => Success([order]));
-      when(() => getReturnRequests.execute(companyId, session)).thenAnswer((_) async => Success([]));
+        when(
+          () => getPurchaseHistory.execute(companyId, session),
+        ).thenAnswer((_) async => Success([order]));
+        when(
+          () => getReturnRequests.execute(companyId, session),
+        ).thenAnswer((_) async => Success([]));
 
-      final states = <CustomerPortalState>[];
-      cubit.stream.listen(states.add);
+        final states = <CustomerPortalState>[];
+        cubit.stream.listen(states.add);
 
-      await cubit.openRma(order: order, reason: 'Broken', companyId: companyId, session: session);
-      await Future.delayed(Duration.zero);
+        await cubit.openRma(
+          order: order,
+          reason: 'Broken',
+          companyId: companyId,
+          session: session,
+        );
+        await Future.delayed(Duration.zero);
 
-      expect(states.last, isA<CustomerPortalLoaded>());
-      final loaded = states.last as CustomerPortalLoaded;
-      expect(loaded.successMessage, 'Solicitação de devolução (RMA) aberta com sucesso!');
-    });
+        expect(states.last, isA<CustomerPortalLoaded>());
+        final loaded = states.last as CustomerPortalLoaded;
+        expect(
+          loaded.successMessage,
+          'Solicitação de devolução (RMA) aberta com sucesso!',
+        );
+      },
+    );
   });
 }

@@ -1,6 +1,6 @@
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/price_table.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/repositories/price_table_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/functional/result.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/price_table.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/price_table_repository.dart';
+import 'package:ecommerce_b2b/app/core/result/result.dart';
 
 class GetPriceTablesUseCase {
   final PriceTableRepository _priceTableRepository;

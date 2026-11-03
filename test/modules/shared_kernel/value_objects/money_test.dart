@@ -1,6 +1,6 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/enums/currency.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/errors/money_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/enums/currency.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -14,11 +14,14 @@ void main() {
     });
 
     /// deve retornar erro de valor negativo na criação
-    test('should return MoneyNegativeError for negative amount during creation', () {
-      final result = Money.create(-1.0);
-      expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<MoneyNegativeError>());
-    });
+    test(
+      'should return MoneyNegativeError for negative amount during creation',
+      () {
+        final result = Money.create(-1.0);
+        expect(result.isFailure, isTrue);
+        expect(result.getFailureOrThrow().code, AppErrorCodes.moneyNegative);
+      },
+    );
 
     /// deve somar quantias da mesma moeda
     test('should add money with same currency', () {
@@ -31,7 +34,10 @@ void main() {
     /// deve lançar erro ao somar moedas diferentes
     test('should throw ArgumentError when adding different currencies', () {
       final m1 = Money.create(50.0, currency: Currency.brazil).getOrThrow();
-      final m2 = Money.create(30.0, currency: Currency.unitedStates).getOrThrow();
+      final m2 = Money.create(
+        30.0,
+        currency: Currency.unitedStates,
+      ).getOrThrow();
       expect(() => m1 + m2, throwsArgumentError);
     });
 

@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/infrastructure/repositories/api_user_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -34,6 +34,8 @@ void main() {
     'email': 'user@test.com',
     'role': role,
     'companyId': companyId,
+    'companyName': companyId == null ? null : 'ACME',
+    'companyLegalName': companyId == null ? null : 'ACME Ltda',
     'active': active,
   };
 
@@ -64,8 +66,11 @@ void main() {
       expect(captured!.queryParameters['active'], 'true');
       expect(captured!.queryParameters['search'], 'silva');
       expect(users, hasLength(2));
+      expect(users[0].companyName, 'ACME');
+      expect(users[0].companyLegalName, 'ACME Ltda');
       expect(users[1].role, UserRole.admin);
       expect(users[1].companyId, isNull);
+      expect(users[1].companyName, isNull);
     });
 
     test('should create a user with roleAssignment-ready payload', () async {
@@ -82,10 +87,14 @@ void main() {
         password: 'senha1234',
         role: UserRole.buyer,
         companyId: 'c1',
+        phone: '11988888888',
+        positionTitle: 'Compras',
       );
 
       expect(body!['role'], 'Buyer');
       expect(body!['companyId'], 'c1');
+      expect(body!['phone'], '11988888888');
+      expect(body!['positionTitle'], 'Compras');
       expect(user.role, UserRole.buyer);
     });
 

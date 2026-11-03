@@ -2,15 +2,15 @@ import 'package:dio/dio.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/enums/price_scope_type.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/price_rule.dart';
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/price_table.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/enums/price_scope_type.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/price_rule.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/price_table.dart';
 import 'package:ecommerce_b2b/modules/catalog/price_table/infrastructure/repositories/api_price_table_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/price_table_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/quantity.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/price_table_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../support/fake_http_adapter.dart';
@@ -40,8 +40,9 @@ void main() {
           successEnvelope([
             {
               'id': 'pt-1',
-              'name': 'Tabela Nacional',
-              'scopeType': 'Regional',
+              'name': 'Tabela Cliente',
+              'scopeType': 'CustomerSpecific',
+              'companyId': 'c1',
               'rules': [
                 {
                   'productId': 'p1',
@@ -61,7 +62,8 @@ void main() {
       final tables = await repository.findAll();
 
       final table = tables.single;
-      expect(table.scopeType, PriceScopeType.regional);
+      expect(table.scopeType, PriceScopeType.customerSpecific);
+      expect(table.companyId, 'c1');
       final rule = table.rules.single;
       expect(rule.minQuantity.value, 10);
       expect(rule.state, State.saoPaulo);
@@ -80,6 +82,7 @@ void main() {
           id: const PriceTableId('pt-1'),
           name: 'Tabela',
           scopeType: PriceScopeType.customerSpecific,
+          companyId: 'c1',
           rules: [
             PriceRule(
               productId: const ProductId('p1'),
@@ -93,6 +96,7 @@ void main() {
       );
 
       expect(body!['scopeType'], 'CustomerSpecific');
+      expect(body!['companyId'], 'c1');
       expect((body!['rules'] as List).single['state'], 'saoPaulo');
     });
   });

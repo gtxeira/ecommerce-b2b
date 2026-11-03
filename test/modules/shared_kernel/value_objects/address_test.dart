@@ -1,12 +1,6 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/state_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/address_complement_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/address_number_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/city_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/neighborhood_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/street_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/errors/zip_code_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/value_objects/address.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -49,7 +43,7 @@ void main() {
     });
 
     /// deve criar um endereço válido com complemento vazio
-    test('should create valid address with empty complement', (){
+    test('should create valid address with empty complement', () {
       final result = Address.create(
         street: 'Rua A',
         number: '123',
@@ -76,7 +70,7 @@ void main() {
         zipCode: '01001-000',
       );
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<StateInvalidError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.stateInvalid);
     });
 
     /// deve retornar erro para rua ausente
@@ -90,7 +84,7 @@ void main() {
         zipCode: '01001-000',
       );
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<StreetEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.streetEmpty);
     });
 
     /// deve retornar erro para código postal inválido
@@ -104,7 +98,7 @@ void main() {
         zipCode: '123',
       );
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<ZipCodeLengthError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.zipCodeLength);
     });
 
     /// deve retornar erro para bairro vazio
@@ -118,7 +112,7 @@ void main() {
         zipCode: '01001-000',
       );
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<NeighborhoodEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.neighborhoodEmpty);
     });
 
     /// deve retornar erro para cidade vazia
@@ -132,7 +126,7 @@ void main() {
         zipCode: '01001-000',
       );
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<CityEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.cityEmpty);
     });
 
     /// deve retornar erro para número vazio
@@ -146,7 +140,7 @@ void main() {
         zipCode: '01001-000',
       );
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<AddressNumberEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.addressNumberEmpty);
     });
 
     /// deve retornar erro para rua muito longa
@@ -160,7 +154,7 @@ void main() {
         zipCode: '01001-000',
       );
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<StreetTooLongError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.streetTooLong);
     });
 
     /// deve retornar erro para complemento muito longo
@@ -175,7 +169,10 @@ void main() {
         zipCode: '01001-000',
       );
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<AddressComplementTooLongError>());
+      expect(
+        result.getFailureOrThrow().code,
+        AppErrorCodes.addressComplementTooLong,
+      );
     });
   });
 }

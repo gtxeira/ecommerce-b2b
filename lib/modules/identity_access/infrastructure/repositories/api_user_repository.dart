@@ -1,8 +1,8 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/user_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_account.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/repositories/user_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_account.dart';
 
 class ApiUserRepository implements UserRepository {
   final ApiClient _api;
@@ -39,6 +39,8 @@ class ApiUserRepository implements UserRepository {
     required String password,
     required UserRole role,
     String? companyId,
+    String? phone,
+    String? positionTitle,
   }) async {
     final data = await _api.post(
       '/api/users',
@@ -48,6 +50,8 @@ class ApiUserRepository implements UserRepository {
         'password': password,
         'role': role.apiName,
         'companyId': companyId,
+        'phone': phone,
+        'positionTitle': positionTitle,
       },
     );
     return _fromJson(Map<String, dynamic>.from(data as Map));
@@ -89,6 +93,10 @@ class ApiUserRepository implements UserRepository {
     email: readString(json, 'email'),
     role: UserRole.fromApiName(readString(json, 'role')) ?? UserRole.buyer,
     companyId: readNullableString(json, 'companyId'),
+    companyName: readNullableString(json, 'companyName'),
+    companyLegalName: readNullableString(json, 'companyLegalName'),
+    phone: readNullableString(json, 'phone'),
+    positionTitle: readNullableString(json, 'positionTitle'),
     active: readBool(json, 'active', true),
   );
 }

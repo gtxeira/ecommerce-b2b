@@ -2,11 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/credit_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/enums/finance_decision.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/credit_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/enums/finance_decision.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/api/finance_api.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/order_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/order_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../support/fake_http_adapter.dart';
@@ -25,6 +25,18 @@ void main() {
     );
     return FinanceApi(client);
   }
+
+  Map<String, dynamic> summaryJson() => {
+    'companyCount': 2,
+    'totalCreditLimit': 15000.0,
+    'totalOpenBalance': 1500.0,
+    'totalPendingOrdersBalance': 5000.0,
+    'totalExposure': 6500.0,
+    'availableLimit': 8500.0,
+    'utilizationPercentage': 43.33,
+    'companiesAtRisk': 1,
+    'companiesOverLimit': 0,
+  };
 
   Map<String, dynamic> orderJson() => {
     'id': 'o1',
@@ -75,6 +87,21 @@ void main() {
 
       expect(result.commissionGenerated, isTrue);
       expect(result.order.id, const OrderId('o1'));
+    });
+
+    test('should load the finance summary', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse(successEnvelope(summaryJson())),
+      );
+      final api = buildApi(adapter);
+
+      final summary = await api.getSummary();
+
+      expect(summary.companyCount, 2);
+      expect(summary.totalExposure.amount, 6500);
+      expect(summary.utilizationPercentage, 43.33);
+      expect(summary.companiesAtRisk, 1);
+      expect(adapter.requests.single.path, '/api/finance/summary');
     });
 
     test('should load the pending finance queue', () async {

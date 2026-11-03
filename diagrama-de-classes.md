@@ -2,6 +2,11 @@
 
 # Visão Geral dos Contextos
 
+> **Documento histórico.** Este diagrama descreve o modelo original do app Flutter, antes da
+> migração para a API C#. A referência atual do domínio é
+> [`../EcommerceB2b/docs/diagrama-de-classes.md`](../EcommerceB2b/docs/diagrama-de-classes.md);
+> no cliente, o código correspondente vive em `lib/modules/*/model/`.
+
 ```text
 ┌──────────────────────┐
 │ Customer Management  │
@@ -59,22 +64,17 @@ class Company {
     +Money creditLimit
 }
 
-class AuthorizedBuyer {
-    +BuyerId id
-    +String fullName
-    +EmailAddress email
-    +PhoneNumber phone
-    +String positionTitle
-    +Boolean active
-}
-
 class CustomerCreditAccount {
     +Money preApprovedLimit
     +Money openBalance
     +Money availableLimit()
 }
 
-Company "1" *-- "*" AuthorizedBuyer
+note right of Company
+  Compradores autorizados são usuários
+  (IdentityAccess) com role Buyer e companyId.
+end note
+
 Company "1" *-- "1" CustomerCreditAccount
 
 @enduml
@@ -204,8 +204,14 @@ Esse é o coração do sistema.
 
 class Quote {
     +QuoteId id
+    +String? companyId
+    +String? companyName
+    +String? companyLegalName
+    +String? representativeId
+    +String? representativeName
     +QuoteStatus status
     +Money total
+    +DateTime? createdAt
 }
 
 class QuoteItem {
@@ -215,18 +221,43 @@ class QuoteItem {
 
 class SalesOrder {
     +OrderId id
+    +String? companyId
+    +String? companyName
+    +String? companyLegalName
     +OrderStatus status
     +Money total
     +CreditStatus creditStatus
+    +DateTime? createdAt
+    +DateTime? lastActivityAt
+    +DateTime? activityAt
+}
+
+class OrderTimelineEntry {
+    +String id
+    +DateTime? occurredAt
+    +OrderTimelineEventType type
+    +OrderStatus? fromStatus
+    +OrderStatus? toStatus
+    +CreditStatus? toCreditStatus
+    +FinanceDecision? decision
+    +String? actorId
+    +String? actorRole
+    +String? actorName
+    +String? note
 }
 
 class OrderItem {
+    +String? productName
+    +String? productSku
     +Quantity quantity
     +Money unitPriceSnapshot
 }
 
 class FinanceReview {
     +FinanceDecision decision
+    +String reviewerId
+    +String? reviewerName
+    +String? reviewerRole
     +String reason
 }
 
@@ -234,6 +265,7 @@ Quote "1" *-- "*" QuoteItem
 
 SalesOrder "1" *-- "*" OrderItem
 SalesOrder "1" --> "0..1" FinanceReview
+SalesOrder "1" o-- "*" OrderTimelineEntry : lê do endpoint
 
 @enduml
 ```
@@ -307,7 +339,6 @@ Eu definiria os Aggregates assim:
 
 ```text
 Company
-├── AuthorizedBuyer
 └── CustomerCreditAccount
 
 SalesRepresentative

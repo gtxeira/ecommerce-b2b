@@ -1,12 +1,12 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/enums/shipment_status.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/repositories/shipment_repository.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/shipment.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/shipping_label.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/shipment_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/logistics/value_objects/tracking_code.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/enums/shipment_status.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/repositories/shipment_repository.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/shipment.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/shipping_label.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/shipment_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/logistics/value_objects/tracking_code.dart';
 
 class ApiShipmentRepository implements ShipmentRepository {
   final ApiClient _api;

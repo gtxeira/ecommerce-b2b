@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/errors/email_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/email_address.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -21,14 +21,14 @@ void main() {
     test('should return EmailEmptyError when input is empty', () {
       final result = EmailAddress.create('');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<EmailEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.emailEmpty);
     });
 
     /// deve retornar erro de e-mail inválido quando a entrada for inválida
     test('should return EmailInvalidError when input is invalid', () {
       final result = EmailAddress.create('invalid-email');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<EmailInvalidError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.emailInvalid);
     });
   });
 }

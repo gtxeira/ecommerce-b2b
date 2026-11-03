@@ -1,4 +1,4 @@
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/quote.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class QuoteState extends Equatable {

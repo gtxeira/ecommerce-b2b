@@ -1,24 +1,36 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/cnpj.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/inscricao_estadual.dart';
+import 'package:ecommerce_b2b/app/presentation/widgets/buyer_person_fields.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/cnpj.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/inscricao_estadual.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/presentation/cubit/company_management_cubit.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_representative.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart'
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart'
     as address_state;
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/email_input.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/money_input.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/not_empty_input.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/phone_input.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/zip_code_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/email_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/money_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/not_empty_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/phone_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/zip_code_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
+const _teamScopeValue = '__team__';
+
 class CompanyListPage extends StatelessWidget {
-  const CompanyListPage({super.key});
+  const CompanyListPage({
+    super.key,
+    this.initialRepresentativeId,
+    this.initialTeamView = false,
+  });
+
+  final String? initialRepresentativeId;
+  final bool initialTeamView;
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +43,12 @@ class CompanyListPage extends StatelessWidget {
     final session = authState.session;
 
     return BlocProvider(
-      create: (context) =>
-          getIt<CompanyManagementCubit>()..loadCompanies(session),
+      create: (context) => getIt<CompanyManagementCubit>()
+        ..loadCompanies(
+          session,
+          targetRepresentativeId: initialRepresentativeId,
+          teamView: initialTeamView,
+        ),
       child: BlocConsumer<CompanyManagementCubit, CompanyManagementState>(
         listener: (context, state) {
           if (state is CompanyManagementSuccess) {
@@ -70,9 +86,14 @@ class CompanyListPage extends StatelessWidget {
                 final targetRepId = state is CompanyManagementLoaded
                     ? state.selectedRepresentativeId
                     : null;
-                return context
-                    .read<CompanyManagementCubit>()
-                    .loadCompanies(session, targetRepresentativeId: targetRepId);
+                final teamView = state is CompanyManagementLoaded
+                    ? state.isTeamView
+                    : false;
+                return context.read<CompanyManagementCubit>().loadCompanies(
+                  session,
+                  targetRepresentativeId: targetRepId,
+                  teamView: teamView,
+                );
               },
               child: state is CompanyManagementLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -95,20 +116,25 @@ class CompanyListPage extends StatelessWidget {
   Widget _buildContent(
     BuildContext context,
     CompanyManagementState state,
-    dynamic session,
+    UserSession session,
     ThemeData theme,
     ColorScheme colorScheme,
   ) {
     List<Company> companies = [];
-    List<dynamic> subordinates = [];
+    List<SalesRepresentative> subordinates = [];
     String? selectedRepId;
+    var isTeamView = false;
     if (state is CompanyManagementLoaded) {
       companies = state.companies;
       subordinates = state.subordinates;
       selectedRepId = state.selectedRepresentativeId;
+      isTeamView = state.isTeamView;
     }
 
     final hasSubordinates = session.isSupervisor && subordinates.isNotEmpty;
+    final currentFilterValue = isTeamView
+        ? _teamScopeValue
+        : selectedRepId ?? session.userId.value;
 
     Widget mainContent;
     if (companies.isEmpty) {
@@ -198,11 +224,17 @@ class CompanyListPage extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildSectionTitle(theme, 'Compradores Autorizados'),
-                            if (!session.isBuyer)
+                            _buildSectionTitle(
+                              theme,
+                              'Compradores Autorizados',
+                            ),
+                            if (session.isAdmin)
                               TextButton.icon(
-                                onPressed: () =>
-                                    _showAddBuyerDialog(context, company, session),
+                                onPressed: () => _showAddBuyerDialog(
+                                  context,
+                                  company,
+                                  session,
+                                ),
                                 icon: const Icon(
                                   Icons.person_add_rounded,
                                   size: 18,
@@ -214,7 +246,9 @@ class CompanyListPage extends StatelessWidget {
                         if (company.authorizedBuyers.isEmpty)
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Nenhum comprador autorizado cadastrado.'),
+                            child: Text(
+                              'Nenhum comprador autorizado cadastrado.',
+                            ),
                           )
                         else
                           ...company.authorizedBuyers.map(
@@ -223,7 +257,9 @@ class CompanyListPage extends StatelessWidget {
                               margin: const EdgeInsets.only(top: 8.0),
                               child: ListTile(
                                 dense: true,
-                                leading: const Icon(Icons.person_outline_rounded),
+                                leading: const Icon(
+                                  Icons.person_outline_rounded,
+                                ),
                                 title: Text(
                                   buyer.fullName,
                                   style: const TextStyle(
@@ -231,7 +267,13 @@ class CompanyListPage extends StatelessWidget {
                                   ),
                                 ),
                                 subtitle: Text(
-                                  '${buyer.positionTitle} • ${buyer.email.value} • ${buyer.phone.value}',
+                                  [
+                                    if (buyer.positionTitle.trim().isNotEmpty)
+                                      buyer.positionTitle,
+                                    buyer.email.value,
+                                    if (buyer.phone != null)
+                                      buyer.phone!.formatted,
+                                  ].join(' • '),
                                 ),
                                 trailing: buyer.active
                                     ? Icon(
@@ -265,12 +307,20 @@ class CompanyListPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: Row(
                   children: [
-                    Icon(Icons.supervised_user_circle_rounded, color: colorScheme.primary),
+                    Icon(
+                      Icons.supervised_user_circle_rounded,
+                      color: colorScheme.primary,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -278,29 +328,51 @@ class CompanyListPage extends StatelessWidget {
                         children: [
                           const Text(
                             'Filtrar Carteira por Representante',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               isExpanded: true,
-                              value: selectedRepId,
+                              value: currentFilterValue,
                               items: [
                                 DropdownMenuItem(
-                                  value: session.userId.value,
-                                  child: const Text('Minha Carteira (Pessoal)', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  value: _teamScopeValue,
+                                  child: const Text(
+                                    'Toda a Equipe (Consolidado)',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
-                                ...subordinates.map((sub) => DropdownMenuItem(
-                                  value: sub.id.value,
-                                  child: Text(sub.fullName),
-                                )),
+                                DropdownMenuItem(
+                                  value: session.userId.value,
+                                  child: const Text('Minha Carteira (Pessoal)'),
+                                ),
+                                ...subordinates.map(
+                                  (sub) => DropdownMenuItem(
+                                    value: sub.id.value,
+                                    child: Text(sub.fullName),
+                                  ),
+                                ),
                               ],
                               onChanged: (newRepId) {
-                                if (newRepId != null) {
-                                  context.read<CompanyManagementCubit>().loadCompanies(
-                                    session,
-                                    targetRepresentativeId: newRepId,
-                                  );
+                                if (newRepId == null) return;
+                                if (newRepId == _teamScopeValue) {
+                                  context
+                                      .read<CompanyManagementCubit>()
+                                      .loadCompanies(session, teamView: true);
+                                } else {
+                                  context
+                                      .read<CompanyManagementCubit>()
+                                      .loadCompanies(
+                                        session,
+                                        targetRepresentativeId: newRepId,
+                                      );
                                 }
                               },
                             ),
@@ -355,7 +427,7 @@ class CompanyListPage extends StatelessWidget {
     );
   }
 
-  void _showRegisterCompanyDialog(BuildContext context, dynamic session) {
+  void _showRegisterCompanyDialog(BuildContext context, UserSession session) {
     final formKey = GlobalKey<FormState>();
     final legalNameCtrl = TextEditingController();
     final tradeNameCtrl = TextEditingController();
@@ -396,7 +468,7 @@ class CompanyListPage extends StatelessWidget {
             return AlertDialog(
               title: const Text('Cadastrar Nova Empresa'),
               content: SizedBox(
-                width: 900,
+                width: 500,
                 child: SingleChildScrollView(
                   child: Form(
                     key: formKey,
@@ -672,18 +744,14 @@ class CompanyListPage extends StatelessWidget {
   void _showAddBuyerDialog(
     BuildContext context,
     Company company,
-    dynamic session,
+    UserSession session,
   ) {
     final formKey = GlobalKey<FormState>();
     final fullNameCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
     final positionCtrl = TextEditingController();
-
-    final phoneFormatter = MaskTextInputFormatter(
-      mask: '(##) #####-####',
-      filter: {"#": RegExp(r'[0-9]')},
-    );
+    final passwordCtrl = TextEditingController();
 
     bool hasSubmitted = false;
 
@@ -697,65 +765,53 @@ class CompanyListPage extends StatelessWidget {
               title: Text('Adicionar Comprador - ${company.tradeName}'),
               content: SizedBox(
                 width: 500, // Aumenta a largura do modal
-                child: Form(
-                  key: formKey,
-                  autovalidateMode: hasSubmitted
-                      ? AutovalidateMode.onUserInteraction
-                      : AutovalidateMode.disabled,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: fullNameCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Nome Completo *',
-                          prefixIcon: Icon(Icons.person_rounded),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    autovalidateMode: hasSubmitted
+                        ? AutovalidateMode.onUserInteraction
+                        : AutovalidateMode.disabled,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        BuyerPersonFields(
+                          fullNameController: fullNameCtrl,
+                          emailController: emailCtrl,
+                          phoneController: phoneCtrl,
+                          positionController: positionCtrl,
                         ),
-                        validator: (v) {
-                          final input = NotEmptyInput.dirty(v ?? '');
-                          return input.isValid ? null : 'Campo obrigatório';
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: emailCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'E-mail *',
-                          prefixIcon: Icon(Icons.email_rounded),
+                        const Divider(height: 32),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Acesso ao portal',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
-                        validator: (v) {
-                          final input = EmailInput.dirty(v ?? '');
-                          return input.isValid ? null : 'E-mail inválido';
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: phoneCtrl,
-                        inputFormatters: [phoneFormatter],
-                        decoration: const InputDecoration(
-                          labelText: 'Telefone *',
-                          hintText: '(00) 00000-0000',
-                          prefixIcon: Icon(Icons.phone_rounded),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: passwordCtrl,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Senha inicial *',
+                            helperText:
+                                'Mínimo 8 caracteres, com pelo menos uma letra e um número',
+                            prefixIcon: Icon(Icons.lock_rounded),
+                          ),
+                          validator: (v) {
+                            final value = v ?? '';
+                            if (value.length < 8) {
+                              return 'A senha deve ter ao menos 8 caracteres';
+                            }
+                            if (!RegExp(r'[A-Za-z]').hasMatch(value) ||
+                                !RegExp(r'\d').hasMatch(value)) {
+                              return 'A senha deve conter letra e número';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (v) {
-                          final input = PhoneInput.dirty(v ?? '');
-                          return input.isValid ? null : 'Telefone inválido';
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: positionCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Cargo *',
-                          hintText: 'Ex: Gerente de Compras',
-                          prefixIcon: Icon(Icons.badge_rounded),
-                        ),
-                        validator: (v) {
-                          final input = NotEmptyInput.dirty(v ?? '');
-                          return input.isValid ? null : 'Campo obrigatório';
-                        },
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -777,6 +833,7 @@ class CompanyListPage extends StatelessWidget {
                         email: emailCtrl.text,
                         phone: phoneCtrl.text,
                         positionTitle: positionCtrl.text,
+                        password: passwordCtrl.text,
                       );
                       Navigator.pop(diagCtx);
                     }

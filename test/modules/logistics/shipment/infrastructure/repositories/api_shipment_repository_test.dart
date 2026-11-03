@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/enums/shipment_status.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/enums/shipment_status.dart';
 import 'package:ecommerce_b2b/modules/logistics/shipment/infrastructure/repositories/api_shipment_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 

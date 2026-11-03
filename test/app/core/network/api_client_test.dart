@@ -59,6 +59,36 @@ void main() {
       expect((data as List).single['id'], 'p1');
     });
 
+    test('should expose data and meta through getEnvelope', () async {
+      final adapter = FakeHttpAdapter(
+        (options) async => jsonResponse({
+          'data': [
+            {'id': 'p1'},
+          ],
+          'meta': {
+            'timestamp': '2026-09-21T10:00:00.000+00:00',
+            'pagination': {
+              'page': 1,
+              'pageSize': 20,
+              'totalItems': 1,
+              'totalPages': 1,
+            },
+          },
+        }),
+      );
+      final client = buildClient(adapter);
+
+      final envelope = await client.getEnvelope('/api/products');
+
+      expect((envelope.data as List).single['id'], 'p1');
+      expect(envelope.meta['pagination'], {
+        'page': 1,
+        'pageSize': 20,
+        'totalItems': 1,
+        'totalPages': 1,
+      });
+    });
+
     test('should throw ApiException with code and field on 4xx', () async {
       final adapter = FakeHttpAdapter(
         (options) async => jsonResponse(

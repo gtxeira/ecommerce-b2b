@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+
 /// Detalhe de campo devolvido pela API em `errors[].details[]`.
 class ApiErrorDetail {
   final String? field;
@@ -31,6 +33,14 @@ class ApiException implements Exception {
   bool get isNotFound => statusCode == 404;
   bool get isConflict => statusCode == 409;
   bool get isValidation => statusCode == 422;
+
+  /// Converte o erro HTTP para o contrato único do cliente, preservando o
+  /// `code` estável da API e o campo que falhou, quando houver.
+  AppError toAppError() => AppError(
+    code,
+    message,
+    field: details.isEmpty ? null : details.first.field,
+  );
 
   /// Constrói a partir do corpo padrão de erro da API. Quando o corpo não segue o
   /// envelope (ex.: proxy/rede), preserva o status e usa uma mensagem genérica.

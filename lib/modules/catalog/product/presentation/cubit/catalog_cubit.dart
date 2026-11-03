@@ -2,20 +2,25 @@ import 'package:ecommerce_b2b/modules/catalog/product/application/delete_product
 import 'package:ecommerce_b2b/modules/catalog/product/application/delete_product_variant/delete_product_variant_use_case.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/application/get_products/get_products_use_case.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/application/save_product/save_product_use_case.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_state.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/repositories/inventory_repository.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/stock_item.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_variant_id.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/repositories/inventory_repository.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/stock_item.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_variant_id.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CatalogCubit extends Cubit<CatalogState> {
+  static const int pageSize = 20;
+
   final GetProductsUseCase _getProductsUseCase;
   final SaveProductUseCase _saveProductUseCase;
   final DeleteProductUseCase _deleteProductUseCase;
   final DeleteProductVariantUseCase _deleteProductVariantUseCase;
   final InventoryRepository _inventoryRepository;
+
+  String? _query;
+  int _requestId = 0;
 
   CatalogCubit(
     this._getProductsUseCase,
@@ -26,8 +31,18 @@ class CatalogCubit extends Cubit<CatalogState> {
   ) : super(CatalogInitial());
 
   Future<void> loadProducts({String? query}) async {
+    _query = query == null || query.trim().isEmpty ? null : query.trim();
+    final requestId = ++_requestId;
     emit(CatalogLoading());
-    final result = await _getProductsUseCase.execute(query: query);
+
+    final result = await _getProductsUseCase.executePage(
+      query: _query,
+      page: 1,
+      pageSize: pageSize,
+    );
+
+    // Uma busca mais nova pode ter começado enquanto esta resposta vinha; nesse caso, descarta.
+    if (requestId != _requestId) return;
 
     // Estoque é complementar: se a chamada falhar, o catálogo ainda aparece.
     var consolidatedStock = const <StockItem>[];
@@ -37,6 +52,8 @@ class CatalogCubit extends Cubit<CatalogState> {
       consolidatedStock = const <StockItem>[];
     }
 
+    if (requestId != _requestId) return;
+
     final Map<String, int> stockMap = {
       for (var item in consolidatedStock)
         item.productId.value: item.physicalQuantity.value,
@@ -44,7 +61,67 @@ class CatalogCubit extends Cubit<CatalogState> {
 
     result.fold(
       (error) => emit(CatalogError(error.toString())),
-      (products) => emit(CatalogLoaded(products, stockMap: stockMap)),
+      (page) => emit(
+        CatalogLoaded(
+          page.items,
+          stockMap: stockMap,
+          page: page.page,
+          totalItems: page.totalItems,
+          totalPages: page.totalPages,
+        ),
+      ),
+    );
+  }
+
+  /// Carrega a próxima página e acrescenta ao final, sem limpar o que já está na tela.
+  Future<void> loadMore() async {
+    final current = state;
+    if (current is! CatalogLoaded ||
+        current.isLoadingMore ||
+        !current.hasMore) {
+      return;
+    }
+
+    emit(current.copyWith(isLoadingMore: true));
+
+    final requestId = _requestId;
+    final result = await _getProductsUseCase.executePage(
+      query: _query,
+      page: current.page + 1,
+      pageSize: pageSize,
+    );
+
+    // Uma busca/refresh começou enquanto esta página vinha: a lista atual já é outra.
+    if (requestId != _requestId) return;
+
+    result.fold(
+      (error) => emit(
+        CatalogLoadMoreFailed(
+          products: current.products,
+          stockMap: current.stockMap,
+          page: current.page,
+          totalItems: current.totalItems,
+          totalPages: current.totalPages,
+          message: error.toString(),
+        ),
+      ),
+      (page) {
+        final ids = current.products.map((product) => product.id.value).toSet();
+        final merged = [
+          ...current.products,
+          ...page.items.where((product) => ids.add(product.id.value)),
+        ];
+
+        emit(
+          CatalogLoaded(
+            merged,
+            stockMap: current.stockMap,
+            page: page.page,
+            totalItems: page.totalItems,
+            totalPages: page.totalPages,
+          ),
+        );
+      },
     );
   }
 
@@ -53,7 +130,7 @@ class CatalogCubit extends Cubit<CatalogState> {
 
     result.fold(
       (error) => emit(CatalogError(error.toString())),
-      (_) => loadProducts(),
+      (_) => loadProducts(query: _query),
     );
   }
 
@@ -62,7 +139,7 @@ class CatalogCubit extends Cubit<CatalogState> {
 
     result.fold((error) => emit(CatalogError(error.toString())), (_) {
       emit(CatalogProductDeleted());
-      loadProducts();
+      loadProducts(query: _query);
     });
   }
 
@@ -77,7 +154,7 @@ class CatalogCubit extends Cubit<CatalogState> {
 
     result.fold((error) => emit(CatalogError(error.toString())), (_) {
       emit(CatalogVariantDeleted());
-      loadProducts();
+      loadProducts(query: _query);
     });
   }
 }

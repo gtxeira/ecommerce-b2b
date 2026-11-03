@@ -1,9 +1,13 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
+import 'package:ecommerce_b2b/app/core/events/order_events.dart';
+import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/repositories/sales_order_repository.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/api/finance_api.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Faturamento dos pedidos entregues. É o gatilho da comissão do representante
 /// na API; a análise de crédito (finance-review) é uma etapa anterior e separada.
@@ -47,6 +51,7 @@ class _BillingPageState extends State<BillingPage> {
   Future<void> _invoice(SalesOrder order) async {
     try {
       final result = await getIt<FinanceApi>().invoice(order.id.value);
+      getIt<OrderEvents>().notifyChanged();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -88,11 +93,13 @@ class _BillingPageState extends State<BillingPage> {
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
                           child: ListTile(
-                            title: Text(
-                              'Pedido #${order.id.value.substring(0, 8)}',
-                            ),
+                            title: Text('Pedido #${order.id.displayCode}'),
                             subtitle: Text(
-                              'Total: ${order.total.formatted} • Empresa: ${order.companyId ?? '-'}',
+                              'Total: ${order.total.formatted} • Empresa: ${order.companyId == null ? '-' : companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',
+                            ),
+                            onTap: () => context.push(
+                              OrderRoutes.detail(order.id.value),
+                              extra: order,
                             ),
                             trailing: ElevatedButton(
                               onPressed: () => _invoice(order),

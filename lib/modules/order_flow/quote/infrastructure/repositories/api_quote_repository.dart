@@ -1,13 +1,16 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/enums/quote_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/quote.dart';
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/quote_item.dart';
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/repositories/quote_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/quote_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/quantity.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/pricing_explanation.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/enums/quote_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote_item.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/repositories/quote_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/repositories/api_sales_order_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/quote_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
 
 class ApiQuoteRepository implements QuoteRepository {
   final ApiClient _api;
@@ -33,11 +36,36 @@ class ApiQuoteRepository implements QuoteRepository {
   }
 
   @override
-  Future<List<Quote>> findByRepresentativeId(String representativeId) async {
+  Future<SalesOrder> convert(QuoteId id, {String? companyId}) async {
+    final body = <String, dynamic>{};
+    if (companyId != null) body['companyId'] = companyId;
+
+    final data = await _api.post('/api/quotes/${id.value}/convert', data: body);
+
+    if (data is! Map) {
+      throw StateError('A API não devolveu o pedido convertido.');
+    }
+
+    return ApiSalesOrderRepository.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  @override
+  Future<List<Quote>> findByRepresentativeId(
+    String representativeId, {
+    bool teamScope = false,
+  }) async {
     final data = await _api.get(
       '/api/quotes',
-      query: {'representativeId': representativeId},
+      query: teamScope
+          ? {'scope': 'team'}
+          : {'representativeId': representativeId},
     );
+    return _mapList(data);
+  }
+
+  @override
+  Future<List<Quote>> findByCompanyId(String companyId) async {
+    final data = await _api.get('/api/quotes', query: {'companyId': companyId});
     return _mapList(data);
   }
 
@@ -56,8 +84,11 @@ class ApiQuoteRepository implements QuoteRepository {
         .map(
           (item) => {
             'productId': item.productId.value,
+            if (item.variantId != null && item.variantId!.isNotEmpty)
+              'variantId': item.variantId,
             'quantity': item.quantity.value,
-            'priceTableId': item.priceTableId,
+            if (item.priceTableId != null && item.priceTableId!.isNotEmpty)
+              'priceTableId': item.priceTableId,
           },
         )
         .toList(),
@@ -66,15 +97,30 @@ class ApiQuoteRepository implements QuoteRepository {
   static Quote fromJson(Map<String, dynamic> json) => Quote(
     id: QuoteId(readString(json, 'id')),
     companyId: readNullableString(json, 'companyId'),
+    companyName: readNullableString(json, 'companyName'),
+    companyLegalName: readNullableString(json, 'companyLegalName'),
     representativeId: readNullableString(json, 'representativeId'),
+    representativeName: readNullableString(json, 'representativeName'),
     status: _statusFromApi(readString(json, 'status')),
+    createdAt: readDate(json, 'createdAt'),
+    expiresAt: readDate(json, 'expiresAt'),
     shippingCost: Money.create(readDouble(json, 'shippingCost')).getOrThrow(),
     items: readMapList(json, 'items')
         .map(
           (item) => QuoteItem(
             productId: ProductId(readString(item, 'productId')),
+            productName: readNullableString(item, 'productName'),
+            productSku: readNullableString(item, 'productSku'),
+            variantId: readNullableString(item, 'variantId'),
+            variantSku: readNullableString(item, 'variantSku'),
+            variantLabel: readNullableString(item, 'variantLabel'),
             quantity: Quantity.create(readInt(item, 'quantity')).getOrThrow(),
             unitPrice: Money.create(readDouble(item, 'unitPrice')).getOrThrow(),
+            pricing: item['pricing'] is Map
+                ? PricingExplanation.fromJson(
+                    Map<String, dynamic>.from(item['pricing'] as Map),
+                  )
+                : null,
           ),
         )
         .toList(),
@@ -85,7 +131,7 @@ class ApiQuoteRepository implements QuoteRepository {
         'draft' => QuoteStatus.draft,
         'sent' => QuoteStatus.sent,
         'expired' => QuoteStatus.expired,
-        'converted' => QuoteStatus.convertedToOrder,
+        'convertedtoorder' => QuoteStatus.convertedToOrder,
         'cancelled' => QuoteStatus.cancelled,
         _ => QuoteStatus.draft,
       };

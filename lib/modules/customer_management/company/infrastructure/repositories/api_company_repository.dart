@@ -1,18 +1,18 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/authorized_buyer.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/company.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/customer_credit_account.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/repositories/company_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/cnpj.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/value_objects/inscricao_estadual.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/enums/state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/address/value_objects/address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/buyer_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/phone_number.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/authorized_buyer.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/customer_credit_account.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/cnpj.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/value_objects/inscricao_estadual.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/address/value_objects/address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/buyer_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/email_address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/phone_number.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
 
 class ApiCompanyRepository implements CompanyRepository {
   final ApiClient _api;
@@ -26,10 +26,15 @@ class ApiCompanyRepository implements CompanyRepository {
   }
 
   @override
-  Future<List<Company>> findByRepresentativeId(String representativeId) async {
+  Future<List<Company>> findByRepresentativeId(
+    String representativeId, {
+    bool teamScope = false,
+  }) async {
     final data = await _api.get(
       '/api/companies',
-      query: {'representativeId': representativeId},
+      query: teamScope
+          ? {'scope': 'team'}
+          : {'representativeId': representativeId},
     );
     return _mapList(data);
   }
@@ -55,6 +60,7 @@ class ApiCompanyRepository implements CompanyRepository {
     required String email,
     required String phone,
     required String positionTitle,
+    required String password,
   }) async {
     final data = await _api.post(
       '/api/companies/${companyId.value}/buyers',
@@ -63,6 +69,7 @@ class ApiCompanyRepository implements CompanyRepository {
         'email': email,
         'phone': phone,
         'positionTitle': positionTitle,
+        'password': password,
       },
     );
     if (data is! Map) {
@@ -159,12 +166,17 @@ class ApiCompanyRepository implements CompanyRepository {
     zipCode: readString(json, 'zipCode'),
   ).getOrThrow();
 
-  AuthorizedBuyer _buyerFromJson(Map<String, dynamic> json) => AuthorizedBuyer(
-    id: BuyerId(readString(json, 'id')),
-    fullName: readString(json, 'fullName'),
-    email: EmailAddress.create(readString(json, 'email')).getOrThrow(),
-    phone: PhoneNumber.create(readString(json, 'phone')).getOrThrow(),
-    positionTitle: readString(json, 'positionTitle'),
-    active: readBool(json, 'active', true),
-  );
+  AuthorizedBuyer _buyerFromJson(Map<String, dynamic> json) {
+    final phone = readNullableString(json, 'phone');
+    return AuthorizedBuyer(
+      id: BuyerId(readString(json, 'id')),
+      fullName: readString(json, 'fullName'),
+      email: EmailAddress.create(readString(json, 'email')).getOrThrow(),
+      phone: phone == null || phone.isEmpty
+          ? null
+          : PhoneNumber.create(phone).getOrThrow(),
+      positionTitle: readString(json, 'positionTitle'),
+      active: readBool(json, 'active', true),
+    );
+  }
 }

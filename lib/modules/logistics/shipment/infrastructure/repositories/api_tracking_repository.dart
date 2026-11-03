@@ -1,6 +1,6 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/repositories/tracking_repository.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/shipment.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/repositories/tracking_repository.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/shipment.dart';
 
 /// Sincronização de rastreamento via API (operação de expedição).
 class ApiTrackingRepository implements TrackingRepository {

@@ -1,14 +1,19 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/format/display_labels.dart';
+import 'package:ecommerce_b2b/app/core/routes/quote_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/user_profile_dropdown.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/boleto/domain/value_objects/boleto_copy.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/boleto/model/value_objects/boleto_copy.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/cubit/customer_portal_cubit.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/enums/rma_status.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/user_session.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/presentation/widgets/buyer_summary_card.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/enums/rma_status.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/credit_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_block_explanation.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_details_content.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_status_visuals.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,8 +44,9 @@ class BuyerHomePage extends StatelessWidget {
     final companyId = CompanyId(companyIdStr.value);
 
     return BlocProvider(
-      create: (context) => getIt<CustomerPortalCubit>()
-        ..loadPortalData(companyId: companyId, session: session),
+      create: (context) =>
+          getIt<CustomerPortalCubit>()
+            ..loadPortalData(companyId: companyId, session: session),
       child: BlocConsumer<CustomerPortalCubit, CustomerPortalState>(
         listener: (context, state) {
           if (state is CustomerPortalLoaded) {
@@ -50,7 +56,9 @@ class BuyerHomePage extends StatelessWidget {
                   content: Text(state.successMessage!),
                   backgroundColor: colorScheme.secondary,
                   behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               );
               context.read<CustomerPortalCubit>().clearSuccessMessage();
@@ -62,7 +70,9 @@ class BuyerHomePage extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is CustomerPortalLoading) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
           }
           if (state is CustomerPortalFailure) {
             return Scaffold(
@@ -70,11 +80,17 @@ class BuyerHomePage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline_rounded, size: 64, color: colorScheme.error),
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 64,
+                      color: colorScheme.error,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Erro ao carregar portal',
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Padding(
@@ -83,7 +99,8 @@ class BuyerHomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: () => context.read<CustomerPortalCubit>().loadPortalData(
+                      onPressed: () =>
+                          context.read<CustomerPortalCubit>().loadPortalData(
                             companyId: companyId,
                             session: session,
                           ),
@@ -98,16 +115,30 @@ class BuyerHomePage extends StatelessWidget {
           if (state is CustomerPortalLoaded) {
             final orders = state.orders;
             final rmas = state.returnRequests;
-            final activeOrders = orders.where((o) => o.status != OrderStatus.delivered && o.status != OrderStatus.cancelled).toList();
-            final pendingBoletos = orders.where((o) => o.status == OrderStatus.blockedByFinance || o.status == OrderStatus.pendingFinanceApproval).toList();
+            final activeOrders = orders
+                .where(
+                  (o) =>
+                      o.status != OrderStatus.delivered &&
+                      o.status != OrderStatus.cancelled,
+                )
+                .toList();
+            final pendingBoletos = orders
+                .where(
+                  (o) =>
+                      o.status == OrderStatus.blockedByFinance ||
+                      o.status == OrderStatus.pendingFinanceApproval,
+                )
+                .toList();
+            final displayName = session.fullName.isEmpty
+                ? session.role.label
+                : session.fullName;
 
             return Scaffold(
               backgroundColor: colorScheme.surface,
               body: RefreshIndicator(
-                onRefresh: () => context.read<CustomerPortalCubit>().loadPortalData(
-                      companyId: companyId,
-                      session: session,
-                    ),
+                onRefresh: () => context
+                    .read<CustomerPortalCubit>()
+                    .loadPortalData(companyId: companyId, session: session),
                 child: CustomScrollView(
                   slivers: [
                     // Header Expressivo
@@ -119,14 +150,18 @@ class BuyerHomePage extends StatelessWidget {
                       elevation: 0,
                       scrolledUnderElevation: 3,
                       flexibleSpace: FlexibleSpaceBar(
-                        titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+                        titlePadding: const EdgeInsets.only(
+                          left: 20,
+                          bottom: 16,
+                        ),
                         title: Text(
-                          'Olá, ${session.userId.value.substring(0, 8)}',
+                          'Olá, $displayName',
                           style: theme.textTheme.headlineSmall?.copyWith(
                             color: colorScheme.onPrimary,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -0.5,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         background: Container(
                           decoration: BoxDecoration(
@@ -148,7 +183,9 @@ class BuyerHomePage extends StatelessWidget {
                                 child: Icon(
                                   Icons.shopping_bag,
                                   size: 200,
-                                  color: colorScheme.onPrimary.withValues(alpha: 0.1),
+                                  color: colorScheme.onPrimary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                 ),
                               ),
                             ],
@@ -158,13 +195,17 @@ class BuyerHomePage extends StatelessWidget {
                       bottom: PreferredSize(
                         preferredSize: const Size.fromHeight(1.0),
                         child: Container(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
                           height: 1.0,
                         ),
                       ),
                       actions: [
                         UserProfileDropdown(
-                          borderColor: colorScheme.onPrimary.withValues(alpha: 0.5),
+                          borderColor: colorScheme.onPrimary.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ],
                     ),
@@ -175,22 +216,29 @@ class BuyerHomePage extends StatelessWidget {
                         padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
                         child: Row(
                           children: [
-                            _buildSummaryCard(
-                              context,
-                              'Pedidos Ativos',
-                              '${activeOrders.length} ativos',
-                              Icons.shopping_cart_outlined,
-                              colorScheme.primaryContainer,
-                              colorScheme.onPrimaryContainer,
+                            BuyerSummaryCard(
+                              title: 'Pedidos Ativos',
+                              value: '${activeOrders.length} ativos',
+                              icon: Icons.shopping_cart_outlined,
+                              backgroundColor: colorScheme.primaryContainer,
+                              foregroundColor: colorScheme.onPrimaryContainer,
+                              onTap: () => _showAllOrdersPage(
+                                context,
+                                activeOrders,
+                                title: 'Pedidos Ativos',
+                              ),
                             ),
                             const SizedBox(width: 12),
-                            _buildSummaryCard(
-                              context,
-                              'Financeiro',
-                              '${pendingBoletos.length} boletos',
-                              Icons.account_balance_wallet_outlined,
-                              colorScheme.secondaryContainer,
-                              colorScheme.onSecondaryContainer,
+                            BuyerSummaryCard(
+                              title: 'Financeiro',
+                              value: '${pendingBoletos.length} boletos',
+                              icon: Icons.account_balance_wallet_outlined,
+                              backgroundColor: colorScheme.secondaryContainer,
+                              foregroundColor: colorScheme.onSecondaryContainer,
+                              onTap: () => _showAllBoletosBottomSheet(
+                                context,
+                                pendingBoletos,
+                              ),
                             ),
                           ],
                         ),
@@ -200,7 +248,10 @@ class BuyerHomePage extends StatelessWidget {
                     // Seção de Ações Rápidas
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
                         child: Text(
                           'Ações Rápidas',
                           style: theme.textTheme.titleLarge?.copyWith(
@@ -232,7 +283,10 @@ class BuyerHomePage extends StatelessWidget {
                               Icons.description_outlined,
                               colorScheme.surfaceContainerHigh,
                               colorScheme.onSurface,
-                              () => _showAllBoletosBottomSheet(context, pendingBoletos),
+                              () => _showAllBoletosBottomSheet(
+                                context,
+                                pendingBoletos,
+                              ),
                             ),
                             _buildActionButton(
                               context,
@@ -240,7 +294,12 @@ class BuyerHomePage extends StatelessWidget {
                               Icons.assignment_return_outlined,
                               colorScheme.surfaceContainerHigh,
                               colorScheme.onSurface,
-                              () => _showOpenRmaBottomSheet(context, orders, companyId, session),
+                              () => _showOpenRmaBottomSheet(
+                                context,
+                                orders,
+                                companyId,
+                                session,
+                              ),
                             ),
                             _buildActionButton(
                               context,
@@ -249,6 +308,14 @@ class BuyerHomePage extends StatelessWidget {
                               colorScheme.surfaceContainerHigh,
                               colorScheme.onSurface,
                               () => context.push('/buyer-catalog'),
+                            ),
+                            _buildActionButton(
+                              context,
+                              'Meus Orçamentos',
+                              Icons.receipt_long_rounded,
+                              colorScheme.surfaceContainerHigh,
+                              colorScheme.onSurface,
+                              () => context.push(QuoteRoutes.buyerList),
                             ),
                           ],
                         ),
@@ -270,7 +337,8 @@ class BuyerHomePage extends StatelessWidget {
                               ),
                             ),
                             TextButton(
-                              onPressed: () => _showAllOrdersPage(context, orders),
+                              onPressed: () =>
+                                  _showAllOrdersPage(context, orders),
                               child: const Text('Ver todos'),
                             ),
                           ],
@@ -285,16 +353,23 @@ class BuyerHomePage extends StatelessWidget {
                           (context, index) {
                             if (orders.isEmpty) {
                               return Card(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
                                 child: const Padding(
                                   padding: EdgeInsets.all(24),
-                                  child: Center(child: Text('Nenhum pedido encontrado.')),
+                                  child: Center(
+                                    child: Text('Nenhum pedido encontrado.'),
+                                  ),
                                 ),
                               );
                             }
                             final order = orders[index];
-                            final orderStatusLabel = _getOrderStatusLabel(order.status);
-                            final orderStatusColor = _getOrderStatusColor(order.status, colorScheme);
+                            final orderStatusLabel = order.status.label;
+                            final statusColor = orderStatusColor(
+                              order.status,
+                              colorScheme,
+                            );
 
                             return Card(
                               margin: const EdgeInsets.only(bottom: 12),
@@ -308,26 +383,44 @@ class BuyerHomePage extends StatelessWidget {
                                 leading: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: orderStatusColor.withValues(alpha: 0.15),
+                                    color: statusColor.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Icon(
-                                    _getOrderStatusIcon(order.status),
-                                    color: orderStatusColor,
+                                    orderStatusIcon(order.status),
+                                    color: statusColor,
                                   ),
                                 ),
                                 title: Text(
-                                  'Pedido #${order.id.value.substring(0, 8)}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  'Pedido #${order.id.displayCode}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                subtitle: Text('Status: $orderStatusLabel\nTotal: ${order.total.toString()}'),
+                                subtitle: Text(
+                                  [
+                                    'Status: $orderStatusLabel',
+                                    'Total: ${order.total.toString()}',
+                                    if (order.companyId != null)
+                                      'Empresa: ${companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',
+                                  ].join('\n'),
+                                ),
                                 isThreeLine: true,
-                                trailing: const Icon(Icons.chevron_right_rounded),
-                                onTap: () => _showOrderDetailsDialog(context, order),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    OrderBlockInfoIcon(order: order),
+                                    const Icon(Icons.chevron_right_rounded),
+                                  ],
+                                ),
+                                onTap: () =>
+                                    showOrderDetailsSheet(context, order),
                               ),
                             );
                           },
-                          childCount: orders.isEmpty ? 1 : (orders.length > 5 ? 5 : orders.length),
+                          childCount: orders.isEmpty
+                              ? 1
+                              : (orders.length > 5 ? 5 : orders.length),
                         ),
                       ),
                     ),
@@ -349,70 +442,90 @@ class BuyerHomePage extends StatelessWidget {
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            if (rmas.isEmpty) {
-                              return Card(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                color: colorScheme.surfaceContainerLow,
-                                child: const Padding(
-                                  padding: EdgeInsets.all(24),
-                                  child: Center(child: Text('Nenhuma solicitação de devolução aberta.')),
-                                ),
-                              );
-                            }
-                            final rma = rmas[index];
-                            final rmaStatusLabel = _getRmaStatusLabel(rma.status);
-                            final rmaStatusColor = _getRmaStatusColor(rma.status, colorScheme);
-
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          if (rmas.isEmpty) {
                             return Card(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              elevation: 0,
-                              color: colorScheme.surfaceContainerLow,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(24),
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          'RMA #${rma.id.value.substring(0, 8)}',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: rmaStatusColor.withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: Text(
-                                            rmaStatusLabel.toUpperCase(),
-                                            style: TextStyle(
-                                              color: rmaStatusColor,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text('Pedido Original: #${rma.orderId.substring(0, 8)}'),
-                                    Text('Motivo: ${rma.reason}'),
-                                    const Divider(height: 24),
-                                    _buildRmaStatusStepper(rma.status, colorScheme),
-                                  ],
+                              color: colorScheme.surfaceContainerLow,
+                              child: const Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Center(
+                                  child: Text(
+                                    'Nenhuma solicitação de devolução aberta.',
+                                  ),
                                 ),
                               ),
                             );
-                          },
-                          childCount: rmas.isEmpty ? 1 : rmas.length,
-                        ),
+                          }
+                          final rma = rmas[index];
+                          final rmaStatusLabel = rma.status.label;
+                          final rmaStatusColor = _getRmaStatusColor(
+                            rma.status,
+                            colorScheme,
+                          );
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            elevation: 0,
+                            color: colorScheme.surfaceContainerLow,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'RMA #${rma.id.displayCode}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: rmaStatusColor.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          rmaStatusLabel.toUpperCase(),
+                                          style: TextStyle(
+                                            color: rmaStatusColor,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text('Pedido Original: #${rma.orderId}'),
+                                  Text('Motivo: ${rma.reason}'),
+                                  const Divider(height: 24),
+                                  _buildRmaStatusStepper(
+                                    rma.status,
+                                    colorScheme,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }, childCount: rmas.isEmpty ? 1 : rmas.length),
                       ),
                     ),
 
@@ -429,48 +542,6 @@ class BuyerHomePage extends StatelessWidget {
   }
 
   // --- Widgets Auxiliares ---
-
-  Widget _buildSummaryCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-    Color backgroundColor,
-    Color foregroundColor,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: foregroundColor, size: 28),
-            const SizedBox(height: 16),
-            Text(
-              value,
-              style: TextStyle(
-                color: foregroundColor,
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            Text(
-              title,
-              style: TextStyle(
-                color: foregroundColor.withValues(alpha: 0.7),
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildActionButton(
     BuildContext context,
@@ -501,8 +572,8 @@ class BuyerHomePage extends StatelessWidget {
                       color: backgroundColor.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
-                    )
-                  ]
+                    ),
+                  ],
                 ),
                 child: Icon(icon, color: foregroundColor, size: 32),
               ),
@@ -512,10 +583,7 @@ class BuyerHomePage extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -535,7 +603,12 @@ class BuyerHomePage extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(sheetContext).viewInsets.bottom + 24),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          24,
+          24,
+          MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -553,7 +626,9 @@ class BuyerHomePage extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               'Segunda Via do Boleto',
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -591,21 +666,27 @@ class BuyerHomePage extends StatelessWidget {
               label: const Text('COPIAR CÓDIGO DE BARRAS'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Download do PDF iniciado (simulado)')),
+                  const SnackBar(
+                    content: Text('Download do PDF iniciado (simulado)'),
+                  ),
                 );
               },
               icon: const Icon(Icons.picture_as_pdf_rounded),
               label: const Text('VISUALIZAR PDF'),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
           ],
@@ -618,7 +699,10 @@ class BuyerHomePage extends StatelessWidget {
     });
   }
 
-  void _showAllBoletosBottomSheet(BuildContext context, List<SalesOrder> pendingOrders) {
+  void _showAllBoletosBottomSheet(
+    BuildContext context,
+    List<SalesOrder> pendingOrders,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -647,7 +731,9 @@ class BuyerHomePage extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               'Boletos de Cobrança',
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -666,7 +752,9 @@ class BuyerHomePage extends StatelessWidget {
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
                           color: colorScheme.surfaceContainerLow,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.all(16),
                             child: Row(
@@ -676,30 +764,57 @@ class BuyerHomePage extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Pedido #${order.id.value.substring(0, 8)}',
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      'Pedido #${order.id.displayCode}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text('Total: ${order.total.toString()}'),
-                                    Text(
-                                      order.status == OrderStatus.blockedByFinance ? 'Bloqueado no Financeiro' : 'Aguardando Aprovação',
-                                      style: TextStyle(
-                                        color: order.status == OrderStatus.blockedByFinance ? colorScheme.error : colorScheme.secondary,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          order.status ==
+                                                  OrderStatus.blockedByFinance
+                                              ? 'Bloqueado no Financeiro'
+                                              : 'Aguardando Aprovação',
+                                          style: TextStyle(
+                                            color:
+                                                order.status ==
+                                                    OrderStatus.blockedByFinance
+                                                ? colorScheme.error
+                                                : colorScheme.secondary,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        OrderBlockInfoIcon(
+                                          order: order,
+                                          size: 16,
+                                          color:
+                                              order.status ==
+                                                  OrderStatus.blockedByFinance
+                                              ? colorScheme.error
+                                              : colorScheme.secondary,
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
                                     Navigator.pop(sheetContext);
-                                    context.read<CustomerPortalCubit>().downloadBoleto(order.id);
+                                    context
+                                        .read<CustomerPortalCubit>()
+                                        .downloadBoleto(order.id);
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: colorScheme.primary,
                                     foregroundColor: colorScheme.onPrimary,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
                                   child: const Text('VER BOLETO'),
                                 ),
@@ -727,8 +842,11 @@ class BuyerHomePage extends StatelessWidget {
 
     // A API aceita RMA para pedidos entregues ou faturados.
     final deliveredOrders = orders
-        .where((o) =>
-            o.status == OrderStatus.delivered || o.status == OrderStatus.invoiced)
+        .where(
+          (o) =>
+              o.status == OrderStatus.delivered ||
+              o.status == OrderStatus.invoiced,
+        )
         .toList();
 
     if (deliveredOrders.isEmpty) {
@@ -763,7 +881,12 @@ class BuyerHomePage extends StatelessWidget {
         return StatefulBuilder(
           builder: (stateContext, setState) {
             return Padding(
-              padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(sheetContext).viewInsets.bottom + 24),
+              padding: EdgeInsets.fromLTRB(
+                24,
+                24,
+                24,
+                MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -781,7 +904,9 @@ class BuyerHomePage extends StatelessWidget {
                   const SizedBox(height: 24),
                   Text(
                     'Solicitar Devolução (RMA)',
-                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
@@ -794,7 +919,9 @@ class BuyerHomePage extends StatelessWidget {
                     items: deliveredOrders.map((order) {
                       return DropdownMenuItem<SalesOrder>(
                         value: order,
-                        child: Text('Pedido #${order.id.value.substring(0, 8)} - ${order.total.toString()}'),
+                        child: Text(
+                          'Pedido #${order.id.displayCode} - ${order.total.toString()}',
+                        ),
                       );
                     }).toList(),
                     onChanged: (val) {
@@ -809,7 +936,8 @@ class BuyerHomePage extends StatelessWidget {
                     maxLines: 4,
                     decoration: const InputDecoration(
                       labelText: 'Justificativa / Motivo do RMA',
-                      hintText: 'Descreva os itens a serem trocados e o motivo detalhado...',
+                      hintText:
+                          'Descreva os itens a serem trocados e o motivo detalhado...',
                       border: OutlineInputBorder(),
                       alignLabelWithHint: true,
                     ),
@@ -819,21 +947,27 @@ class BuyerHomePage extends StatelessWidget {
                     onPressed: () {
                       if (reasonController.text.trim().isEmpty) {
                         ScaffoldMessenger.of(stateContext).showSnackBar(
-                          const SnackBar(content: Text('Por favor, preencha o motivo da devolução.')),
+                          const SnackBar(
+                            content: Text(
+                              'Por favor, preencha o motivo da devolução.',
+                            ),
+                          ),
                         );
                         return;
                       }
                       Navigator.pop(sheetContext);
                       context.read<CustomerPortalCubit>().openRma(
-                            order: selectedOrder,
-                            reason: reasonController.text,
-                            companyId: companyId,
-                            session: session,
-                          );
+                        order: selectedOrder,
+                        reason: reasonController.text,
+                        companyId: companyId,
+                        session: session,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
                     ),
@@ -848,70 +982,11 @@ class BuyerHomePage extends StatelessWidget {
     );
   }
 
-  void _showOrderDetailsDialog(BuildContext context, SalesOrder order) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: Text('Detalhes do Pedido #${order.id.value.substring(0, 8)}'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Status: ${_getOrderStatusLabel(order.status)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text('Limite Financeiro: ${_getCreditStatusLabel(order.creditStatus)}'),
-              const Divider(height: 24),
-              const Text('Itens do Pedido:', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              if (order.items.isEmpty)
-                const Text('Nenhum item adicionado.')
-              else
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: order.items.length,
-                    itemBuilder: (itemContext, index) {
-                      final item = order.items[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('${item.quantity.value}x Produto #${item.productId.value.substring(0, 5)}'),
-                            Text(item.unitPriceSnapshot.toString()),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              const Divider(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Total:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(order.total.toString(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: colorScheme.primary)),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('FECHAR'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAllOrdersPage(BuildContext context, List<SalesOrder> orders) {
+  void _showAllOrdersPage(
+    BuildContext context,
+    List<SalesOrder> orders, {
+    String title = 'Histórico Completo de Pedidos',
+  }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -939,43 +1014,72 @@ class BuyerHomePage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Histórico Completo de Pedidos',
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              title,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.builder(
-                itemCount: orders.length,
-                itemBuilder: (listContext, index) {
-                  final order = orders[index];
-                  final orderStatusLabel = _getOrderStatusLabel(order.status);
-                  final orderStatusColor = _getOrderStatusColor(order.status, colorScheme);
+              child: orders.isEmpty
+                  ? const Center(child: Text('Nenhum pedido encontrado.'))
+                  : ListView.builder(
+                      itemCount: orders.length,
+                      itemBuilder: (listContext, index) {
+                        final order = orders[index];
+                        final orderStatusLabel = order.status.label;
+                        final statusColor = orderStatusColor(
+                          order.status,
+                          colorScheme,
+                        );
 
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    color: colorScheme.surfaceContainerLow,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      leading: CircleAvatar(
-                        backgroundColor: orderStatusColor.withValues(alpha: 0.15),
-                        child: Icon(_getOrderStatusIcon(order.status), color: orderStatusColor),
-                      ),
-                      title: Text(
-                        'Pedido #${order.id.value.substring(0, 8)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text('Status: $orderStatusLabel\nTotal: ${order.total.toString()}'),
-                      isThreeLine: true,
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () {
-                        _showOrderDetailsDialog(context, order);
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          color: colorScheme.surfaceContainerLow,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: CircleAvatar(
+                              backgroundColor: statusColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              child: Icon(
+                                orderStatusIcon(order.status),
+                                color: statusColor,
+                              ),
+                            ),
+                            title: Text(
+                              'Pedido #${order.id.displayCode}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              [
+                                'Status: $orderStatusLabel',
+                                'Total: ${order.total.toString()}',
+                                if (order.companyId != null)
+                                  'Empresa: ${companyLabel(tradeName: order.companyName, legalName: order.companyLegalName, id: order.companyId!)}',
+                              ].join('\n'),
+                            ),
+                            isThreeLine: true,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                OrderBlockInfoIcon(order: order),
+                                const Icon(Icons.chevron_right_rounded),
+                              ],
+                            ),
+                            onTap: () {
+                              showOrderDetailsSheet(context, order);
+                            },
+                          ),
+                        );
                       },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),
@@ -984,99 +1088,6 @@ class BuyerHomePage extends StatelessWidget {
   }
 
   // --- Conversores de Status e Helpers ---
-
-  String _getOrderStatusLabel(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pendingFinanceApproval:
-        return 'Pendente Aprovação';
-      case OrderStatus.blockedByFinance:
-        return 'Bloqueado pelo Financeiro';
-      case OrderStatus.pickingPacking:
-        return 'Picking & Packing';
-      case OrderStatus.inTransit:
-        return 'Em Transporte';
-      case OrderStatus.delivered:
-        return 'Entregue';
-      case OrderStatus.invoiced:
-        return 'Faturado';
-      case OrderStatus.rma:
-        return 'Devolução / RMA';
-      case OrderStatus.cancelled:
-        return 'Cancelado';
-    }
-  }
-
-  Color _getOrderStatusColor(OrderStatus status, ColorScheme colorScheme) {
-    switch (status) {
-      case OrderStatus.pendingFinanceApproval:
-        return colorScheme.tertiary;
-      case OrderStatus.blockedByFinance:
-        return colorScheme.error;
-      case OrderStatus.pickingPacking:
-        return colorScheme.primary;
-      case OrderStatus.inTransit:
-        return Colors.orange;
-      case OrderStatus.delivered:
-        return Colors.green;
-      case OrderStatus.invoiced:
-        return Colors.teal;
-      case OrderStatus.rma:
-        return colorScheme.secondary;
-      case OrderStatus.cancelled:
-        return colorScheme.outline;
-    }
-  }
-
-  IconData _getOrderStatusIcon(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pendingFinanceApproval:
-        return Icons.hourglass_empty_rounded;
-      case OrderStatus.blockedByFinance:
-        return Icons.lock_rounded;
-      case OrderStatus.pickingPacking:
-        return Icons.inventory_2_outlined;
-      case OrderStatus.inTransit:
-        return Icons.local_shipping_outlined;
-      case OrderStatus.delivered:
-        return Icons.check_circle_outline_rounded;
-      case OrderStatus.invoiced:
-        return Icons.receipt_long_outlined;
-      case OrderStatus.rma:
-        return Icons.assignment_return_outlined;
-      case OrderStatus.cancelled:
-        return Icons.cancel_outlined;
-    }
-  }
-
-  String _getCreditStatusLabel(CreditStatus status) {
-    switch (status) {
-      case CreditStatus.approved:
-        return 'Aprovado';
-      case CreditStatus.blocked:
-        return 'Bloqueado';
-      case CreditStatus.pending:
-        return 'Pendente';
-      default:
-        return 'Desconhecido';
-    }
-  }
-
-  String _getRmaStatusLabel(RmaStatus status) {
-    switch (status) {
-      case RmaStatus.pending:
-        return 'Solicitado';
-      case RmaStatus.authorized:
-        return 'Autorizado';
-      case RmaStatus.received:
-        return 'Recebido';
-      case RmaStatus.inspected:
-        return 'Em Inspeção';
-      case RmaStatus.completed:
-        return 'Concluído';
-      case RmaStatus.rejected:
-        return 'Rejeitado';
-    }
-  }
 
   Color _getRmaStatusColor(RmaStatus status, ColorScheme colorScheme) {
     switch (status) {
@@ -1096,9 +1107,15 @@ class BuyerHomePage extends StatelessWidget {
 
   Widget _buildRmaStatusStepper(RmaStatus status, ColorScheme colorScheme) {
     int activeIndex = 0;
-    if (status == RmaStatus.authorized) activeIndex = 1;
-    if (status == RmaStatus.received || status == RmaStatus.inspected) activeIndex = 2;
-    if (status == RmaStatus.completed || status == RmaStatus.rejected) activeIndex = 3;
+    if (status == RmaStatus.authorized) {
+      activeIndex = 1;
+    }
+    if (status == RmaStatus.received || status == RmaStatus.inspected) {
+      activeIndex = 2;
+    }
+    if (status == RmaStatus.completed || status == RmaStatus.rejected) {
+      activeIndex = 3;
+    }
 
     final steps = ['Solicitado', 'Autorizado', 'Em Análise', 'Finalizado'];
 
@@ -1111,7 +1128,9 @@ class BuyerHomePage extends StatelessWidget {
           return Expanded(
             child: Container(
               height: 4,
-              color: isActive ? colorScheme.primary : colorScheme.outlineVariant,
+              color: isActive
+                  ? colorScheme.primary
+                  : colorScheme.outlineVariant,
             ),
           );
         } else {
@@ -1127,10 +1146,14 @@ class BuyerHomePage extends StatelessWidget {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: isActive ? colorScheme.primary : colorScheme.surfaceContainerHigh,
+                  color: isActive
+                      ? colorScheme.primary
+                      : colorScheme.surfaceContainerHigh,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isActive ? colorScheme.primary : colorScheme.outlineVariant,
+                    color: isActive
+                        ? colorScheme.primary
+                        : colorScheme.outlineVariant,
                     width: 2,
                   ),
                 ),
@@ -1141,7 +1164,9 @@ class BuyerHomePage extends StatelessWidget {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: isActive ? colorScheme.onPrimary : colorScheme.outline,
+                            color: isActive
+                                ? colorScheme.onPrimary
+                                : colorScheme.outline,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -1153,7 +1178,9 @@ class BuyerHomePage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                  color: isActive ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                  color: isActive
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
             ],

@@ -1,26 +1,29 @@
 import 'package:get_it/get_it.dart';
 
+import 'package:ecommerce_b2b/app/core/events/order_events.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
 
 // Repositórios (interfaces)
-import 'package:ecommerce_b2b/modules/catalog/price_table/domain/repositories/price_table_repository.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/repositories/product_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_management/company/domain/repositories/company_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/boleto/domain/repositories/boleto_repository.dart';
-import 'package:ecommerce_b2b/modules/customer_portal/return_request/domain/repositories/return_request_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/auth_repository.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/repositories/user_repository.dart';
-import 'package:ecommerce_b2b/modules/inventory/warehouse/domain/repositories/inventory_repository.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/repositories/shipment_repository.dart';
-import 'package:ecommerce_b2b/modules/logistics/shipment/domain/repositories/tracking_repository.dart';
-import 'package:ecommerce_b2b/modules/order_flow/quote/domain/repositories/quote_repository.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/repositories/sales_order_repository.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/repositories/sales_representative_repository.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/price_table_repository.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/model/repositories/pricing_repository.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/repositories/product_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/boleto/model/repositories/boleto_repository.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/return_request/model/repositories/return_request_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/repositories/auth_repository.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/repositories/user_repository.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/model/repositories/inventory_repository.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/repositories/shipment_repository.dart';
+import 'package:ecommerce_b2b/modules/logistics/shipment/model/repositories/tracking_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/quote/model/repositories/quote_repository.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/repositories/sales_representative_repository.dart';
 
 // Implementações HTTP
 import 'package:ecommerce_b2b/modules/catalog/price_table/infrastructure/repositories/api_price_table_repository.dart';
+import 'package:ecommerce_b2b/modules/catalog/price_table/infrastructure/repositories/api_pricing_repository.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/infrastructure/repositories/api_product_repository.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/infrastructure/repositories/api_company_repository.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/boleto/infrastructure/repositories/api_boleto_repository.dart';
@@ -54,11 +57,14 @@ import 'package:ecommerce_b2b/modules/customer_portal/return_request/application
 import 'package:ecommerce_b2b/modules/customer_portal/return_request/application/open_return_request/open_return_request_use_case.dart';
 import 'package:ecommerce_b2b/modules/identity_access/application/login/login_use_case.dart';
 import 'package:ecommerce_b2b/modules/logistics/application/procces_order/process_order_shipment_use_case.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_finance_summary/get_finance_summary_use_case.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_pending_finance_reviews/get_pending_finance_reviews_use_case.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/process_finance_review/process_finance_review_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_commissions/get_representative_commissions_use_case.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_all_commissions/get_all_commissions_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_customers/get_customer_portfolio_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_quotes/get_recent_quotes_use_case.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/update_commission_status/update_commission_status_use_case.dart';
 
 // Cubits
 import 'package:ecommerce_b2b/modules/catalog/price_table/presentation/cubit/price_table_cubit.dart';
@@ -67,8 +73,13 @@ import 'package:ecommerce_b2b/modules/customer_management/company/presentation/c
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/cubit/customer_portal_cubit.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/user_management_cubit.dart';
+import 'package:ecommerce_b2b/modules/inventory/warehouse/presentation/cubit/inventory_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/open_orders_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/order_list_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_summary_cubit.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/cubit/commission_list_cubit.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/cubit/representative_dashboard_cubit.dart';
 
 final getIt = GetIt.instance;
@@ -82,8 +93,11 @@ Future<void> setupServiceLocator() async {
     sessionEvents: sessionEvents,
   );
 
+  final orderEvents = OrderEvents();
+
   getIt.registerSingleton<TokenStore>(tokenStore);
   getIt.registerSingleton<SessionEvents>(sessionEvents);
+  getIt.registerSingleton<OrderEvents>(orderEvents);
   getIt.registerSingleton<ApiClient>(apiClient);
 
   // --- Repositórios HTTP ---
@@ -98,6 +112,9 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerLazySingleton<PriceTableRepository>(
     () => ApiPriceTableRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PricingRepository>(
+    () => ApiPricingRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<CompanyRepository>(
     () => ApiCompanyRepository(getIt<ApiClient>()),
@@ -139,10 +156,16 @@ Future<void> setupServiceLocator() async {
     ),
   );
   getIt.registerLazySingleton(
+    () => GetAllCommissionsUseCase(getIt<SalesRepresentativeRepository>()),
+  );
+  getIt.registerLazySingleton(
     () => GetCustomerPortfolioUseCase(getIt<SalesRepresentativeRepository>()),
   );
   getIt.registerLazySingleton(
     () => GetRecentQuotesUseCase(getIt<QuoteRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => UpdateCommissionStatusUseCase(getIt<SalesRepresentativeRepository>()),
   );
   getIt.registerLazySingleton(
     () => GetProductsUseCase(getIt<ProductRepository>()),
@@ -192,6 +215,9 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton(
     () => GetPendingFinanceReviewsUseCase(getIt<FinanceApi>()),
   );
+  getIt.registerLazySingleton(
+    () => GetFinanceSummaryUseCase(getIt<FinanceApi>()),
+  );
 
   // --- Cubits ---
   getIt.registerLazySingleton(
@@ -210,6 +236,16 @@ Future<void> setupServiceLocator() async {
       getCustomerPortfolioUseCase: getIt<GetCustomerPortfolioUseCase>(),
       getRecentQuotesUseCase: getIt<GetRecentQuotesUseCase>(),
       representativeRepository: getIt<SalesRepresentativeRepository>(),
+      updateCommissionStatusUseCase: getIt<UpdateCommissionStatusUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => CommissionListCubit(
+      getCommissionsUseCase: getIt<GetRepresentativeCommissionsUseCase>(),
+      getAllCommissionsUseCase: getIt<GetAllCommissionsUseCase>(),
+      representativeRepository: getIt<SalesRepresentativeRepository>(),
+      updateCommissionStatusUseCase: getIt<UpdateCommissionStatusUseCase>(),
     ),
   );
 
@@ -217,7 +253,20 @@ Future<void> setupServiceLocator() async {
     () => FinanceReviewCubit(
       getPendingReviews: getIt<GetPendingFinanceReviewsUseCase>(),
       processReview: getIt<ProcessFinanceReviewUseCase>(),
+      orderRepository: getIt<SalesOrderRepository>(),
+      orderEvents: getIt<OrderEvents>(),
     ),
+  );
+
+  getIt.registerFactory(
+    () => FinanceSummaryCubit(
+      getIt<GetFinanceSummaryUseCase>(),
+      getIt<OrderEvents>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => OpenOrdersCubit(getIt<SalesOrderRepository>(), getIt<OrderEvents>()),
   );
 
   getIt.registerFactory(
@@ -246,7 +295,23 @@ Future<void> setupServiceLocator() async {
     ),
   );
 
-  getIt.registerFactory(() => QuoteCubit(getIt<QuoteRepository>()));
+  getIt.registerFactory(
+    () => InventoryCubit(
+      getIt<InventoryRepository>(),
+      getIt<ProductRepository>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => QuoteCubit(getIt<QuoteRepository>(), getIt<OrderEvents>()),
+  );
+
+  getIt.registerFactory(
+    () => OrderListCubit(
+      getIt<SalesOrderRepository>(),
+      getIt<CompanyRepository>(),
+    ),
+  );
 
   getIt.registerFactory(
     () => CustomerPortalCubit(

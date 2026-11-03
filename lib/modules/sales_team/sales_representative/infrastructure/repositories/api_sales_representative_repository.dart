@@ -1,17 +1,17 @@
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/api_exception.dart';
 import 'package:ecommerce_b2b/app/core/network/json_read.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/commission.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/customer_assignment.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/enums/commission_status.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/repositories/sales_representative_repository.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/sales_representative.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/sales_hierarchy_link.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/company_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/representative_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/email_address.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/percentage.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/customer_assignment.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/enums/commission_status.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/repositories/sales_representative_repository.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_representative.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/sales_hierarchy_link.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/company_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/email_address.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/percentage.dart';
 
 class ApiSalesRepresentativeRepository
     implements SalesRepresentativeRepository {
@@ -104,52 +104,107 @@ class ApiSalesRepresentativeRepository
   }
 
   @override
-  Future<List<Commission>> getCommissions({String? representativeId}) async {
+  Future<List<Commission>> getCommissions({
+    String? representativeId,
+    bool teamScope = false,
+  }) async {
     final data = await _api.get(
       '/api/me/commissions',
       query: {
-        if (representativeId != null && representativeId.isNotEmpty)
+        if (teamScope)
+          'scope': 'team'
+        else if (representativeId != null && representativeId.isNotEmpty)
           'representativeId': representativeId,
       },
     );
     if (data is! List) return const [];
 
-    return data.whereType<Map>().map((raw) {
-      final json = Map<String, dynamic>.from(raw);
-      return Commission(
-        baseAmount: Money.create(readDouble(json, 'baseAmount')).getOrThrow(),
-        rate: Percentage.create(readDouble(json, 'rate')).getOrThrow(),
-        amount: Money.create(readDouble(json, 'amount')).getOrThrow(),
-        status: _commissionStatusFromApi(readString(json, 'status')),
-        orderId: readNullableString(json, 'orderId'),
+    return data
+        .whereType<Map>()
+        .map((raw) => _mapCommission(Map<String, dynamic>.from(raw)))
+        .toList();
+  }
+
+  @override
+  Future<Commission> updateCommissionStatus({
+    required int commissionId,
+    required CommissionStatus status,
+  }) async {
+    final data = await _api.patch(
+      '/api/me/commissions/$commissionId/status',
+      data: {'status': _commissionStatusToApi(status)},
+    );
+    if (data is! Map) {
+      throw const ApiException(
+        statusCode: 0,
+        code: 'INVALID_RESPONSE',
+        message: 'Resposta inválida ao alterar o status da comissão.',
       );
-    }).toList();
+    }
+
+    return _mapCommission(Map<String, dynamic>.from(data));
+  }
+
+  Commission _mapCommission(Map<String, dynamic> json) => Commission(
+    id: readInt(json, 'commissionId'),
+    baseAmount: Money.create(readDouble(json, 'baseAmount')).getOrThrow(),
+    rate: Percentage.create(readDouble(json, 'rate')).getOrThrow(),
+    amount: Money.create(readDouble(json, 'amount')).getOrThrow(),
+    status: _commissionStatusFromApi(readString(json, 'status')),
+    orderId: readNullableString(json, 'orderId'),
+    createdAt: readDate(json, 'createdAt'),
+    representativeId: readNullableString(json, 'representativeId'),
+    representativeName: readNullableString(json, 'representativeName'),
+  );
+
+  @override
+  Future<List<Commission>> getAllCommissions() async {
+    final data = await _api.get('/api/commissions');
+    if (data is! List) return const [];
+
+    return data
+        .whereType<Map>()
+        .map((raw) => _mapCommission(Map<String, dynamic>.from(raw)))
+        .toList();
   }
 
   @override
   Future<List<CustomerAssignment>> getPortfolio({
     String? representativeId,
+    bool teamScope = false,
   }) async {
     final data = await _api.get(
       '/api/me/portfolio',
       query: {
-        if (representativeId != null && representativeId.isNotEmpty)
+        if (teamScope)
+          'scope': 'team'
+        else if (representativeId != null && representativeId.isNotEmpty)
           'representativeId': representativeId,
       },
     );
     if (data is! List) return const [];
     return data.whereType<Map>().map((raw) {
       final json = Map<String, dynamic>.from(raw);
-      return CustomerAssignment(CompanyId(readString(json, 'companyId')));
+      return CustomerAssignment(
+        CompanyId(readString(json, 'companyId')),
+        representativeId: readNullableString(json, 'representativeId'),
+        representativeName: readNullableString(json, 'representativeName'),
+      );
     }).toList();
   }
 
   static CommissionStatus _commissionStatusFromApi(String value) =>
       switch (value.toLowerCase()) {
-        'approved' => CommissionStatus.approved,
         'paid' => CommissionStatus.paid,
         'cancelled' => CommissionStatus.cancelled,
         _ => CommissionStatus.pending,
+      };
+
+  static String _commissionStatusToApi(CommissionStatus status) =>
+      switch (status) {
+        CommissionStatus.paid => 'Paid',
+        CommissionStatus.cancelled => 'Cancelled',
+        CommissionStatus.pending => 'Pending',
       };
 
   SalesRepresentative _rep(

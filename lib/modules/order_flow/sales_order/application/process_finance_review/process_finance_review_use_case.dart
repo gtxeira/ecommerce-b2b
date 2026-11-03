@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/finance_review.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/finance_review.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/api/finance_api.dart';
 
 /// A análise financeira é uma operação da API: ela decide a transição, aloca

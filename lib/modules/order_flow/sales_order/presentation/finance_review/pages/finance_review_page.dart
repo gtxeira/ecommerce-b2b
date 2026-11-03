@@ -1,10 +1,12 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
-import 'package:ecommerce_b2b/modules/order_flow/domain/enums/order_status.dart';
-import 'package:ecommerce_b2b/modules/order_flow/sales_order/domain/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/widgets/finance_review_order_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class FinanceReviewPage extends StatelessWidget {
   const FinanceReviewPage({super.key});
@@ -93,187 +95,11 @@ class FinanceReviewPage extends StatelessWidget {
                 itemCount: state.pendingOrders.length,
                 itemBuilder: (context, index) {
                   final order = state.pendingOrders[index];
-                  final isBlocked =
-                      order.status == OrderStatus.blockedByFinance;
-                  final statusColor = isBlocked
-                      ? colorScheme.error
-                      : colorScheme.tertiary;
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 20),
-                    elevation: 0,
-                    color: colorScheme.surfaceContainerLow,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      side: BorderSide(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.3,
-                        ),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Pedido #${order.id.value.substring(0, 8)}',
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: -0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Empresa ID: ${order.companyId}',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  isBlocked ? 'BLOQUEADO' : 'PENDENTE',
-                                  style: TextStyle(
-                                    color: statusColor,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Divider(height: 32),
-
-                          // Detalhes dos Itens do Pedido
-                          Text(
-                            'Itens do Pedido',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: order.items.length,
-                            itemBuilder: (itemCtx, itemIdx) {
-                              final item = order.items[itemIdx];
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        '${item.quantity.value}x Produto #${item.productId.value.substring(0, 8)}',
-                                        style: theme.textTheme.bodyMedium,
-                                      ),
-                                    ),
-                                    Text(
-                                      item.unitPriceSnapshot.toString(),
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                          const Divider(height: 32),
-
-                          // Valor Total
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Valor Total a Faturar',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                order.total.toString(),
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Ações
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () =>
-                                      _showReviewDialog(context, order, false),
-                                  icon: const Icon(Icons.cancel_outlined),
-                                  label: const Text('REPROVAR CRÉDITO'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: colorScheme.error,
-                                    side: BorderSide(
-                                      color: colorScheme.error.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () =>
-                                      _showReviewDialog(context, order, true),
-                                  icon: const Icon(
-                                    Icons.check_circle_outline_rounded,
-                                  ),
-                                  label: const Text('APROVAR'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: colorScheme.primary,
-                                    foregroundColor: colorScheme.onPrimary,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
+                  return FinanceReviewOrderCard(
+                    order: order,
+                    onOpenDetails: () => _openOrderDetails(context, order),
+                    onApprove: () => _showReviewDialog(context, order, true),
+                    onReject: () => _showReviewDialog(context, order, false),
                   );
                 },
               );
@@ -284,6 +110,10 @@ class FinanceReviewPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _openOrderDetails(BuildContext context, SalesOrder order) {
+    context.push(OrderRoutes.detail(order.id.value), extra: order);
   }
 
   void _showReviewDialog(BuildContext context, SalesOrder order, bool approve) {
@@ -303,8 +133,8 @@ class FinanceReviewPage extends StatelessWidget {
           children: [
             Text(
               approve
-                  ? 'Você está prestes a aprovar o pedido #${order.id.value.substring(0, 8)}. O estoque será alocado e o fluxo de expedição iniciado.'
-                  : 'Você está prestes a reprovar o pedido #${order.id.value.substring(0, 8)}. O pedido será cancelado no sistema.',
+                  ? 'Você está prestes a aprovar o pedido #${order.id.displayCode}. O estoque será alocado e o fluxo de expedição iniciado.'
+                  : 'Você está prestes a reprovar o pedido #${order.id.displayCode}. O pedido será cancelado no sistema.',
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 20),

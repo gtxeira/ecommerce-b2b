@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/errors/quantity_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/quantity.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/quantity.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -15,7 +15,7 @@ void main() {
     test('should return QuantityNegativeError for negative values', () {
       final result = Quantity.create(-1);
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<QuantityNegativeError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.quantityNegative);
     });
 
     /// deve somar quantidades

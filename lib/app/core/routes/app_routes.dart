@@ -1,17 +1,25 @@
 import 'dart:async';
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
+import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
+import 'package:ecommerce_b2b/app/core/routes/quote_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/layouts/main_layout.dart';
 import 'package:ecommerce_b2b/app/presentation/pages/home_page.dart';
-import 'package:ecommerce_b2b/modules/identity_access/domain/enums/user_role.dart';
+import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/pages/login_page.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/pages/users_page.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_catalog_page.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_home_page.dart';
+import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_quotes_page.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/pages/commission_list_page.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/pages/representative_home_page.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/pages/finance_home_page.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/pages/finance_review_page.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/pages/order_detail_page.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/pages/order_list_page.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/pages/billing_page.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/presentation/pages/company_list_page.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/pages/product_list_page.dart';
@@ -71,22 +79,52 @@ final appRouter = GoRouter(
               return const _SplashPage();
             }
             if (authState is AuthAuthenticated) {
-              if (authState.session.role == UserRole.buyer) {
-                return const BuyerHomePage();
+              final session = authState.session;
+              final homeKey = ValueKey(
+                'home-${session.role.name}-${session.userId.value}-${session.companyId?.value}',
+              );
+              if (session.role == UserRole.buyer) {
+                return KeyedSubtree(key: homeKey, child: const BuyerHomePage());
               }
-              if (authState.session.role == UserRole.representative ||
-                  authState.session.role == UserRole.supervisor) {
-                return const RepresentativeHomePage();
+              if (session.role == UserRole.representative ||
+                  session.role == UserRole.supervisor) {
+                return KeyedSubtree(
+                  key: homeKey,
+                  child: const RepresentativeHomePage(),
+                );
               }
-              if (authState.session.role == UserRole.finance) {
-                return const FinanceHomePage();
+              if (session.role == UserRole.finance) {
+                return KeyedSubtree(
+                  key: homeKey,
+                  child: const FinanceHomePage(),
+                );
               }
-              if (authState.session.role == UserRole.admin) {
-                return const HomePage();
+              if (session.role == UserRole.admin) {
+                return KeyedSubtree(key: homeKey, child: const HomePage());
               }
             }
             return const HomePage();
           },
+        ),
+        GoRoute(
+          path: OrderRoutes.list,
+          redirect: _buyerGuard,
+          builder: (context, state) => OrderListPage(
+            initialGroup: switch (state.uri.queryParameters['group']) {
+              'closed' => OrderStatusGroup.closed,
+              _ => OrderStatusGroup.open,
+            },
+          ),
+        ),
+        GoRoute(
+          path: OrderRoutes.detailPattern,
+          redirect: _buyerGuard,
+          builder: (context, state) => OrderDetailPage(
+            orderId: state.pathParameters['id']!,
+            initialOrder: state.extra is SalesOrder
+                ? state.extra! as SalesOrder
+                : null,
+          ),
         ),
         GoRoute(
           path: AppPage.finance.path,
@@ -98,7 +136,23 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: AppPage.companies.path,
-          builder: (context, state) => const CompanyListPage(),
+          builder: (context, state) => CompanyListPage(
+            initialRepresentativeId:
+                state.uri.queryParameters['representativeId'],
+            initialTeamView: state.uri.queryParameters['scope'] == 'team',
+          ),
+        ),
+        GoRoute(
+          path: AppPage.commissions.path,
+          redirect: _buyerGuard,
+          builder: (context, state) {
+            final scope = state.uri.queryParameters['scope'];
+            return CommissionListPage(
+              initialRepresentativeId:
+                  state.uri.queryParameters['representativeId'],
+              initialTeamView: scope == null ? null : scope == 'team',
+            );
+          },
         ),
         GoRoute(
           path: AppPage.catalog.path,
@@ -106,7 +160,9 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: AppPage.quotes.path,
-          builder: (context, state) => const QuotePage(),
+          builder: (context, state) => QuotePage(
+            initialTab: state.uri.queryParameters['tab'] == 'list' ? 1 : 0,
+          ),
         ),
         GoRoute(
           path: AppPage.logistics.path,
@@ -124,10 +180,36 @@ final appRouter = GoRouter(
           path: '/buyer-catalog',
           builder: (context, state) => const BuyerCatalogPage(),
         ),
+        GoRoute(
+          path: QuoteRoutes.buyerList,
+          redirect: _nonBuyerGuard,
+          builder: (context, state) => const BuyerQuotesPage(),
+        ),
       ],
     ),
   ],
 );
+
+/// Rotas de pedido são leitura interna: o comprador consulta o próprio
+/// histórico pelo portal (`/api/me/purchase-history`).
+String? _buyerGuard(BuildContext context, GoRouterState state) {
+  final authState = context.read<AuthCubit>().state;
+  if (authState is AuthAuthenticated &&
+      authState.session.role == UserRole.buyer) {
+    return AppPage.home.path;
+  }
+  return null;
+}
+
+/// "Meus orçamentos" é a visão do comprador; os demais papéis usam /quotes.
+String? _nonBuyerGuard(BuildContext context, GoRouterState state) {
+  final authState = context.read<AuthCubit>().state;
+  if (authState is AuthAuthenticated &&
+      authState.session.role != UserRole.buyer) {
+    return AppPage.home.path;
+  }
+  return null;
+}
 
 /// Enquanto os tokens persistidos são validados, evita exibir a Home ou o Login.
 class _SplashPage extends StatelessWidget {

@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/errors/phone_number_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/contact/value_objects/phone_number.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/contact/value_objects/phone_number.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -29,22 +29,34 @@ void main() {
     test('should return PhoneNumberEmptyError when input is empty', () {
       final result = PhoneNumber.create('');
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<PhoneNumberEmptyError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.phoneNumberEmpty);
     });
 
     /// deve retornar PhoneNumberInvalidError quando o número for muito curto (E.164 min 7 dígitos)
-    test('should return PhoneNumberInvalidError when number is too short (E.164 min 7 digits)', () {
-      final result = PhoneNumber.create('+123456');
-      expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<PhoneNumberInvalidError>());
-    });
+    test(
+      'should return PhoneNumberInvalidError when number is too short (E.164 min 7 digits)',
+      () {
+        final result = PhoneNumber.create('+123456');
+        expect(result.isFailure, isTrue);
+        expect(
+          result.getFailureOrThrow().code,
+          AppErrorCodes.phoneNumberInvalid,
+        );
+      },
+    );
 
     /// deve retornar PhoneNumberInvalidError quando o número for muito longo (E.164 max 15 dígitos)
-    test('should return PhoneNumberInvalidError when number is too long (E.164 max 15 digits)', () {
-      final result = PhoneNumber.create('+1234567890123456');
-      expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<PhoneNumberInvalidError>());
-    });
+    test(
+      'should return PhoneNumberInvalidError when number is too long (E.164 max 15 digits)',
+      () {
+        final result = PhoneNumber.create('+1234567890123456');
+        expect(result.isFailure, isTrue);
+        expect(
+          result.getFailureOrThrow().code,
+          AppErrorCodes.phoneNumberInvalid,
+        );
+      },
+    );
 
     /// deve normalizar removendo parênteses, traços e espaços
     test('should normalize by removing brackets, dashes and spaces', () {

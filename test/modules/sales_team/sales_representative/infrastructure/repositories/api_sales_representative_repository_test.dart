@@ -2,9 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
-import 'package:ecommerce_b2b/modules/sales_team/sales_representative/domain/enums/commission_status.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/enums/commission_status.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/infrastructure/repositories/api_sales_representative_repository.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/representative_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../support/fake_http_adapter.dart';
@@ -68,18 +68,26 @@ void main() {
           return jsonResponse(
             successEnvelope([
               {
+                'commissionId': 12,
                 'baseAmount': 1000,
                 'rate': 5,
                 'amount': 50,
-                'status': 'Approved',
+                'status': 'Paid',
                 'orderId': 'o1',
+                'createdAt': '2026-11-03T14:30:00Z',
+                'representativeId': 'rep-456',
+                'representativeName': 'Representante Mock',
               },
             ]),
           );
         }
         return jsonResponse(
           successEnvelope([
-            {'companyId': 'c1'},
+            {
+              'companyId': 'c1',
+              'representativeId': 'rep-456',
+              'representativeName': 'Representante Mock',
+            },
           ]),
         );
       });
@@ -92,10 +100,45 @@ void main() {
         representativeId: 'rep-456',
       );
 
-      expect(commissions.single.status, CommissionStatus.approved);
+      expect(commissions.single.status, CommissionStatus.paid);
+      expect(commissions.single.id, 12);
       expect(commissions.single.orderId, 'o1');
+      expect(commissions.single.createdAt, DateTime.utc(2026, 11, 3, 14, 30));
+      expect(commissions.single.representativeId, 'rep-456');
+      expect(commissions.single.representativeName, 'Representante Mock');
       expect(portfolio.single.companyId.value, 'c1');
+      expect(portfolio.single.representativeId, 'rep-456');
+      expect(portfolio.single.representativeName, 'Representante Mock');
     });
+
+    test(
+      'should request the team scope instead of a representative id',
+      () async {
+        Map<String, dynamic>? commissionQuery;
+        Map<String, dynamic>? portfolioQuery;
+        final adapter = FakeHttpAdapter((options) async {
+          if (options.path == '/api/me/commissions') {
+            commissionQuery = options.queryParameters;
+            return jsonResponse(successEnvelope(const []));
+          }
+          portfolioQuery = options.queryParameters;
+          return jsonResponse(successEnvelope(const []));
+        });
+        final repository = buildRepository(adapter);
+
+        await repository.getCommissions(
+          representativeId: 'rep-1',
+          teamScope: true,
+        );
+        await repository.getPortfolio(
+          representativeId: 'rep-1',
+          teamScope: true,
+        );
+
+        expect(commissionQuery, {'scope': 'team'});
+        expect(portfolioQuery, {'scope': 'team'});
+      },
+    );
 
     test('should find a representative by id', () async {
       final adapter = FakeHttpAdapter((options) async {
@@ -123,6 +166,68 @@ void main() {
 
       expect(rep!.fullName, 'Representante');
       expect(rep.commissionRate.value, 5);
+    });
+
+    test('should list all commissions from the backoffice endpoint', () async {
+      RequestOptions? captured;
+      final adapter = FakeHttpAdapter((options) async {
+        captured = options;
+        return jsonResponse(
+          successEnvelope([
+            {
+              'commissionId': 3,
+              'baseAmount': 2000,
+              'rate': 5,
+              'amount': 100,
+              'status': 'Pending',
+              'orderId': 'o2',
+              'createdAt': '2026-11-02T10:00:00Z',
+              'representativeId': 'rep-2',
+              'representativeName': 'Rep Dois',
+            },
+          ]),
+        );
+      });
+      final repository = buildRepository(adapter);
+
+      final commissions = await repository.getAllCommissions();
+
+      expect(captured!.method, 'GET');
+      expect(captured!.path, '/api/commissions');
+      expect(commissions.single.id, 3);
+      expect(commissions.single.representativeName, 'Rep Dois');
+    });
+
+    test('should patch the commission status and map the response', () async {
+      RequestOptions? captured;
+      final adapter = FakeHttpAdapter((options) async {
+        captured = options;
+        return jsonResponse(
+          successEnvelope({
+            'commissionId': 12,
+            'baseAmount': 1000,
+            'rate': 5,
+            'amount': 50,
+            'status': 'Paid',
+            'orderId': 'o1',
+            'createdAt': '2026-11-03T14:30:00Z',
+            'representativeId': 'rep-456',
+            'representativeName': 'Representante Mock',
+          }),
+        );
+      });
+      final repository = buildRepository(adapter);
+
+      final updated = await repository.updateCommissionStatus(
+        commissionId: 12,
+        status: CommissionStatus.paid,
+      );
+
+      expect(captured!.method, 'PATCH');
+      expect(captured!.path, '/api/me/commissions/12/status');
+      expect((captured!.data as Map)['status'], 'Paid');
+      expect(updated.id, 12);
+      expect(updated.status, CommissionStatus.paid);
     });
   });
 }

@@ -1,5 +1,5 @@
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/logistics/errors/weight_errors.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/logistics/value_objects/weight.dart';
+import 'package:ecommerce_b2b/app/core/errors/app_error.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/logistics/value_objects/weight.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -15,7 +15,7 @@ void main() {
     test('should return WeightNegativeError for negative weight', () {
       final result = Weight.create(-1.0);
       expect(result.isFailure, isTrue);
-      expect(result.getFailureOrThrow(), isA<WeightNegativeError>());
+      expect(result.getFailureOrThrow().code, AppErrorCodes.weightNegative);
     });
 
     /// toString deve formatar corretamente

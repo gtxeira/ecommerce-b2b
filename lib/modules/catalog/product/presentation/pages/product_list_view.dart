@@ -1,21 +1,56 @@
+import 'dart:async';
+
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product.dart';
-import 'package:ecommerce_b2b/modules/catalog/product/domain/product_variant.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product.dart';
+import 'package:ecommerce_b2b/modules/catalog/product/model/product_variant.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_cubit.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_state.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/common/ids/product_variant_id.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/finance/value_objects/money.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/domain/logistics/value_objects/weight.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/money_input.dart';
-import 'package:ecommerce_b2b/modules/shared_kernel/presentation/formz/not_empty_input.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/product_variant_id.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/money.dart';
+import 'package:ecommerce_b2b/modules/shared_kernel/model/logistics/value_objects/weight.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/money_input.dart';
+import 'package:ecommerce_b2b/app/presentation/formz/not_empty_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
-class ProductListView extends StatelessWidget {
+class ProductListView extends StatefulWidget {
   const ProductListView({super.key});
+
+  @override
+  State<ProductListView> createState() => _ProductListViewState();
+}
+
+class _ProductListViewState extends State<ProductListView> {
+  Timer? _debounce;
+  String _query = '';
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(BuildContext context, String value) {
+    _query = value;
+    final cubit = context.read<CatalogCubit>();
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      cubit.loadProducts(query: value);
+    });
+  }
+
+  void _loadMoreIfNeeded(
+    BuildContext context,
+    ScrollNotification notification,
+  ) {
+    if (notification.metrics.extentAfter < 240) {
+      context.read<CatalogCubit>().loadMore();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +70,13 @@ class ProductListView extends StatelessWidget {
               const SnackBar(
                 content: Text('Variante excluída com sucesso!'),
                 backgroundColor: Colors.green,
+              ),
+            );
+          } else if (state is CatalogLoadMoreFailed) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red.shade700,
               ),
             );
           } else if (state is CatalogError) {
@@ -60,23 +102,42 @@ class ProductListView extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Pesquisar produtos por nome ou SKU...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Pesquisar produtos por nome ou SKU...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onChanged: (query) => _onSearchChanged(context, query),
                       ),
-                    ),
-                    onChanged: (query) {
-                      context.read<CatalogCubit>().loadProducts(query: query);
-                    },
+                      if (state is CatalogLoaded) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          '${state.totalItems} produto(s) encontrado(s)',
+                          textAlign: TextAlign.end,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 Expanded(
                   child: RefreshIndicator(
-                    onRefresh: () => context.read<CatalogCubit>().loadProducts(),
-                    child: _buildList(context, state, theme, colorScheme),
+                    onRefresh: () => context.read<CatalogCubit>().loadProducts(
+                      query: _query,
+                    ),
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (notification) {
+                        _loadMoreIfNeeded(context, notification);
+                        return false;
+                      },
+                      child: _buildList(context, state, theme, colorScheme),
+                    ),
                   ),
                 ),
               ],
@@ -107,8 +168,29 @@ class ProductListView extends StatelessWidget {
 
       return ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: products.length,
+        itemCount:
+            products.length + (state.isLoadingMore || state.hasMore ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index >= products.length) {
+            if (state.isLoadingMore) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: TextButton.icon(
+                  onPressed: () => context.read<CatalogCubit>().loadMore(),
+                  icon: const Icon(Icons.expand_more_rounded),
+                  label: const Text('Carregar mais'),
+                ),
+              ),
+            );
+          }
+
           final product = products[index];
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
@@ -137,17 +219,25 @@ class ProductListView extends StatelessWidget {
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('SKU: ${product.sku} | Preço Base: ${product.basePrice.formatted}'),
+                  Text(
+                    'SKU: ${product.sku} | Preço Base: ${product.basePrice.formatted}',
+                  ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.blueGrey),
+                      const Icon(
+                        Icons.inventory_2_outlined,
+                        size: 14,
+                        color: Colors.blueGrey,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'Estoque Disponível: ${state.stockMap[product.id.value] ?? 0} un',
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: (state.stockMap[product.id.value] ?? 0) > 0 ? Colors.green.shade700 : Colors.red.shade700,
+                          color: (state.stockMap[product.id.value] ?? 0) > 0
+                              ? Colors.green.shade700
+                              : Colors.red.shade700,
                         ),
                       ),
                     ],
@@ -161,11 +251,15 @@ class ProductListView extends StatelessWidget {
                     label: Text(
                       product.active ? 'Ativo' : 'Inativo',
                       style: TextStyle(
-                        color: product.active ? Colors.green.shade900 : Colors.red.shade900,
+                        color: product.active
+                            ? Colors.green.shade900
+                            : Colors.red.shade900,
                         fontSize: 12,
                       ),
                     ),
-                    backgroundColor: product.active ? Colors.green.shade100 : Colors.red.shade100,
+                    backgroundColor: product.active
+                        ? Colors.green.shade100
+                        : Colors.red.shade100,
                     side: BorderSide.none,
                   ),
                   const SizedBox(width: 4),
@@ -191,10 +285,17 @@ class ProductListView extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildSectionTitle(theme, 'Variações (${product.variants.length})'),
+                          _buildSectionTitle(
+                            theme,
+                            'Variações (${product.variants.length})',
+                          ),
                           TextButton.icon(
-                            onPressed: () => _showAddVariantDialog(context, product),
-                            icon: const Icon(Icons.add_circle_outline, size: 20),
+                            onPressed: () =>
+                                _showAddVariantDialog(context, product),
+                            icon: const Icon(
+                              Icons.add_circle_outline,
+                              size: 20,
+                            ),
                             label: const Text('Adicionar'),
                           ),
                         ],
@@ -205,48 +306,55 @@ class ProductListView extends StatelessWidget {
                           child: Text('Nenhuma variação cadastrada.'),
                         )
                       else
-                        ...product.variants.map((variant) => Card(
-                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                          elevation: 0,
-                          margin: const EdgeInsets.only(top: 8),
-                          child: ListTile(
-                            dense: true,
-                            leading: const Icon(Icons.style_outlined),
-                            title: Text(
-                              'SKU: ${variant.variantSku}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                              'Cor: ${variant.color} | Tam: ${variant.size} | Voltagem: ${variant.voltage}',
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  variant.sameAsParent 
-                                      ? product.basePrice.formatted 
-                                      : (variant.price?.formatted ?? 'N/A'),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.primary,
-                                  ),
+                        ...product.variants.map(
+                          (variant) => Card(
+                            color: colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.3),
+                            elevation: 0,
+                            margin: const EdgeInsets.only(top: 8),
+                            child: ListTile(
+                              dense: true,
+                              leading: const Icon(Icons.style_outlined),
+                              title: Text(
+                                'SKU: ${variant.variantSku}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.remove_circle_outline,
-                                    color: colorScheme.error,
-                                    size: 20,
+                              ),
+                              subtitle: Text(
+                                'Cor: ${variant.color} | Tam: ${variant.size} | Voltagem: ${variant.voltage}',
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    variant.sameAsParent
+                                        ? product.basePrice.formatted
+                                        : (variant.price?.formatted ?? 'N/A'),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.primary,
+                                    ),
                                   ),
-                                  tooltip: 'Excluir Variante',
-                                  onPressed: () => _showDeleteVariantDialog(
-                                    context, product, variant,
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.remove_circle_outline,
+                                      color: colorScheme.error,
+                                      size: 20,
+                                    ),
+                                    tooltip: 'Excluir Variante',
+                                    onPressed: () => _showDeleteVariantDialog(
+                                      context,
+                                      product,
+                                      variant,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        )),
+                        ),
                     ],
                   ),
                 ),
@@ -276,7 +384,11 @@ class ProductListView extends StatelessWidget {
     showDialog(
       context: context,
       builder: (diagCtx) => AlertDialog(
-        icon: Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.error, size: 48),
+        icon: Icon(
+          Icons.warning_amber_rounded,
+          color: Theme.of(context).colorScheme.error,
+          size: 48,
+        ),
         title: const Text('Excluir Produto'),
         content: Text(
           'Tem certeza que deseja excluir o produto "${product.name}" (SKU: ${product.sku})?\n\n'
@@ -304,11 +416,19 @@ class ProductListView extends StatelessWidget {
     );
   }
 
-  void _showDeleteVariantDialog(BuildContext context, Product product, ProductVariant variant) {
+  void _showDeleteVariantDialog(
+    BuildContext context,
+    Product product,
+    ProductVariant variant,
+  ) {
     showDialog(
       context: context,
       builder: (diagCtx) => AlertDialog(
-        icon: Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.error, size: 48),
+        icon: Icon(
+          Icons.warning_amber_rounded,
+          color: Theme.of(context).colorScheme.error,
+          size: 48,
+        ),
         title: const Text('Excluir Variante'),
         content: Text(
           'Tem certeza que deseja excluir a variante "${variant.variantSku}" do produto "${product.name}"?\n\n'
@@ -325,7 +445,10 @@ class ProductListView extends StatelessWidget {
               foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
             ),
             onPressed: () {
-              context.read<CatalogCubit>().deleteVariant(product.id, variant.id);
+              context.read<CatalogCubit>().deleteVariant(
+                product.id,
+                variant.id,
+              );
               Navigator.pop(diagCtx);
             },
             child: const Text('Excluir'),
@@ -352,38 +475,64 @@ class ProductListView extends StatelessWidget {
             return AlertDialog(
               title: const Text('Cadastrar Novo Produto'),
               content: SizedBox(
-                width: 600,
+                width: 500,
                 child: SingleChildScrollView(
                   child: Form(
                     key: formKey,
-                    autovalidateMode: hasSubmitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                    autovalidateMode: hasSubmitted
+                        ? AutovalidateMode.onUserInteraction
+                        : AutovalidateMode.disabled,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         TextFormField(
                           controller: nameCtrl,
-                          decoration: const InputDecoration(labelText: 'Nome do Produto *', prefixIcon: Icon(Icons.label_outline)),
-                          validator: (v) => NotEmptyInput.dirty(v ?? '').isValid ? null : 'Obrigatório',
+                          decoration: const InputDecoration(
+                            labelText: 'Nome do Produto *',
+                            prefixIcon: Icon(Icons.label_outline),
+                          ),
+                          validator: (v) => NotEmptyInput.dirty(v ?? '').isValid
+                              ? null
+                              : 'Obrigatório',
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: skuCtrl,
-                          decoration: const InputDecoration(labelText: 'SKU Base *', prefixIcon: Icon(Icons.qr_code_scanner)),
-                          validator: (v) => NotEmptyInput.dirty(v ?? '').isValid ? null : 'Obrigatório',
+                          decoration: const InputDecoration(
+                            labelText: 'SKU Base *',
+                            prefixIcon: Icon(Icons.qr_code_scanner),
+                          ),
+                          validator: (v) => NotEmptyInput.dirty(v ?? '').isValid
+                              ? null
+                              : 'Obrigatório',
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: priceCtrl,
-                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: const InputDecoration(labelText: 'Preço Base *', prefixIcon: Icon(Icons.attach_money_rounded)),
-                          validator: (v) => MoneyInput.dirty(v ?? '').isValid ? null : 'Inválido',
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d*'),
+                            ),
+                          ],
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Preço Base *',
+                            prefixIcon: Icon(Icons.attach_money_rounded),
+                          ),
+                          validator: (v) => MoneyInput.dirty(v ?? '').isValid
+                              ? null
+                              : 'Inválido',
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: descCtrl,
                           maxLines: 3,
-                          decoration: const InputDecoration(labelText: 'Descrição', prefixIcon: Icon(Icons.description_outlined)),
+                          decoration: const InputDecoration(
+                            labelText: 'Descrição',
+                            prefixIcon: Icon(Icons.description_outlined),
+                          ),
                         ),
                       ],
                     ),
@@ -391,7 +540,10 @@ class ProductListView extends StatelessWidget {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(diagCtx), child: const Text('Cancelar')),
+                TextButton(
+                  onPressed: () => Navigator.pop(diagCtx),
+                  child: const Text('Cancelar'),
+                ),
                 ElevatedButton(
                   onPressed: () {
                     setState(() => hasSubmitted = true);
@@ -401,7 +553,9 @@ class ProductListView extends StatelessWidget {
                         sku: skuCtrl.text,
                         name: nameCtrl.text,
                         description: descCtrl.text,
-                        basePrice: Money.create(double.parse(priceCtrl.text)).getOrThrow(),
+                        basePrice: Money.create(
+                          double.parse(priceCtrl.text),
+                        ).getOrThrow(),
                         active: true,
                       );
                       context.read<CatalogCubit>().saveProduct(product);
@@ -442,20 +596,28 @@ class ProductListView extends StatelessWidget {
                 child: SingleChildScrollView(
                   child: Form(
                     key: formKey,
-                    autovalidateMode: hasSubmitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+                    autovalidateMode: hasSubmitted
+                        ? AutovalidateMode.onUserInteraction
+                        : AutovalidateMode.disabled,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         TextFormField(
                           controller: skuCtrl,
-                          decoration: const InputDecoration(labelText: 'SKU da Variante *', prefixIcon: Icon(Icons.qr_code_rounded)),
-                          validator: (v) => NotEmptyInput.dirty(v ?? '').isValid ? null : 'Obrigatório',
+                          decoration: const InputDecoration(
+                            labelText: 'SKU da Variante *',
+                            prefixIcon: Icon(Icons.qr_code_rounded),
+                          ),
+                          validator: (v) => NotEmptyInput.dirty(v ?? '').isValid
+                              ? null
+                              : 'Obrigatório',
                         ),
                         const SizedBox(height: 16),
                         CheckboxListTile(
                           title: const Text('Mesmo preço do produto raiz'),
                           value: sameAsParent,
-                          onChanged: (v) => setState(() => sameAsParent = v ?? true),
+                          onChanged: (v) =>
+                              setState(() => sameAsParent = v ?? true),
                           controlAffinity: ListTileControlAffinity.leading,
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -464,31 +626,55 @@ class ProductListView extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 8.0),
                             child: TextFormField(
                               controller: priceCtrl,
-                              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              decoration: const InputDecoration(labelText: 'Preço da Variante *', prefixIcon: Icon(Icons.attach_money_rounded)),
-                              validator: (v) => MoneyInput.dirty(v ?? '').isValid ? null : 'Inválido',
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d*\.?\d*'),
+                                ),
+                              ],
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              decoration: const InputDecoration(
+                                labelText: 'Preço da Variante *',
+                                prefixIcon: Icon(Icons.attach_money_rounded),
+                              ),
+                              validator: (v) =>
+                                  MoneyInput.dirty(v ?? '').isValid
+                                  ? null
+                                  : 'Inválido',
                             ),
                           ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: colorCtrl,
-                          decoration: const InputDecoration(labelText: 'Cor', prefixIcon: Icon(Icons.color_lens_outlined)),
+                          decoration: const InputDecoration(
+                            labelText: 'Cor',
+                            prefixIcon: Icon(Icons.color_lens_outlined),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: sizeCtrl,
-                          decoration: const InputDecoration(labelText: 'Tamanho / Dimensão', prefixIcon: Icon(Icons.straighten_rounded)),
+                          decoration: const InputDecoration(
+                            labelText: 'Tamanho / Dimensão',
+                            prefixIcon: Icon(Icons.straighten_rounded),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: voltageCtrl,
-                          decoration: const InputDecoration(labelText: 'Voltagem', prefixIcon: Icon(Icons.bolt_rounded)),
+                          decoration: const InputDecoration(
+                            labelText: 'Voltagem',
+                            prefixIcon: Icon(Icons.bolt_rounded),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: weightCtrl,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           decoration: const InputDecoration(
                             labelText: 'Peso (kg)',
                             prefixIcon: Icon(Icons.scale_outlined),
@@ -500,7 +686,10 @@ class ProductListView extends StatelessWidget {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(diagCtx), child: const Text('Cancelar')),
+                TextButton(
+                  onPressed: () => Navigator.pop(diagCtx),
+                  child: const Text('Cancelar'),
+                ),
                 ElevatedButton(
                   onPressed: () {
                     setState(() => hasSubmitted = true);
@@ -512,8 +701,14 @@ class ProductListView extends StatelessWidget {
                         size: sizeCtrl.text,
                         voltage: voltageCtrl.text,
                         sameAsParent: sameAsParent,
-                        price: sameAsParent ? null : Money.create(double.parse(priceCtrl.text)).getOrThrow(),
-                        weight: Weight.create(double.tryParse(weightCtrl.text) ?? 0).getOrThrow(),
+                        price: sameAsParent
+                            ? null
+                            : Money.create(
+                                double.parse(priceCtrl.text),
+                              ).getOrThrow(),
+                        weight: Weight.create(
+                          double.tryParse(weightCtrl.text) ?? 0,
+                        ).getOrThrow(),
                       );
                       product.addVariant(variant);
                       context.read<CatalogCubit>().saveProduct(product);

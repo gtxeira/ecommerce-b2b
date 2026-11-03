@@ -15,15 +15,22 @@ class CompanyManagementLoaded extends CompanyManagementState {
   final List<Company> companies;
   final List<SalesRepresentative> subordinates;
   final String? selectedRepresentativeId;
+  final bool isTeamView;
 
   const CompanyManagementLoaded({
     required this.companies,
     this.subordinates = const [],
     this.selectedRepresentativeId,
+    this.isTeamView = false,
   });
 
   @override
-  List<Object?> get props => [companies, subordinates, selectedRepresentativeId];
+  List<Object?> get props => [
+    companies,
+    subordinates,
+    selectedRepresentativeId,
+    isTeamView,
+  ];
 }
 
 class CompanyManagementFailure extends CompanyManagementState {
