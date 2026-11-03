@@ -6,6 +6,7 @@ void main() {
     test('status em fluxo são abertos', () {
       expect(OrderStatus.pendingFinanceApproval.isOpen, isTrue);
       expect(OrderStatus.blockedByFinance.isOpen, isTrue);
+      expect(OrderStatus.awaitingInfo.isOpen, isTrue);
       expect(OrderStatus.pickingPacking.isOpen, isTrue);
       expect(OrderStatus.inTransit.isOpen, isTrue);
     });
@@ -32,7 +33,7 @@ void main() {
       final closed = OrderStatus.values.where((s) => !s.isOpen).length;
 
       expect(open + closed, OrderStatus.values.length);
-      expect(open, 4);
+      expect(open, 5);
       expect(closed, 4);
     });
 

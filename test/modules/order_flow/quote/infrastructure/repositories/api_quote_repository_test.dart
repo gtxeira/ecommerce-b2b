@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:ecommerce_b2b/app/core/network/api_client.dart';
 import 'package:ecommerce_b2b/app/core/network/session_events.dart';
 import 'package:ecommerce_b2b/app/core/network/token_store.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/enums/quote_status.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/model/quote_item.dart';
@@ -29,9 +30,10 @@ void main() {
     return ApiQuoteRepository(client);
   }
 
-  Map<String, dynamic> quoteJson({String status = 'Converted'}) => {
+  Map<String, dynamic> quoteJson({String status = 'ConvertedToOrder'}) => {
     'id': 'q1',
     'createdAt': '2026-09-21T10:00:00.000+00:00',
+    'expiresAt': '2026-10-21T10:00:00.000+00:00',
     'status': status,
     'companyId': 'c1',
     'companyName': 'ACME',
@@ -46,12 +48,35 @@ void main() {
     ],
   };
 
+  Map<String, dynamic> orderJson() => {
+    'id': 'o1',
+    'createdAt': '2026-09-21T10:00:00.000+00:00',
+    'lastActivityAt': '2026-09-21T10:00:00.000+00:00',
+    'companyId': 'c1',
+    'companyName': 'ACME',
+    'companyLegalName': 'ACME Ltda',
+    'status': 'PickingPacking',
+    'creditStatus': 'Approved',
+    'itemsTotal': 100,
+    'shippingCost': 22,
+    'total': 122,
+    'items': [
+      {
+        'productId': 'p1',
+        'productName': 'Produto',
+        'productSku': 'SKU-1',
+        'quantity': 2,
+        'unitPrice': 50,
+      },
+    ],
+  };
+
   setUp(() => events = SessionEvents());
   tearDown(() => events.dispose());
 
   group('ApiQuoteRepository', () {
     test(
-      'should map Converted to convertedToOrder and include freight',
+      'should map ConvertedToOrder and include freight',
       () async {
         final adapter = FakeHttpAdapter(
           (options) async => jsonResponse(successEnvelope(quoteJson())),
@@ -127,8 +152,11 @@ void main() {
 
       final quote = (await repository.getById(const QuoteId('q1')))!;
       expect(quote.createdAt, DateTime.utc(2026, 9, 21, 10));
+      expect(quote.expiresAt, DateTime.utc(2026, 10, 21, 10));
 
-      final legacy = quoteJson()..remove('createdAt');
+      final legacy = quoteJson()
+        ..remove('createdAt')
+        ..remove('expiresAt');
       final legacyAdapter = FakeHttpAdapter(
         (options) async => jsonResponse(successEnvelope(legacy)),
       );
@@ -138,6 +166,26 @@ void main() {
         const QuoteId('q1'),
       ))!;
       expect(legacyQuote.createdAt, isNull);
+      expect(legacyQuote.expiresAt, isNull);
+    });
+
+    test('should convert a quote into an order', () async {
+      RequestOptions? captured;
+      final adapter = FakeHttpAdapter((options) async {
+        captured = options;
+        return jsonResponse(successEnvelope(orderJson()), statusCode: 201);
+      });
+      final repository = buildRepository(adapter);
+
+      final order = await repository.convert(
+        const QuoteId('q1'),
+        companyId: 'c1',
+      );
+
+      expect(captured!.path, '/api/quotes/q1/convert');
+      expect((captured!.data as Map)['companyId'], 'c1');
+      expect(order.id.value, 'o1');
+      expect(order.status, OrderStatus.pickingPacking);
     });
     test('should map the pricing explanation on an item', () async {
       final json = quoteJson();
