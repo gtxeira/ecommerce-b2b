@@ -10,6 +10,10 @@ import 'package:ecommerce_b2b/modules/shared_kernel/model/finance/value_objects/
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  const both = {CommissionStatus.paid, CommissionStatus.cancelled};
+  const cancelOnly = {CommissionStatus.cancelled};
+  const none = <CommissionStatus>{};
+
   UserSession session(UserRole role, String id) =>
       UserSession(userId: UserId(id), role: role);
 
@@ -22,62 +26,72 @@ void main() {
     representativeId: ownerId,
   );
 
-  test('representante não gerencia nem a própria comissão', () {
+  test('representante é somente leitura', () {
     expect(
-      canManageCommissionStatus(
+      allowedCommissionStatusActions(
         session(UserRole.representative, 'rep-1'),
         commission('rep-1'),
       ),
-      isFalse,
+      none,
     );
   });
 
-  test('supervisor não gerencia a própria comissão', () {
+  test('representante não altera a comissão de outra pessoa', () {
     expect(
-      canManageCommissionStatus(
+      allowedCommissionStatusActions(
+        session(UserRole.representative, 'rep-1'),
+        commission('rep-2'),
+      ),
+      none,
+    );
+  });
+
+  test('supervisor não altera a própria comissão', () {
+    expect(
+      allowedCommissionStatusActions(
         session(UserRole.supervisor, 'sup-1'),
         commission('sup-1'),
       ),
-      isFalse,
+      none,
     );
   });
 
-  test('supervisor gerencia a comissão de um subordinado', () {
+  test('supervisor apenas cancela a comissão de um subordinado', () {
     expect(
-      canManageCommissionStatus(
+      allowedCommissionStatusActions(
         session(UserRole.supervisor, 'sup-1'),
         commission('rep-1'),
       ),
-      isTrue,
+      cancelOnly,
     );
   });
 
   test('supervisor nega quando o dono não veio no payload', () {
     expect(
-      canManageCommissionStatus(
+      allowedCommissionStatusActions(
         session(UserRole.supervisor, 'sup-1'),
         commission(null),
       ),
-      isFalse,
+      none,
     );
   });
 
-  test('finance e admin gerenciam qualquer comissão', () {
+  test('finance e admin pagam e cancelam qualquer comissão', () {
     for (final role in [UserRole.finance, UserRole.admin]) {
       expect(
-        canManageCommissionStatus(
+        allowedCommissionStatusActions(
           session(role, 'backoffice-1'),
           commission('rep-1'),
         ),
-        isTrue,
+        both,
         reason: 'papel $role',
       );
     }
   });
 
-  test('comprador não gerencia comissão', () {
+  test('comprador não altera comissão', () {
     expect(
-      canManageCommissionStatus(
+      allowedCommissionStatusActions(
         UserSession(
           userId: const UserId('buyer-1'),
           role: UserRole.buyer,
@@ -85,7 +99,7 @@ void main() {
         ),
         commission('rep-1'),
       ),
-      isFalse,
+      none,
     );
   });
 }

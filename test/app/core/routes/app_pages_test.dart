@@ -67,8 +67,13 @@ void main() {
       expect(AppPage.commissions.path, CommissionRoutes.list);
     });
 
-    test('aparece na sidebar de representante e supervisor', () {
-      for (final role in [UserRole.representative, UserRole.supervisor]) {
+    test('aparece na sidebar dos papéis internos', () {
+      for (final role in [
+        UserRole.representative,
+        UserRole.supervisor,
+        UserRole.finance,
+        UserRole.admin,
+      ]) {
         expect(
           AppPage.sidebarPagesFor(role),
           contains(AppPage.commissions),
@@ -77,14 +82,11 @@ void main() {
       }
     });
 
-    test('não aparece para financeiro, admin nem comprador', () {
-      for (final role in [UserRole.finance, UserRole.admin, UserRole.buyer]) {
-        expect(
-          AppPage.sidebarPagesFor(role),
-          isNot(contains(AppPage.commissions)),
-          reason: 'papel $role',
-        );
-      }
+    test('não aparece para o comprador', () {
+      expect(
+        AppPage.sidebarPagesFor(UserRole.buyer),
+        isNot(contains(AppPage.commissions)),
+      );
     });
   });
 }

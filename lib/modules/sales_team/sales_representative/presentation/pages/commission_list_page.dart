@@ -101,17 +101,22 @@ class CommissionListPage extends StatelessWidget {
                         ),
                       )
                     else
-                      ...state.commissions.map(
-                        (commission) => CommissionTile(
+                      ...state.commissions.map((commission) {
+                        final allowedStatuses = allowedCommissionStatusActions(
+                          session,
+                          commission,
+                        );
+                        return CommissionTile(
                           commission: commission,
                           representativeName: commission.representativeName,
                           onTap: () => showCommissionDetailsSheet(
                             context,
                             commission,
                             representativeName: commission.representativeName,
-                            onStatusChange:
-                                canManageCommissionStatus(session, commission)
-                                ? (target) async {
+                            allowedStatuses: allowedStatuses,
+                            onStatusChange: allowedStatuses.isEmpty
+                                ? null
+                                : (target) async {
                                     final error = await context
                                         .read<CommissionListCubit>()
                                         .updateStatus(
@@ -127,11 +132,10 @@ class CommissionListPage extends StatelessWidget {
                                       );
                                     }
                                     return error;
-                                  }
-                                : null,
+                                  },
                           ),
-                        ),
-                      ),
+                        );
+                      }),
                   ],
                 ),
               );

@@ -19,6 +19,7 @@ Future<void> showCommissionDetailsSheet(
   Commission commission, {
   String? representativeName,
   CommissionStatusCallback? onStatusChange,
+  Set<CommissionStatus> allowedStatuses = const {},
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -30,6 +31,7 @@ Future<void> showCommissionDetailsSheet(
       commission: commission,
       representativeName: representativeName,
       onStatusChange: onStatusChange,
+      allowedStatuses: allowedStatuses,
     ),
   );
 }
@@ -40,11 +42,13 @@ class CommissionDetailsSheet extends StatelessWidget {
     required this.commission,
     this.representativeName,
     this.onStatusChange,
+    this.allowedStatuses = const {},
   });
 
   final Commission commission;
   final String? representativeName;
   final CommissionStatusCallback? onStatusChange;
+  final Set<CommissionStatus> allowedStatuses;
 
   Future<void> _handleAction(
     BuildContext context,
@@ -86,8 +90,11 @@ class CommissionDetailsSheet extends StatelessWidget {
     final repName = (representativeName ?? commission.representativeName ?? '')
         .trim();
     final orderId = commission.orderId;
-    final canChangeStatus =
-        commission.canChangeStatus && onStatusChange != null;
+    final canTransition = commission.canChangeStatus && onStatusChange != null;
+    final showPaid =
+        canTransition && allowedStatuses.contains(CommissionStatus.paid);
+    final showCancelled =
+        canTransition && allowedStatuses.contains(CommissionStatus.cancelled);
 
     return SafeArea(
       child: ConstrainedBox(
@@ -179,24 +186,27 @@ class CommissionDetailsSheet extends StatelessWidget {
                   icon: const Icon(Icons.receipt_long_rounded),
                   label: const Text('Ver pedido'),
                 ),
-              if (canChangeStatus) ...[
+              if (showPaid || showCancelled) ...[
                 const SizedBox(height: 8),
-                FilledButton.icon(
-                  onPressed: () =>
-                      _handleAction(context, CommissionStatus.paid),
-                  icon: const Icon(Icons.price_check_rounded),
-                  label: const Text('Marcar como paga'),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () =>
-                      _handleAction(context, CommissionStatus.cancelled),
-                  icon: Icon(Icons.cancel_outlined, color: colorScheme.error),
-                  label: Text(
-                    'Cancelar comissão',
-                    style: TextStyle(color: colorScheme.error),
+                if (showPaid)
+                  FilledButton.icon(
+                    onPressed: () =>
+                        _handleAction(context, CommissionStatus.paid),
+                    icon: const Icon(Icons.price_check_rounded),
+                    label: const Text('Marcar como paga'),
                   ),
-                ),
+                if (showCancelled) ...[
+                  if (showPaid) const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        _handleAction(context, CommissionStatus.cancelled),
+                    icon: Icon(Icons.cancel_outlined, color: colorScheme.error),
+                    label: Text(
+                      'Cancelar comissão',
+                      style: TextStyle(color: colorScheme.error),
+                    ),
+                  ),
+                ],
               ],
               const SizedBox(height: 8),
               OutlinedButton(

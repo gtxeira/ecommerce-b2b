@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  const both = {CommissionStatus.paid, CommissionStatus.cancelled};
+
   Commission commission({
     int id = 5,
     CommissionStatus status = CommissionStatus.pending,
@@ -24,6 +26,7 @@ void main() {
     WidgetTester tester,
     Commission value, {
     CommissionStatusCallback? onStatusChange,
+    Set<CommissionStatus> allowedStatuses = const {},
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -35,6 +38,7 @@ void main() {
                   context,
                   value,
                   onStatusChange: onStatusChange,
+                  allowedStatuses: allowedStatuses,
                 ),
                 child: const Text('abrir'),
               ),
@@ -47,10 +51,29 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('comissão pendente oferece as ações de status', (tester) async {
-    await openSheet(tester, commission(), onStatusChange: (_) async => null);
+  testWidgets('comissão pendente com permissão total oferece as duas ações', (
+    tester,
+  ) async {
+    await openSheet(
+      tester,
+      commission(),
+      onStatusChange: (_) async => null,
+      allowedStatuses: both,
+    );
 
     expect(find.text('Marcar como paga'), findsOneWidget);
+    expect(find.text('Cancelar comissão'), findsOneWidget);
+  });
+
+  testWidgets('supervisor vê somente a ação de cancelar', (tester) async {
+    await openSheet(
+      tester,
+      commission(),
+      onStatusChange: (_) async => null,
+      allowedStatuses: const {CommissionStatus.cancelled},
+    );
+
+    expect(find.text('Marcar como paga'), findsNothing);
     expect(find.text('Cancelar comissão'), findsOneWidget);
   });
 
@@ -68,6 +91,7 @@ void main() {
       tester,
       commission(status: CommissionStatus.paid),
       onStatusChange: (_) async => null,
+      allowedStatuses: both,
     );
 
     expect(find.text('Marcar como paga'), findsNothing);
@@ -85,6 +109,7 @@ void main() {
         received = target;
         return null;
       },
+      allowedStatuses: both,
     );
 
     await tester.tap(find.text('Marcar como paga'));

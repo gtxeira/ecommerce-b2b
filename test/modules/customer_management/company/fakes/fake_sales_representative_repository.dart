@@ -88,6 +88,10 @@ class FakeSalesRepresentativeRepository
   }
 
   @override
+  Future<List<Commission>> getAllCommissions() async =>
+      _reps.expand((r) => r.commissions).toList();
+
+  @override
   Future<Commission> updateCommissionStatus({
     required int commissionId,
     required CommissionStatus status,

@@ -158,6 +158,17 @@ class ApiSalesRepresentativeRepository
   );
 
   @override
+  Future<List<Commission>> getAllCommissions() async {
+    final data = await _api.get('/api/commissions');
+    if (data is! List) return const [];
+
+    return data
+        .whereType<Map>()
+        .map((raw) => _mapCommission(Map<String, dynamic>.from(raw)))
+        .toList();
+  }
+
+  @override
   Future<List<CustomerAssignment>> getPortfolio({
     String? representativeId,
     bool teamScope = false,

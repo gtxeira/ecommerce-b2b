@@ -31,4 +31,10 @@ abstract class SalesRepresentativeRepository {
     required int commissionId,
     required CommissionStatus status,
   });
+
+  /// Comissões de todos os representantes (GET /api/commissions).
+  ///
+  /// Visão de backoffice: a API responde 403 para papéis que não sejam
+  /// Finance/Admin.
+  Future<List<Commission>> getAllCommissions();
 }

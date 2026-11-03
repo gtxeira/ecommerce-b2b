@@ -335,6 +335,11 @@ class RepresentativeHomePage extends StatelessWidget {
                             final repName = state.isTeamView
                                 ? commission.representativeName
                                 : null;
+                            final allowedStatuses =
+                                allowedCommissionStatusActions(
+                                  session,
+                                  commission,
+                                );
                             return CommissionTile(
                               commission: commission,
                               representativeName: repName,
@@ -342,12 +347,10 @@ class RepresentativeHomePage extends StatelessWidget {
                                 context,
                                 commission,
                                 representativeName: repName,
-                                onStatusChange:
-                                    canManageCommissionStatus(
-                                      session,
-                                      commission,
-                                    )
-                                    ? (target) async {
+                                allowedStatuses: allowedStatuses,
+                                onStatusChange: allowedStatuses.isEmpty
+                                    ? null
+                                    : (target) async {
                                         final error = await context
                                             .read<
                                               RepresentativeDashboardCubit
@@ -365,8 +368,7 @@ class RepresentativeHomePage extends StatelessWidget {
                                           );
                                         }
                                         return error;
-                                      }
-                                    : null,
+                                      },
                               ),
                             );
                           }, childCount: state.commissions.length),

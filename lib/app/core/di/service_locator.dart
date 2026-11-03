@@ -61,6 +61,7 @@ import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_fin
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/get_pending_finance_reviews/get_pending_finance_reviews_use_case.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/application/process_finance_review/process_finance_review_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_commissions/get_representative_commissions_use_case.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_all_commissions/get_all_commissions_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_customers/get_customer_portfolio_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_quotes/get_recent_quotes_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/update_commission_status/update_commission_status_use_case.dart';
@@ -155,6 +156,9 @@ Future<void> setupServiceLocator() async {
     ),
   );
   getIt.registerLazySingleton(
+    () => GetAllCommissionsUseCase(getIt<SalesRepresentativeRepository>()),
+  );
+  getIt.registerLazySingleton(
     () => GetCustomerPortfolioUseCase(getIt<SalesRepresentativeRepository>()),
   );
   getIt.registerLazySingleton(
@@ -239,6 +243,7 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory(
     () => CommissionListCubit(
       getCommissionsUseCase: getIt<GetRepresentativeCommissionsUseCase>(),
+      getAllCommissionsUseCase: getIt<GetAllCommissionsUseCase>(),
       representativeRepository: getIt<SalesRepresentativeRepository>(),
       updateCommissionStatusUseCase: getIt<UpdateCommissionStatusUseCase>(),
     ),

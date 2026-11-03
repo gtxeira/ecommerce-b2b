@@ -151,6 +151,7 @@ enum AppPage {
       UserRole.finance => [
         AppPage.home,
         AppPage.orders,
+        AppPage.commissions,
         AppPage.finance,
         AppPage.billing,
       ],
@@ -160,6 +161,7 @@ enum AppPage {
         AppPage.companies,
         AppPage.catalog,
         AppPage.quotes,
+        AppPage.commissions,
         AppPage.inventory,
         AppPage.finance,
         AppPage.billing,

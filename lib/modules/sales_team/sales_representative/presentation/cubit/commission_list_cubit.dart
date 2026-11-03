@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/modules/identity_access/model/user_session.dart';
+import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_all_commissions/get_all_commissions_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/get_commissions/get_representative_commissions_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/application/update_commission_status/update_commission_status_use_case.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
@@ -13,11 +14,13 @@ part 'commission_list_state.dart';
 
 class CommissionListCubit extends Cubit<CommissionListState> {
   final GetRepresentativeCommissionsUseCase _getCommissionsUseCase;
+  final GetAllCommissionsUseCase _getAllCommissionsUseCase;
   final SalesRepresentativeRepository _representativeRepository;
   final UpdateCommissionStatusUseCase _updateCommissionStatusUseCase;
 
   CommissionListCubit({
     required this._getCommissionsUseCase,
+    required this._getAllCommissionsUseCase,
     required this._representativeRepository,
     required this._updateCommissionStatusUseCase,
   }) : super(CommissionListInitial());
@@ -31,6 +34,25 @@ class CommissionListCubit extends Cubit<CommissionListState> {
 
     try {
       final selfId = RepresentativeId(session.userId.value);
+
+      // Finance/Admin não têm representante próprio: a tela mostra a operação inteira.
+      if (session.isAdmin || session.isFinance) {
+        final result = await _getAllCommissionsUseCase.execute();
+        result.fold(
+          (error) => emit(CommissionListFailure(error.message)),
+          (commissions) => emit(
+            CommissionListLoaded(
+              commissions: commissions,
+              subordinates: const [],
+              selectedRepId: selfId,
+              selectedRepName: 'Todos os representantes',
+              isTeamView: false,
+            ),
+          ),
+        );
+        return;
+      }
+
       final selectedRepId = targetRepId ?? selfId;
       final allReps = await _representativeRepository.findAll();
       final subordinates = allReps

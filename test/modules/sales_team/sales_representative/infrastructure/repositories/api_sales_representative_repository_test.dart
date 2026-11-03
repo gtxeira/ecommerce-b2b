@@ -168,6 +168,36 @@ void main() {
       expect(rep.commissionRate.value, 5);
     });
 
+    test('should list all commissions from the backoffice endpoint', () async {
+      RequestOptions? captured;
+      final adapter = FakeHttpAdapter((options) async {
+        captured = options;
+        return jsonResponse(
+          successEnvelope([
+            {
+              'commissionId': 3,
+              'baseAmount': 2000,
+              'rate': 5,
+              'amount': 100,
+              'status': 'Pending',
+              'orderId': 'o2',
+              'createdAt': '2026-11-02T10:00:00Z',
+              'representativeId': 'rep-2',
+              'representativeName': 'Rep Dois',
+            },
+          ]),
+        );
+      });
+      final repository = buildRepository(adapter);
+
+      final commissions = await repository.getAllCommissions();
+
+      expect(captured!.method, 'GET');
+      expect(captured!.path, '/api/commissions');
+      expect(commissions.single.id, 3);
+      expect(commissions.single.representativeName, 'Rep Dois');
+    });
+
     test('should patch the commission status and map the response', () async {
       RequestOptions? captured;
       final adapter = FakeHttpAdapter((options) async {

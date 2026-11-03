@@ -60,6 +60,7 @@ void main() {
       expect(find.text('FINANCEIRO'), findsOneWidget);
       expect(find.text('OPERAÇÕES'), findsNothing);
       expect(find.text('GESTÃO'), findsNothing);
+      expect(find.text('Comissões'), findsOneWidget);
     });
 
     testWidgets('representante vê operações e não vê financeiro', (
