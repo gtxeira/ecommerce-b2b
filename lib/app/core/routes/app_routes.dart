@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
+import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/layouts/main_layout.dart';
 import 'package:ecommerce_b2b/app/presentation/pages/home_page.dart';
 import 'package:ecommerce_b2b/modules/identity_access/model/enums/user_role.dart';
@@ -10,8 +11,12 @@ import 'package:ecommerce_b2b/modules/identity_access/presentation/pages/users_p
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_catalog_page.dart';
 import 'package:ecommerce_b2b/modules/customer_portal/presentation/pages/buyer_home_page.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/pages/representative_home_page.dart';
+import 'package:ecommerce_b2b/modules/order_flow/model/enums/order_status.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/pages/finance_home_page.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/pages/finance_review_page.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/pages/order_detail_page.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/pages/order_list_page.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/pages/billing_page.dart';
 import 'package:ecommerce_b2b/modules/customer_management/company/presentation/pages/company_list_page.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/pages/product_list_page.dart';
@@ -89,6 +94,26 @@ final appRouter = GoRouter(
           },
         ),
         GoRoute(
+          path: OrderRoutes.list,
+          redirect: _buyerGuard,
+          builder: (context, state) => OrderListPage(
+            initialGroup: switch (state.uri.queryParameters['group']) {
+              'closed' => OrderStatusGroup.closed,
+              _ => OrderStatusGroup.open,
+            },
+          ),
+        ),
+        GoRoute(
+          path: OrderRoutes.detailPattern,
+          redirect: _buyerGuard,
+          builder: (context, state) => OrderDetailPage(
+            orderId: state.pathParameters['id']!,
+            initialOrder: state.extra is SalesOrder
+                ? state.extra! as SalesOrder
+                : null,
+          ),
+        ),
+        GoRoute(
           path: AppPage.finance.path,
           builder: (context, state) => const FinanceReviewPage(),
         ),
@@ -106,7 +131,9 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: AppPage.quotes.path,
-          builder: (context, state) => const QuotePage(),
+          builder: (context, state) => QuotePage(
+            initialTab: state.uri.queryParameters['tab'] == 'list' ? 1 : 0,
+          ),
         ),
         GoRoute(
           path: AppPage.logistics.path,
@@ -128,6 +155,17 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+/// Rotas de pedido são leitura interna: o comprador consulta o próprio
+/// histórico pelo portal (`/api/me/purchase-history`).
+String? _buyerGuard(BuildContext context, GoRouterState state) {
+  final authState = context.read<AuthCubit>().state;
+  if (authState is AuthAuthenticated &&
+      authState.session.role == UserRole.buyer) {
+    return AppPage.home.path;
+  }
+  return null;
+}
 
 /// Enquanto os tokens persistidos são validados, evita exibir a Home ou o Login.
 class _SplashPage extends StatelessWidget {

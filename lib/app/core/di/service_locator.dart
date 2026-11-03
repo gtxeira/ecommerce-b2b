@@ -68,6 +68,7 @@ import 'package:ecommerce_b2b/modules/customer_portal/presentation/cubit/custome
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/user_management_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/quote/presentation/cubit/quote_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/cubit/order_list_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentation/cubit/representative_dashboard_cubit.dart';
 
@@ -248,6 +249,8 @@ Future<void> setupServiceLocator() async {
   );
 
   getIt.registerFactory(() => QuoteCubit(getIt<QuoteRepository>()));
+
+  getIt.registerFactory(() => OrderListCubit(getIt<SalesOrderRepository>()));
 
   getIt.registerFactory(
     () => CustomerPortalCubit(
