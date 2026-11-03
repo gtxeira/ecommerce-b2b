@@ -251,8 +251,8 @@ class _BuyerCatalogViewState extends State<_BuyerCatalogView> {
                     product: product,
                     tiers: _tiersFor(product.id.value),
                     session: _session,
-                    onAddToCart: (variant, quantity, tier, preview) =>
-                        _addToCart(product, variant, quantity, tier, preview),
+                    onAddToCart: (variant, quantity, preview) =>
+                        _addToCart(product, variant, quantity, preview),
                   );
                 },
               ),
@@ -291,7 +291,6 @@ class _BuyerCatalogViewState extends State<_BuyerCatalogView> {
     Product product,
     ProductVariant? variant,
     int quantity,
-    PriceTier? tier,
     PricingPreview preview,
   ) async {
     final companyId = _session?.companyId;
@@ -303,7 +302,7 @@ class _BuyerCatalogViewState extends State<_BuyerCatalogView> {
     final variantId = variant?.id.value;
     final existing = _cart.state.itemFor(product.id, variantId: variantId);
     if (existing == null) {
-      _cart.addOrReplace(_cartItem(product, variant, quantity, tier, preview));
+      _cart.addOrReplace(_cartItem(product, variant, quantity, preview));
       _notifyAdded(quantity);
       return;
     }
@@ -316,13 +315,12 @@ class _BuyerCatalogViewState extends State<_BuyerCatalogView> {
         companyId: companyId.value,
         productId: product.id.value,
         quantity: mergedQuantity,
-        priceTableId: tier?.priceTableId,
         variantId: variantId,
       );
       if (!mounted) return;
 
       _cart.addOrReplace(
-        _cartItem(product, variant, mergedQuantity, tier, mergedPreview),
+        _cartItem(product, variant, mergedQuantity, mergedPreview),
       );
       _notifyAdded(quantity);
     } catch (error) {
@@ -335,7 +333,6 @@ class _BuyerCatalogViewState extends State<_BuyerCatalogView> {
     Product product,
     ProductVariant? variant,
     int quantity,
-    PriceTier? tier,
     PricingPreview preview,
   ) => BuyerQuoteCartItem(
     productId: product.id,
@@ -345,7 +342,8 @@ class _BuyerCatalogViewState extends State<_BuyerCatalogView> {
     variantSku: variant?.variantSku,
     variantLabel: variant?.label,
     quantity: quantity,
-    priceTableId: tier?.priceTableId,
+    // O comprador não escolhe tabela: o servidor resolve a melhor condição no
+    // preview e reprecifica tudo no envio.
     preview: preview,
   );
 
@@ -625,7 +623,6 @@ class _ProductCard extends StatefulWidget {
   final void Function(
     ProductVariant? variant,
     int quantity,
-    PriceTier? tier,
     PricingPreview preview,
   )
   onAddToCart;
@@ -659,9 +656,6 @@ class _ProductCardState extends State<_ProductCard> {
   /// quando existe; senão a regra de produto (que também se aplica a ela).
   List<PriceTier> get _applicableTiers =>
       applicableTiers(widget.tiers, variantId: _selectedVariant?.id.value);
-
-  PriceTier? get _primaryTier =>
-      _applicableTiers.isEmpty ? null : _applicableTiers.first;
 
   @override
   void initState() {
@@ -733,7 +727,6 @@ class _ProductCardState extends State<_ProductCard> {
         companyId: companyId.value,
         productId: widget.product.id.value,
         quantity: _quantity,
-        priceTableId: _primaryTier?.priceTableId,
         variantId: _selectedVariant?.id.value,
       );
 
@@ -1082,7 +1075,7 @@ class _ProductCardState extends State<_ProductCard> {
       return;
     }
 
-    widget.onAddToCart(_selectedVariant, _quantity, _primaryTier, preview);
+    widget.onAddToCart(_selectedVariant, _quantity, preview);
   }
 }
 

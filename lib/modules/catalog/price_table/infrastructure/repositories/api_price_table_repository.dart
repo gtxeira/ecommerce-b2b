@@ -52,6 +52,8 @@ class ApiPriceTableRepository implements PriceTableRepository {
     'id': table.id.value,
     'name': table.name,
     'scopeType': _scopeToApi(table.scopeType),
+    if (table.companyId != null && table.companyId!.isNotEmpty)
+      'companyId': table.companyId,
     'rules': table.rules
         .map(
           (rule) => {
@@ -70,6 +72,7 @@ class ApiPriceTableRepository implements PriceTableRepository {
     id: PriceTableId(readString(json, 'id')),
     name: readString(json, 'name'),
     scopeType: _scopeFromApi(readString(json, 'scopeType')),
+    companyId: readNullableString(json, 'companyId'),
     rules: readMapList(json, 'rules').map(_ruleFromJson).toList(),
   );
 

@@ -6,6 +6,8 @@ import 'package:ecommerce_b2b/modules/catalog/price_table/presentation/cubit/pri
 import 'package:ecommerce_b2b/modules/catalog/price_table/presentation/cubit/price_table_state.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_cubit.dart';
 import 'package:ecommerce_b2b/modules/catalog/product/presentation/cubit/catalog_state.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/company.dart';
+import 'package:ecommerce_b2b/modules/customer_management/company/model/repositories/company_repository.dart';
 import 'package:ecommerce_b2b/modules/shared_kernel/model/address/enums/state.dart'
     as address_state;
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/price_table_id.dart';
@@ -73,7 +75,13 @@ class PriceTableListView extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            subtitle: Text('Escopo: ${table.scopeType.label}'),
+                            subtitle: Text(
+                              table.scopeType ==
+                                          PriceScopeType.customerSpecific &&
+                                      table.companyId != null
+                                  ? 'Escopo: ${table.scopeType.label} • Empresa ${table.companyId}'
+                                  : 'Escopo: ${table.scopeType.label}',
+                            ),
                             children: [
                               Padding(
                                 padding: const EdgeInsets.all(16),
@@ -155,11 +163,22 @@ class PriceTableListView extends StatelessWidget {
     );
   }
 
-  void _showAddTableDialog(BuildContext context) {
+  Future<void> _showAddTableDialog(BuildContext context) async {
     final formKey = GlobalKey<FormState>();
     final nameCtrl = TextEditingController();
     PriceScopeType scope = PriceScopeType.national;
+    String? companyId;
     bool hasSubmitted = false;
+
+    // O vínculo com a empresa só existe no escopo CustomerSpecific; carregar antes
+    // evita abrir o diálogo sem opções quando o escopo for trocado.
+    List<Company> companies = const [];
+    try {
+      companies = await getIt<CompanyRepository>().findAll();
+    } catch (_) {
+      companies = const [];
+    }
+    if (!context.mounted) return;
 
     showDialog(
       context: context,
@@ -198,8 +217,34 @@ class PriceTableListView extends StatelessWidget {
                             ),
                           )
                           .toList(),
-                      onChanged: (v) => setState(() => scope = v!),
+                      onChanged: (v) => setState(() {
+                        scope = v!;
+                        if (scope != PriceScopeType.customerSpecific) {
+                          companyId = null;
+                        }
+                      }),
                     ),
+                    if (scope == PriceScopeType.customerSpecific) ...[
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        initialValue: companyId,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Empresa *',
+                          prefixIcon: Icon(Icons.business_rounded),
+                        ),
+                        items: companies
+                            .map(
+                              (company) => DropdownMenuItem(
+                                value: company.id.value,
+                                child: Text(company.tradeName),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() => companyId = v),
+                        validator: (v) => v == null ? 'Obrigatório' : null,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -216,6 +261,9 @@ class PriceTableListView extends StatelessWidget {
                         id: PriceTableId(const Uuid().v7()),
                         name: nameCtrl.text,
                         scopeType: scope,
+                        companyId: scope == PriceScopeType.customerSpecific
+                            ? companyId
+                            : null,
                       );
                       context.read<PriceTableCubit>().saveTable(table);
                       Navigator.pop(diagCtx);
@@ -382,6 +430,7 @@ class PriceTableListView extends StatelessWidget {
                         id: table.id,
                         name: table.name,
                         scopeType: table.scopeType,
+                        companyId: table.companyId,
                         rules: [...table.rules, rule],
                       );
 

@@ -21,6 +21,10 @@ class PriceTier {
   final int minQuantity;
   final int maxQuantity;
   final String? state;
+
+  /// Empresa dona da condição quando o escopo efetivo é `customerSpecific`.
+  final String? companyId;
+
   final Money unitPrice;
   final Money referenceUnitPrice;
   final Money discountPerUnit;
@@ -39,6 +43,7 @@ class PriceTier {
     required this.minQuantity,
     required this.maxQuantity,
     this.state,
+    this.companyId,
     required this.unitPrice,
     required this.referenceUnitPrice,
     required this.discountPerUnit,
@@ -58,6 +63,7 @@ class PriceTier {
     minQuantity: readInt(json, 'minQuantity'),
     maxQuantity: readInt(json, 'maxQuantity'),
     state: readNullableString(json, 'state'),
+    companyId: readNullableString(json, 'companyId'),
     unitPrice: Money.create(readDouble(json, 'unitPrice')).getOrThrow(),
     referenceUnitPrice: Money.create(
       readDouble(json, 'referenceUnitPrice'),

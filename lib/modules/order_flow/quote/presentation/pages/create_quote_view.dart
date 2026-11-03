@@ -65,7 +65,8 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
       _companies = companies;
       _priceTables = priceTables;
       _selectedCompany = _companies.isNotEmpty ? _companies.first : null;
-      _selectedPriceTable = _priceTables.isNotEmpty ? _priceTables.first : null;
+      // Sem tabela = o servidor resolve Cliente > Regional > Nacional > catálogo.
+      _selectedPriceTable = null;
       _isLoading = false;
     });
   }
@@ -93,11 +94,10 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
   }
 
   // Empresa e tabela definem a UF e a regra; trocar qualquer uma delas invalida
-  // o preço já mostrado nos itens.
+  // o preço já mostrado nos itens. Tabela nula deixa a API resolver a melhor condição.
   Future<void> _repriceItems() async {
     final company = _selectedCompany;
-    final table = _selectedPriceTable;
-    if (company == null || table == null || _items.isEmpty) return;
+    if (company == null || _items.isEmpty) return;
 
     setState(() => _isLoading = true);
     try {
@@ -107,7 +107,7 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
           companyId: company.id.value,
           productId: item.productId.value,
           quantity: item.quantity.value,
-          priceTableId: table.id.value,
+          priceTableId: _selectedPriceTable?.id.value,
           variantId: item.variantId,
         );
 
@@ -119,7 +119,7 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
             variantLabel: item.variantLabel,
             quantity: item.quantity,
             unitPrice: preview.unitPrice,
-            priceTableId: table.id.value,
+            priceTableId: _selectedPriceTable?.id.value,
             pricing: preview.toExplanation(),
           ),
         );
@@ -147,12 +147,10 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
     final authState = context.read<AuthCubit>().state;
     if (authState is! AuthAuthenticated) return;
 
-    if (_selectedCompany == null || _selectedPriceTable == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecione a empresa e a tabela de preços.'),
-        ),
-      );
+    if (_selectedCompany == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Selecione a empresa.')));
       return;
     }
 
@@ -217,18 +215,25 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
             },
           ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<PriceTable>(
+          DropdownButtonFormField<PriceTable?>(
             initialValue: _selectedPriceTable,
             decoration: const InputDecoration(
-              labelText: 'Tabela de preços *',
+              labelText: 'Tabela de preços (opcional)',
+              helperText: 'Automático aplica a melhor condição da empresa.',
               prefixIcon: Icon(Icons.sell_rounded),
             ),
-            items: _priceTables
-                .map(
-                  (table) =>
-                      DropdownMenuItem(value: table, child: Text(table.name)),
-                )
-                .toList(),
+            items: [
+              const DropdownMenuItem<PriceTable?>(
+                value: null,
+                child: Text('Automático (melhor condição)'),
+              ),
+              ..._priceTables.map(
+                (table) => DropdownMenuItem<PriceTable?>(
+                  value: table,
+                  child: Text(table.name),
+                ),
+              ),
+            ],
             onChanged: (table) {
               setState(() => _selectedPriceTable = table);
               unawaited(_repriceItems());
@@ -409,12 +414,9 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
 
   void _showAddProductDialog() {
     final company = _selectedCompany;
-    final table = _selectedPriceTable;
-    if (company == null || table == null) {
+    if (company == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecione a empresa e a tabela de preços primeiro.'),
-        ),
+        const SnackBar(content: Text('Selecione a empresa primeiro.')),
       );
       return;
     }
@@ -424,7 +426,7 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
       builder: (_) => _AddQuoteItemDialog(
         products: _availableProducts,
         company: company,
-        priceTable: table,
+        priceTable: _selectedPriceTable,
       ),
     ).then((draft) {
       if (draft != null) {
@@ -453,7 +455,9 @@ class _QuoteItemDraft {
 class _AddQuoteItemDialog extends StatefulWidget {
   final List<Product> products;
   final Company company;
-  final PriceTable priceTable;
+
+  /// Tabela escolhida como override; nula usa a resolução automática da API.
+  final PriceTable? priceTable;
 
   const _AddQuoteItemDialog({
     required this.products,
@@ -515,7 +519,7 @@ class _AddQuoteItemDialogState extends State<_AddQuoteItemDialog> {
         companyId: widget.company.id.value,
         productId: product.id.value,
         quantity: _quantity,
-        priceTableId: widget.priceTable.id.value,
+        priceTableId: widget.priceTable?.id.value,
         variantId: _variant?.id.value,
       );
 
