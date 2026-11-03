@@ -136,7 +136,9 @@ API e qualquer regra que divirja é considerada bug do cliente.
 
 O cliente não replica a precedência de tabela/variante/UF. A API expõe
 `POST /api/pricing/preview` (preço aplicado, desconto, regra e próxima faixa) e
-`GET /api/catalog/price-tiers` (faixas elegíveis para a empresa). O Flutter usa esses dados para:
+`GET /api/catalog/price-tiers` (faixas elegíveis para a empresa). A condição é resolvida no
+servidor por **Cliente > Regional > Nacional > catálogo**; dentro da camada, variante vence
+produto e o empate fica com o menor preço. O Flutter usa esses dados para:
 
 - simular a quantidade no catálogo do comprador e mostrar “faltam X un. para R$ Y/un.”;
 - exibir o selo de desconto (`DiscountBadge`) com tooltip/bottom sheet explicando tabela, faixa,
@@ -148,7 +150,9 @@ quantidade, se o produto já está no carrinho) e o FAB envia todos os itens de 
 recalcula os preços e grava o snapshot de cada item. Produtos com variação têm um seletor de
 cor/tamanho/voltagem; a escolha vai no item e é preservada no orçamento e no pedido convertido.
 Quando não há faixa de desconto elegível, o item entra pelo **preço de catálogo** (ou da
-variação), sem exigir tabela de preços. Depois do envio, “Meus Orçamentos”
+variação), sem exigir tabela de preços. O comprador nunca escolhe tabela: no fluxo interno de
+orçamento, “Automático” aplica a melhor condição e o seletor de tabela serve apenas como override
+explícito. Depois do envio, “Meus Orçamentos”
 (`/buyer-quotes`) lista os orçamentos da empresa do comprador, com status, validade e itens —
 somente leitura.
 
