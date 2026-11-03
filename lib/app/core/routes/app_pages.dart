@@ -149,6 +149,7 @@ enum AppPage {
         AppPage.orders,
         AppPage.companies,
         AppPage.catalog,
+        AppPage.quotes,
         AppPage.inventory,
         AppPage.finance,
         AppPage.billing,

@@ -23,6 +23,10 @@ class QuoteListView extends StatefulWidget {
 }
 
 class _QuoteListViewState extends State<QuoteListView> {
+  /// Filtros do Admin. Nulo significa "Todos".
+  String? _representativeFilter;
+  String? _companyFilter;
+
   @override
   void initState() {
     super.initState();
@@ -74,10 +78,14 @@ class _QuoteListViewState extends State<QuoteListView> {
     if (confirmed != true || !context.mounted) return;
 
     try {
-      final order = await context.read<QuoteCubit>().convertQuote(quote, session);
+      final order = await context.read<QuoteCubit>().convertQuote(
+        quote,
+        session,
+      );
       if (!context.mounted) return;
 
-      final waitingFinance = order.status == OrderStatus.blockedByFinance ||
+      final waitingFinance =
+          order.status == OrderStatus.blockedByFinance ||
           order.status == OrderStatus.pendingFinanceApproval ||
           order.status == OrderStatus.awaitingInfo;
 
@@ -144,56 +152,106 @@ class _QuoteListViewState extends State<QuoteListView> {
             );
           }
 
+          final isAdmin = session?.isAdmin ?? false;
+          final options = quoteFilterOptions(quotes);
+
+          // Um filtro que deixou de existir na lista (após uma recarga) é ignorado em vez
+          // de esvaziar a tela; o dropdown também volta para "Todos".
+          final representativeFilter = effectiveQuoteFilter(
+            options.representatives,
+            _representativeFilter,
+          );
+          final companyFilter = effectiveQuoteFilter(
+            options.companies,
+            _companyFilter,
+          );
+
+          final filtered = isAdmin
+              ? filterQuotes(
+                  quotes,
+                  representativeId: representativeFilter,
+                  companyId: companyFilter,
+                )
+              : quotes;
+          final showRepresentativeFilter =
+              isAdmin && options.representatives.length > 1;
+          final showCompanyFilter = isAdmin && options.companies.length > 1;
+
           return RefreshIndicator(
             onRefresh: () async => _loadQuotes(),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: quotes.length,
-              itemBuilder: (context, index) {
-                final quote = quotes[index];
-                final savings = quoteSavings(quote);
-                final canConvert = session != null
-                    && (session.isRepresentative || session.isAdmin)
-                    && quote.status == QuoteStatus.sent;
+            child: Column(
+              children: [
+                if (showRepresentativeFilter || showCompanyFilter)
+                  _buildAdminFilters(
+                    options: options,
+                    representativeFilter: representativeFilter,
+                    companyFilter: companyFilter,
+                    showRepresentative: showRepresentativeFilter,
+                    showCompany: showCompanyFilter,
+                  ),
+                Expanded(
+                  child: filtered.isEmpty
+                      ? _buildFilteredEmptyState(theme, colorScheme)
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: filtered.length,
+                          itemBuilder: (context, index) {
+                            final quote = filtered[index];
+                            final savings = quoteSavings(quote);
+                            final canConvert =
+                                session != null &&
+                                (session.isRepresentative || session.isAdmin) &&
+                                quote.status == QuoteStatus.sent;
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  elevation: 0,
-                  color: colorScheme.surfaceContainerLow,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    title: Text(
-                      'Orçamento #${quote.id.displayCode}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      [
-                        'Status: ${quote.status.label} • Itens: ${quote.items.length}',
-                        'Total: ${quote.total.formatted}',
-                        if (savings != null)
-                          'Desconto aplicado: ${savings.formatted}',
-                        if (quote.companyId != null)
-                          'Empresa: ${companyLabel(tradeName: quote.companyName, legalName: quote.companyLegalName, id: quote.companyId!)}',
-                        if (quote.representativeId != null)
-                          'Representante: ${personLabel(name: quote.representativeName, role: 'Representative', id: quote.representativeId!)}',
-                        if (quote.expiresAt != null)
-                          'Válido até ${formatDate(quote.expiresAt!)}',
-                      ].join('\n'),
-                    ),
-                    isThreeLine: true,
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => showQuoteDetailsSheet(
-                      context,
-                      quote,
-                      onConvert: canConvert
-                          ? () => _convertQuote(context, quote, session)
-                          : null,
-                    ),
-                  ),
-                );
-              },
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              elevation: 0,
+                              color: colorScheme.surfaceContainerLow,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                title: Text(
+                                  'Orçamento #${quote.id.displayCode}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  [
+                                    'Status: ${quote.status.label} • Itens: ${quote.items.length}',
+                                    'Total: ${quote.total.formatted}',
+                                    if (savings != null)
+                                      'Desconto aplicado: ${savings.formatted}',
+                                    if (quote.companyId != null)
+                                      'Empresa: ${companyLabel(tradeName: quote.companyName, legalName: quote.companyLegalName, id: quote.companyId!)}',
+                                    if (quote.representativeId != null)
+                                      'Representante: ${personLabel(name: quote.representativeName, role: 'Representative', id: quote.representativeId!)}',
+                                    if (quote.expiresAt != null)
+                                      'Válido até ${formatDate(quote.expiresAt!)}',
+                                  ].join('\n'),
+                                ),
+                                isThreeLine: true,
+                                trailing: const Icon(
+                                  Icons.chevron_right_rounded,
+                                ),
+                                onTap: () => showQuoteDetailsSheet(
+                                  context,
+                                  quote,
+                                  onConvert: canConvert
+                                      ? () => _convertQuote(
+                                          context,
+                                          quote,
+                                          session,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
           );
         }
@@ -202,7 +260,187 @@ class _QuoteListViewState extends State<QuoteListView> {
       },
     );
   }
+
+  Widget _buildAdminFilters({
+    required QuoteFilterOptions options,
+    required String? representativeFilter,
+    required String? companyFilter,
+    required bool showRepresentative,
+    required bool showCompany,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Row(
+        children: [
+          if (showRepresentative)
+            Expanded(
+              child: _filterDropdown(
+                label: 'Representante',
+                selected: representativeFilter,
+                options: options.representatives,
+                onChanged: (value) =>
+                    setState(() => _representativeFilter = value),
+              ),
+            ),
+          if (showRepresentative && showCompany) const SizedBox(width: 12),
+          if (showCompany)
+            Expanded(
+              child: _filterDropdown(
+                label: 'Empresa',
+                selected: companyFilter,
+                options: options.companies,
+                onChanged: (value) => setState(() => _companyFilter = value),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _filterDropdown({
+    required String label,
+    required String? selected,
+    required List<QuoteFilterOption> options,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      // FormField não reaplica initialValue em rebuild: a key faz "Limpar filtros" e um
+      // filtro obsoleto voltarem a exibir "Todos".
+      key: ValueKey('$label-${selected ?? ''}'),
+      initialValue: selected ?? '',
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        isDense: true,
+        border: const OutlineInputBorder(),
+      ),
+      items: [
+        const DropdownMenuItem(value: '', child: Text('Todos')),
+        ...options.map(
+          (option) => DropdownMenuItem(
+            value: option.id,
+            child: Text(option.label, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+      ],
+      onChanged: (value) =>
+          onChanged(value == null || value.isEmpty ? null : value),
+    );
+  }
+
+  Widget _buildFilteredEmptyState(ThemeData theme, ColorScheme colorScheme) {
+    return ListView(
+      // Precisa rolar para o RefreshIndicator continuar funcionando sem resultados.
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(32),
+      children: [
+        Icon(
+          Icons.filter_alt_off_rounded,
+          size: 64,
+          color: colorScheme.outline,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Nenhum orçamento para os filtros selecionados.',
+          style: theme.textTheme.titleMedium,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: TextButton(
+            onPressed: () => setState(() {
+              _representativeFilter = null;
+              _companyFilter = null;
+            }),
+            child: const Text('Limpar filtros'),
+          ),
+        ),
+      ],
+    );
+  }
 }
+
+/// Opção de um filtro de orçamento (representante ou empresa).
+class QuoteFilterOption {
+  final String id;
+  final String label;
+
+  const QuoteFilterOption({required this.id, required this.label});
+}
+
+/// Opções do seletor do Admin, derivadas dos orçamentos já carregados.
+///
+/// O Admin recebe a lista inteira de `/api/quotes`; derivar as opções dela evita um
+/// endpoint só para preencher o filtro e garante que só apareça quem tem orçamento.
+class QuoteFilterOptions {
+  final List<QuoteFilterOption> representatives;
+  final List<QuoteFilterOption> companies;
+
+  const QuoteFilterOptions({
+    required this.representatives,
+    required this.companies,
+  });
+}
+
+QuoteFilterOptions quoteFilterOptions(List<Quote> quotes) {
+  return QuoteFilterOptions(
+    representatives: _distinctOptions(
+      quotes,
+      idOf: (quote) => quote.representativeId,
+      labelOf: (quote) => quote.representativeName,
+    ),
+    companies: _distinctOptions(
+      quotes,
+      idOf: (quote) => quote.companyId,
+      labelOf: (quote) {
+        final tradeName = quote.companyName;
+        return tradeName != null && tradeName.isNotEmpty
+            ? tradeName
+            : quote.companyLegalName;
+      },
+    ),
+  );
+}
+
+/// Filtra por representante e/ou empresa. Nulo significa "todos".
+List<Quote> filterQuotes(
+  List<Quote> quotes, {
+  String? representativeId,
+  String? companyId,
+}) {
+  return quotes
+      .where(
+        (quote) =>
+            (representativeId == null ||
+                quote.representativeId == representativeId) &&
+            (companyId == null || quote.companyId == companyId),
+      )
+      .toList();
+}
+
+List<QuoteFilterOption> _distinctOptions(
+  List<Quote> quotes, {
+  required String? Function(Quote quote) idOf,
+  required String? Function(Quote quote) labelOf,
+}) {
+  final byId = <String, String>{};
+  for (final quote in quotes) {
+    final id = idOf(quote);
+    if (id == null || byId.containsKey(id)) continue;
+    final name = labelOf(quote);
+    byId[id] = name == null || name.isEmpty ? '#$id' : name;
+  }
+
+  return byId.entries
+      .map((entry) => QuoteFilterOption(id: entry.key, label: entry.value))
+      .toList()
+    ..sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
+}
+
+/// Filtro efetivo: um id que não existe nas opções vira nulo ("Todos"), em vez de
+/// esvaziar a lista quando o orçamento que o originou sai da lista.
+String? effectiveQuoteFilter(List<QuoteFilterOption> options, String? id) =>
+    id != null && options.any((option) => option.id == id) ? id : null;
 
 /// Soma da economia congelada nos itens. Nulo quando nenhum item tem desconto.
 Money? quoteSavings(Quote quote) {
@@ -358,7 +596,7 @@ Widget _quoteItemRow(BuildContext context, QuoteItem item) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${item.quantity.value}x produto #${item.productId.value}',
+                '${item.quantity.value}x ${productLabel(name: item.productName, sku: item.productSku, id: item.productId.value)}',
                 style: theme.textTheme.bodyMedium,
               ),
               if (item.pricing != null)

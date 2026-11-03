@@ -15,9 +15,11 @@ class QuoteCubit extends Cubit<QuoteState> {
   Future<void> loadQuotes(UserSession session) async {
     emit(QuoteLoading());
     try {
-      final quotes = await _quoteRepository.findByRepresentativeId(
-        session.userId.value,
-      );
+      // O Admin não é representante: filtrar pelo próprio id devolveria lista vazia.
+      // GET /api/quotes sem filtro devolve todos, que é o que o Admin precisa ver.
+      final quotes = session.isAdmin
+          ? await _quoteRepository.getAll()
+          : await _quoteRepository.findByRepresentativeId(session.userId.value);
       emit(QuoteLoaded(quotes));
     } catch (e) {
       emit(QuoteError(e.toString()));

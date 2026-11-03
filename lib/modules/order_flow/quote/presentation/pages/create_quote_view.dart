@@ -146,7 +146,11 @@ class _CreateQuoteViewState extends State<CreateQuoteView> {
     final quote = Quote(
       id: QuoteId(const Uuid().v4()),
       companyId: _selectedCompany!.id.value,
-      representativeId: authState.session.userId.value,
+      // A API define o dono pelo representante da empresa; o Admin não tem vínculo de
+      // representante, então mandar o próprio id aqui só criaria um dado falso.
+      representativeId: authState.session.isRepresentative
+          ? authState.session.userId.value
+          : null,
       status: QuoteStatus.sent,
       items: _items,
     );

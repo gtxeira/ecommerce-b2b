@@ -40,18 +40,13 @@ class ApiQuoteRepository implements QuoteRepository {
     final body = <String, dynamic>{};
     if (companyId != null) body['companyId'] = companyId;
 
-    final data = await _api.post(
-      '/api/quotes/${id.value}/convert',
-      data: body,
-    );
+    final data = await _api.post('/api/quotes/${id.value}/convert', data: body);
 
     if (data is! Map) {
       throw StateError('A API não devolveu o pedido convertido.');
     }
 
-    return ApiSalesOrderRepository.fromJson(
-      Map<String, dynamic>.from(data),
-    );
+    return ApiSalesOrderRepository.fromJson(Map<String, dynamic>.from(data));
   }
 
   @override
@@ -100,6 +95,8 @@ class ApiQuoteRepository implements QuoteRepository {
         .map(
           (item) => QuoteItem(
             productId: ProductId(readString(item, 'productId')),
+            productName: readNullableString(item, 'productName'),
+            productSku: readNullableString(item, 'productSku'),
             quantity: Quantity.create(readInt(item, 'quantity')).getOrThrow(),
             unitPrice: Money.create(readDouble(item, 'unitPrice')).getOrThrow(),
             pricing: item['pricing'] is Map

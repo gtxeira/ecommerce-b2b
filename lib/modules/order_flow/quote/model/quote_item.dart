@@ -7,6 +7,14 @@ import 'package:flutter/foundation.dart';
 @immutable
 class QuoteItem {
   final ProductId productId;
+
+  /// Nome do produto, resolvido pela API na leitura. Nulo quando o produto não
+  /// existe mais ou em payloads antigos.
+  final String? productName;
+
+  /// SKU do produto, resolvido pela API na leitura.
+  final String? productSku;
+
   final Quantity quantity;
   final Money unitPrice;
 
@@ -19,6 +27,8 @@ class QuoteItem {
 
   const QuoteItem({
     required this.productId,
+    this.productName,
+    this.productSku,
     required this.quantity,
     required this.unitPrice,
     this.priceTableId,
@@ -36,6 +46,8 @@ class QuoteItem {
       other is QuoteItem &&
           runtimeType == other.runtimeType &&
           productId == other.productId &&
+          productName == other.productName &&
+          productSku == other.productSku &&
           quantity == other.quantity &&
           unitPrice == other.unitPrice &&
           priceTableId == other.priceTableId &&
@@ -44,6 +56,8 @@ class QuoteItem {
   @override
   int get hashCode =>
       productId.hashCode ^
+      productName.hashCode ^
+      productSku.hashCode ^
       quantity.hashCode ^
       unitPrice.hashCode ^
       priceTableId.hashCode ^
