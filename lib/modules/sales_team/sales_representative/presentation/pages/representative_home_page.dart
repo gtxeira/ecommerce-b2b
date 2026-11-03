@@ -1,4 +1,5 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/sales_team/sales_representative/model/commission.dart';
@@ -6,6 +7,7 @@ import 'package:ecommerce_b2b/modules/sales_team/sales_representative/presentati
 import 'package:ecommerce_b2b/modules/shared_kernel/model/common/ids/representative_id.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class RepresentativeHomePage extends StatelessWidget {
   const RepresentativeHomePage({super.key});
@@ -220,9 +222,6 @@ class RepresentativeHomePage extends StatelessWidget {
                                 subtitle: Text(
                                   'Base: ${commission.baseAmount.formatted} (${commission.rate.formatted})',
                                 ),
-                                trailing: const Icon(
-                                  Icons.chevron_right_rounded,
-                                ),
                               ),
                             );
                           }, childCount: state.commissions.length),
@@ -277,6 +276,9 @@ class RepresentativeHomePage extends StatelessWidget {
                                 ),
                                 trailing: const Icon(
                                   Icons.chevron_right_rounded,
+                                ),
+                                onTap: () => context.go(
+                                  '${AppPage.quotes.path}?tab=list',
                                 ),
                               ),
                             );

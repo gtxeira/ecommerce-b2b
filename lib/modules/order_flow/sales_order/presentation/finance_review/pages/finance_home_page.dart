@@ -1,8 +1,10 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
 import 'package:ecommerce_b2b/app/core/routes/app_pages.dart';
+import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/finance_review/cubit/finance_review_cubit.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_summary_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -95,7 +97,12 @@ class FinanceHomePage extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
                       child: isLoading
-                          ? const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(32),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
                           : _buildActionHeroCard(
                               context,
                               'Revisão de Crédito',
@@ -103,8 +110,12 @@ class FinanceHomePage extends StatelessWidget {
                                   ? 'Nenhum pedido aguardando sua análise manual.'
                                   : 'Existem $pendingCount ${pendingCount == 1 ? 'pedido aguardando' : 'pedidos aguardando'} sua análise manual.',
                               Icons.gpp_maybe_rounded,
-                              pendingCount > 0 ? colorScheme.primary : colorScheme.surfaceContainerHigh,
-                              pendingCount > 0 ? colorScheme.onPrimary : colorScheme.onSurface,
+                              pendingCount > 0
+                                  ? colorScheme.primary
+                                  : colorScheme.surfaceContainerHigh,
+                              pendingCount > 0
+                                  ? colorScheme.onPrimary
+                                  : colorScheme.onSurface,
                               () => context.go(AppPage.finance.path),
                             ),
                     ),
@@ -148,34 +159,11 @@ class FinanceHomePage extends StatelessWidget {
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate((context, index) {
                           final order = recentReleases[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            color: colorScheme.surfaceContainerLow,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.all(16),
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.green.withValues(
-                                  alpha: 0.15,
-                                ),
-                                child: const Icon(
-                                  Icons.check_circle_outline_rounded,
-                                  color: Colors.green,
-                                ),
-                              ),
-                              title: Text(
-                                'Pedido #${order.id.displayCode}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              subtitle: Text(
-                                'Status: ${order.status.label} • Total: ${order.total.formatted}',
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              trailing: const Icon(Icons.chevron_right_rounded),
+                          return OrderSummaryTile(
+                            order: order,
+                            onTap: () => context.push(
+                              OrderRoutes.detail(order.id.value),
+                              extra: order,
                             ),
                           );
                         }, childCount: recentReleases.length),

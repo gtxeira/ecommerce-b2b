@@ -1,9 +1,11 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/infrastructure/api/finance_api.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Faturamento dos pedidos entregues. É o gatilho da comissão do representante
 /// na API; a análise de crédito (finance-review) é uma etapa anterior e separada.
@@ -91,6 +93,10 @@ class _BillingPageState extends State<BillingPage> {
                             title: Text('Pedido #${order.id.displayCode}'),
                             subtitle: Text(
                               'Total: ${order.total.formatted} • Empresa: ${order.companyId ?? '-'}',
+                            ),
+                            onTap: () => context.push(
+                              OrderRoutes.detail(order.id.value),
+                              extra: order,
                             ),
                             trailing: ElevatedButton(
                               onPressed: () => _invoice(order),

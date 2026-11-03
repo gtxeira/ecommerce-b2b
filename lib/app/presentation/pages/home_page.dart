@@ -1,8 +1,10 @@
 import 'package:ecommerce_b2b/app/core/di/service_locator.dart';
+import 'package:ecommerce_b2b/app/core/routes/order_routes.dart';
 import 'package:ecommerce_b2b/app/presentation/widgets/b2b_app_bar.dart';
 import 'package:ecommerce_b2b/modules/identity_access/presentation/cubit/auth_cubit.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/repositories/sales_order_repository.dart';
 import 'package:ecommerce_b2b/modules/order_flow/sales_order/model/sales_order.dart';
+import 'package:ecommerce_b2b/modules/order_flow/sales_order/presentation/widgets/order_summary_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -72,15 +74,21 @@ class _HomePageState extends State<HomePage> {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 10.0,
-              ),
-              child: Text(
-                'Atividades Recentes',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Atividades Recentes',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push(OrderRoutes.list),
+                    child: const Text('Ver todos'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -107,24 +115,20 @@ class _HomePageState extends State<HomePage> {
               ),
             )
           else
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final order = _recentOrders[index];
-                return ListTile(
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.history, size: 20),
-                  ),
-                  title: Text(
-                    'Pedido #${order.id.displayCode}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    'Status: ${order.status.label} • Total: ${order.total.formatted}',
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
-                );
-              }, childCount: _recentOrders.length),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final order = _recentOrders[index];
+                  return OrderSummaryTile(
+                    order: order,
+                    onTap: () => context.push(
+                      OrderRoutes.detail(order.id.value),
+                      extra: order,
+                    ),
+                  );
+                }, childCount: _recentOrders.length),
+              ),
             ),
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
